@@ -198,6 +198,13 @@ export function resolveStoryboardModelBinding(providerId, input = {}) {
     connectionPresetId: cleanId(input.connectionPresetId), customModel: !getStoryboardModel(providerId, remoteModelId) };
 }
 
+export function resolveStoryboardProfileBinding(providerId, profile = {}) {
+  return resolveStoryboardModelBinding(providerId, {
+    remoteModelId: profile.model == null || profile.model === '' ? getStoryboardProvider(providerId)?.defaultModel : profile.model,
+    capabilityModelId: profile.capabilityModelId,
+  });
+}
+
 export function resolveStoryboardJobModelIdentity(job = {}) {
   const fail = (code, message) => { const error = new Error(message); error.code = code; throw error; };
   const provider = getStoryboardProvider(job.source);

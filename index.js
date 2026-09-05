@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.27';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.27';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.27';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.28';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.28';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.28';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.27';
+} from './qianmu-llm-output.js?v=1.59.28';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -147,6 +147,7 @@ import {
   rememberStoryboardModelProfile,
   resolveStoryboardJobModelIdentity,
   resolveStoryboardModelBinding,
+  resolveStoryboardProfileBinding,
   resolveStoryboardMessageReference,
   resolveStoryboardComposition,
   restoreStoryboardCompositionPolicy,
@@ -163,143 +164,143 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.27';
+} from './qianmu-storyboard.js?v=1.59.28';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.27';
+const VERSION = '1.59.28';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.27'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.28'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.27').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.28').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.27'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.28'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.27'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.28'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.27'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.28'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.27'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.28'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.27'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.28'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.27'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.28'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.27'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.28'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.27'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.28'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.27'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.28'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.27'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.28'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.27'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.28'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.27'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.28'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.27'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.28'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.27'),
+    load: () => import('./qianmu-video-task.js?v=1.59.28'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.27'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.28'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.27'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.28'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.27'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.28'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.27'),
+    load: () => import('./qianmu-video-store.js?v=1.59.28'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.27'),
+    load: () => import('./qianmu-video-result.js?v=1.59.28'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.27'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.28'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.27'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.28'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.27'),
+    load: () => import('./qianmu-video-media.js?v=1.59.28'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.27'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.28'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.27'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.28'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.27'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.28'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.27'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.28'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.27'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.28'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.27'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.28'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.27'),
-        import('./qianmu-theaters.js?v=1.59.27'),
+        import('./builtin-theaters.js?v=1.59.28'),
+        import('./qianmu-theaters.js?v=1.59.28'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -12068,10 +12069,6 @@ function storyboardPromptsForArtist(state, artist, sourceId, modelId, { prompt =
   };
 }
 
-function storyboardEffectivePrompts(state, sourceId = state.source, modelId = storyboardProviderProfile(state, sourceId).model, options = {}) {
-  return storyboardPromptsForArtist(state, storyboardSelectedArtistPreset(state), sourceId, modelId, options);
-}
-
 function storyboardRemovePromptLayer(value, layer) {
   const source = String(value || '').trim();
   const needle = String(layer || '').trim();
@@ -12183,36 +12180,35 @@ function storyboardConnectionState(state, providerId = state.source) {
   return { group, active, draft: group?.draft || active || {} };
 }
 
-function storyboardModelOptions(providerId, selected = '') {
+function storyboardModelOptions(providerId, selected = '', capabilityModelId = '') {
   const options = STORYBOARD_MODEL_REGISTRY[providerId] || [];
-  const fixedSelection = options.some((item) => item.id === selected)
-    ? selected
-    : STORYBOARD_PROVIDER_REGISTRY[providerId]?.defaultModel;
-  return options.map((item) => `<option value="${htmlEscape(item.id)}" ${fixedSelection === item.id ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('');
+  const fixedSelection = selected || STORYBOARD_PROVIDER_REGISTRY[providerId]?.defaultModel;
+  const capabilityLabel = options.find((item) => item.id === capabilityModelId)?.label;
+  const currentAlias = selected && !options.some((item) => item.id === selected)
+    ? `<option value="${htmlEscape(selected)}" selected>${htmlEscape(selected)}${capabilityLabel ? ` · ${htmlEscape(capabilityLabel)}` : ' · 待确认'}</option>` : '';
+  return currentAlias + options.map((item) => `<option value="${htmlEscape(item.id)}" ${fixedSelection === item.id ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('');
 }
 
-function storyboardResolveModelId(providerId, value = '') {
-  const provider = STORYBOARD_PROVIDER_REGISTRY[providerId];
-  if (!provider) return '';
-  const requestedModel = String(value || '').trim().slice(0, 240);
-  const knownModel = (STORYBOARD_MODEL_REGISTRY[providerId] || []).some((item) => item.id === requestedModel);
-  return (knownModel || Boolean(provider.customModelId && requestedModel)) ? requestedModel : provider.defaultModel || '';
-}
-
-function storyboardProviderProfile(state, providerId = state.source) {
-  const legacy = storyboardProfile(providerId);
+function storyboardProviderProfile(state, providerId = state.source, profileOverride = null) {
+  const legacy = profileOverride || state.profiles[providerId];
   const { draft } = storyboardConnectionState(state, providerId);
   const provider = STORYBOARD_PROVIDER_REGISTRY[providerId];
-  const requestedModel = String(legacy.model || provider?.defaultModel || '').trim();
-  const fixedModel = storyboardResolveModelId(providerId, requestedModel);
-  const modelDefaults = providerId === 'novel' ? getStoryboardNovelParameterSpec(fixedModel).defaults : {};
+  let binding;
+  try { binding = resolveStoryboardProfileBinding(providerId, legacy); }
+  catch (error) {
+    return { ...legacy, model: String(legacy.model || ''), modelBindingError: error.message,
+      baseUrl: String(draft.baseUrl || provider?.defaultBaseUrl || ''),
+      connectionPresetId: String(storyboardConnectionState(state, providerId).group?.activePresetId || '') };
+  }
+  const modelDefaults = providerId === 'novel' ? getStoryboardNovelParameterSpec(binding.capabilityModelId).defaults : {};
   const resolved = { ...legacy };
   for (const [key, value] of Object.entries(modelDefaults)) {
     if (!legacy.loaded || resolved[key] === '' || resolved[key] == null) resolved[key] = value;
   }
   return {
     ...resolved,
-    model: fixedModel,
+    model: binding.remoteModelId,
+    capabilityModelId: binding.capabilityModelId,
     baseUrl: String(draft.baseUrl || STORYBOARD_PROVIDER_REGISTRY[providerId]?.defaultBaseUrl || ''),
     connectionPresetId: String(storyboardConnectionState(state, providerId).group?.activePresetId || ''),
   };
@@ -12262,8 +12258,9 @@ function renderStoryboardModelCard(state) {
       <label><span>取景整理 API</span><select class="text_pole sd-storyboard-compiler-api"><option value="">沿用千幕当前 API</option>${storyboardCompilerProfileOptions(state)}</select></label>
       <div class="sd-storyboard-model-picker">
         <label><span>生图渠道</span><select class="text_pole sd-storyboard-provider">${Object.values(STORYBOARD_PROVIDER_REGISTRY).map((item) => `<option value="${item.id}" ${state.source === item.id ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('')}</select></label>
-        <label><span>模型</span>${provider.customModelId ? `<input class="text_pole sd-storyboard-model-select" value="${htmlEscape(profile.model)}" maxlength="240" spellcheck="false">` : `<select class="text_pole sd-storyboard-model-select">${storyboardModelOptions(state.source, profile.model)}</select>`}</label>
+        <label><span>模型</span>${provider.customModelId ? `<input class="text_pole sd-storyboard-model-select" value="${htmlEscape(profile.model)}" maxlength="240" spellcheck="false">` : `<select class="text_pole sd-storyboard-model-select">${storyboardModelOptions(state.source, profile.model, profile.capabilityModelId)}</select>`}</label>
       </div>
+      ${profile.modelBindingError ? `<div class="sd-storyboard-connection-result failed" role="status"><span>${htmlEscape(profile.modelBindingError)}；请重新选择模型。</span></div>` : ''}
       <div class="sd-storyboard-preset-field"><span>API 预设${activePreset ? `<small>已载入 · ${htmlEscape(connection.active?.name || '')}</small>` : ''}</span><div class="sd-storyboard-connection-preset-row"><select class="text_pole sd-storyboard-connection-preset"><option value="">选择生图 API 预设</option>${presetOptions}</select><button type="button" class="sd-icon-btn sd-storyboard-save-connection-preset" title="保存当前渠道的 API 预设" aria-label="保存当前渠道的 API 预设"><i class="fa-solid fa-bookmark"></i></button><button type="button" class="sd-icon-btn sd-danger sd-storyboard-delete-connection-preset" ${activePreset ? '' : 'disabled'} title="删除所选 API 预设" aria-label="删除所选 API 预设"><i class="fa-solid fa-trash-can"></i></button></div></div>
       <label><span>API 地址</span><input class="text_pole sd-storyboard-base-url" value="${htmlEscape(profile.baseUrl)}" placeholder="${htmlEscape(provider.defaultBaseUrl || 'http://127.0.0.1:8188')}"></label>
       <label><span>${state.source === 'comfy' ? '访问令牌（可选）' : 'API Key'}</span><input class="text_pole sd-storyboard-api-key-memory" type="password" autocomplete="new-password" value="${htmlEscape(storyboardDraftApiKeys.get(state.source) || '')}" placeholder="输入 API Key"></label>
@@ -12280,7 +12277,7 @@ function renderStoryboardParameterVibes(state, profile, capabilities) {
   const selected = new Set(state.selectedVibeIds || []);
   const vibes = state.vibeLibrary.filter((item) => !item.providerIds?.length || item.providerIds.includes('novel'));
   const rows = vibes.slice(0, 24).map((item) => {
-    const modelCompatible = !item.modelIds?.length || item.modelIds.includes(profile.model);
+    const modelCompatible = !item.modelIds?.length || item.modelIds.includes(profile.capabilityModelId || profile.model);
     const disabled = !capabilities.vibe || !modelCompatible;
     return `<button type="button" class="sd-storyboard-param-vibe ${selected.has(item.id) ? 'active' : ''}" data-storyboard-param-vibe="${htmlEscape(item.id)}" ${disabled ? 'disabled' : ''} title="${disabled ? '当前 NovelAI 模型暂不支持这项 Vibe' : htmlEscape(item.name)}" aria-pressed="${selected.has(item.id)}">${storyboardSafeUrl(item.previewUrl) ? `<img src="${htmlEscape(storyboardSafeUrl(item.previewUrl))}" alt="">` : '<i class="fa-solid fa-image"></i>'}<span>${htmlEscape(item.name)}</span></button>`;
   }).join('');
@@ -13305,8 +13302,9 @@ function renderStoryboardProductionSources(state) {
 
 function renderStoryboardCreate(state) {
   const profile = storyboardProviderProfile(state);
-  const capabilities = getStoryboardCapabilities(state.source, profile.model);
-  const promptLayer = storyboardPromptLayerForArtist(state, storyboardSelectedArtistPreset(state), state.source, profile.model);
+  if (profile.modelBindingError) return renderStoryboardModelCard(state);
+  const capabilities = getStoryboardCapabilities(state.source, profile.capabilityModelId);
+  const promptLayer = storyboardPromptLayerForArtist(state, storyboardSelectedArtistPreset(state), state.source, profile.model, profile.capabilityModelId);
   const last = [...storyboardGalleryRecords()].reverse().find((item) => storyboardSafeUrl(item.url));
   const draft = state.promptDraft;
   const promptPresets = state.promptPresets.map((item) => `<option value="${htmlEscape(item.id)}" ${state.promptCompiler.instructionPresetId === item.id ? 'selected' : ''}>${htmlEscape(item.name)}</option>`).join('');
@@ -13315,7 +13313,7 @@ function renderStoryboardCreate(state) {
     ? `<optgroup label="画师方案">${state.artistPools.map((item) => `<option value="pool:${htmlEscape(item.id)}" ${state.selectedArtistPoolId === item.id ? 'selected' : ''}>${htmlEscape(item.name)}</option>`).join('')}</optgroup>` : '';
   const tagChips = state.tagLibrary.filter((item) => item.favorite).concat(state.tagLibrary.filter((item) => !item.favorite)).slice(0, 24)
     .map((item) => `<button type="button" class="${item.positive === false ? 'negative' : ''}" data-storyboard-add-tag="${htmlEscape(item.id)}" title="${item.positive === false ? '加入负面提示词' : '加入提示词'}"><span>${htmlEscape(item.name)}</span></button>`).join('');
-  const novelSpec = state.source === 'novel' ? getStoryboardNovelParameterSpec(profile.model) : null;
+  const novelSpec = state.source === 'novel' ? getStoryboardNovelParameterSpec(profile.capabilityModelId) : null;
   const novelSamplerOptions = novelSpec?.samplers.map((item) => `<option value="${htmlEscape(item.value)}" ${profile.sampler === item.value ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('') || '';
   const novelSchedulerOptions = novelSpec?.schedulers.map((item) => `<option value="${htmlEscape(item.value)}" ${profile.scheduler === item.value ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('') || '';
   const sourceSpecific = state.source === 'openai' ? `<label><span>Quality</span><select class="text_pole sd-storyboard-field" data-storyboard-field="openaiQuality"><option value="">auto</option>${['low', 'medium', 'high'].map((value) => `<option value="${value}" ${profile.openaiQuality === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label><label><span>Background</span><select class="text_pole sd-storyboard-field" data-storyboard-field="openaiBackground"><option value="">auto</option>${['transparent', 'opaque'].map((value) => `<option value="${value}" ${profile.openaiBackground === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label><label><span>Output format</span><select class="text_pole sd-storyboard-field" data-storyboard-field="openaiOutputFormat"><option value="">png</option>${['jpeg', 'webp'].map((value) => `<option value="${value}" ${profile.openaiOutputFormat === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label>`
@@ -13449,7 +13447,7 @@ function renderStoryboardAssets(state) {
   const activeSection = ['tags', 'vibes', 'routing'].includes(state.assetView) ? state.assetView : 'tags';
   const tags = storyboardFilteredTags(state);
   const profile = storyboardProviderProfile(state);
-  const capabilities = getStoryboardCapabilities(state.source, profile.model);
+  const capabilities = getStoryboardCapabilities(state.source, profile.capabilityModelId || profile.model);
   const editingTag = state.tagLibrary.find((item) => item.id === state.editingTagId) || null;
   const editingVibe = state.vibeLibrary.find((item) => item.id === state.editingVibeId) || null;
   const selectedVibes = new Set(state.selectedVibeIds || []);
@@ -15781,14 +15779,26 @@ function storyboardProfileSnapshot(profile, sourceId) {
   return Object.fromEntries(keys.map((key) => [key, clone(profile?.[key] ?? fallback[key])]));
 }
 
-function storyboardParameterPresets(sourceId = storyboardState().source, modelId = '') {
+function storyboardParameterPresets(sourceId = storyboardState().source, modelId = '', capabilityModelId = '') {
   const state = storyboardState();
-  const currentModel = String(modelId || storyboardProviderProfile(state, sourceId).model || '');
-  const builtins = getStoryboardBuiltinParameterPresets(sourceId, currentModel).map((item) => ({
-    ...item, source: sourceId, profile: { ...item.profile, model: currentModel }, builtin: true,
+  const current = storyboardProviderProfile(state, sourceId);
+  let binding;
+  try {
+    binding = resolveStoryboardProfileBinding(sourceId, {
+      model: modelId || current.model,
+      capabilityModelId: capabilityModelId || (!modelId || modelId === current.model ? current.capabilityModelId : ''),
+    });
+  } catch (_) { return []; }
+  const currentModel = binding.remoteModelId;
+  const builtins = getStoryboardBuiltinParameterPresets(sourceId, binding.capabilityModelId).map((item) => ({
+    ...item, source: sourceId, profile: { ...item.profile, model: currentModel, capabilityModelId: binding.capabilityModelId }, builtin: true,
   }));
-  const userPresets = state.parameterPresets.filter((item) => item.source === sourceId
-    && (!item.profile?.model || !currentModel || item.profile.model === currentModel));
+  const userPresets = state.parameterPresets.filter((item) => {
+    if (item.source !== sourceId || item.profile?.model && item.profile.model !== currentModel) return false;
+    try {
+      return resolveStoryboardProfileBinding(sourceId, { ...item.profile, model: item.profile?.model || currentModel }).capabilityModelId === binding.capabilityModelId;
+    } catch (_) { return false; }
+  });
   return [...builtins, ...userPresets];
 }
 
@@ -15927,12 +15937,19 @@ function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceI
   const routedConnection = connectionState.group?.presets?.find((item) => item.id === connectionPresetId) || null;
   const connection = routedConnection || connectionState.draft || connectionState.active;
   const baseProviderProfile = sourceId === state.source ? profile : storyboardProviderProfile(state, sourceId);
-  const requestedModel = String(modelId || baseProviderProfile.model || STORYBOARD_PROVIDER_REGISTRY[sourceId]?.defaultModel || '');
-  const fixedModel = storyboardResolveModelId(sourceId, requestedModel);
-  const providerProfile = {
-    ...baseProviderProfile,
-    model: fixedModel,
-  };
+  const binding = resolveStoryboardProfileBinding(sourceId, {
+    model: modelId || baseProviderProfile.model,
+    capabilityModelId: !modelId || modelId === baseProviderProfile.model ? baseProviderProfile.capabilityModelId : '',
+  });
+  const targetProfile = modelId && modelId !== baseProviderProfile.model
+    ? getStoryboardRememberedProfile(state.modelProfiles, sourceId, binding.remoteModelId, binding.capabilityModelId)
+      || createStoryboardDefaults().profiles[sourceId]
+    : baseProviderProfile;
+  const providerProfile = storyboardProviderProfile(state, sourceId, {
+    ...targetProfile,
+    model: binding.remoteModelId,
+    capabilityModelId: binding.capabilityModelId,
+  });
   const shotSpec = normalizeStoryboardShotSpec(shot?.shotSpec || {
     ...shot,
     promptAtoms: { global: [prompt], negative: [negative] },
@@ -16164,7 +16181,8 @@ function storyboardLoadLogToWorkbench(log) {
   const state = storyboardState();
   const snap = log.snapshot;
   state.source = STORYBOARD_SOURCES[snap.source] ? snap.source : log.source;
-  Object.assign(state.profiles[state.source], clone(snap.profile || {}), { loaded: true });
+  state.profiles[state.source] = { ...createStoryboardDefaults().profiles[state.source], ...clone(snap.profile || {}),
+    ...(snap.modelIdentity?.capabilityModelId ? { capabilityModelId: snap.modelIdentity.capabilityModelId } : {}), loaded: true };
   state.prompt = String(snap.prompt || log.prompt || '');
   state.negative = String(snap.negative || log.negative || '');
   state.promptDraft.artistString = String(snap.artistString || snap.payload?.artistString || '');
@@ -16181,18 +16199,21 @@ function storyboardLoadLogToWorkbench(log) {
 
 async function storyboardLoadRecordToWorkbench(record) {
   if (!record) return false;
-  const linkedLog = storyboardState().logs.find((item) => item.recordId === record.id);
-  if (linkedLog?.snapshot) return storyboardLoadLogToWorkbench(linkedLog);
   const state = storyboardState();
+  const chatKey = String(getChatKey() || '');
+  const linkedLog = state.logs.find((item) => item.recordId === record.id || item.recordIds?.includes(record.id));
   const snap = await storyboardReadSnapshotForRecord(record);
+  if (chatKey !== String(getChatKey() || '') || state !== storyboardState()) return false;
+  if (linkedLog?.snapshot) return storyboardLoadLogToWorkbench({ ...linkedLog, snapshot: snap || linkedLog.snapshot });
   const source = STORYBOARD_SOURCES[snap?.source] ? snap.source : (STORYBOARD_SOURCES[record.source] ? record.source : state.source);
   state.source = source;
-  if (snap?.profile) Object.assign(state.profiles[source], clone(snap.profile), { loaded: true });
-  else Object.assign(state.profiles[source], {
+  if (snap?.profile) state.profiles[source] = { ...createStoryboardDefaults().profiles[source], ...clone(snap.profile),
+    ...(snap.modelIdentity?.capabilityModelId ? { capabilityModelId: snap.modelIdentity.capabilityModelId } : {}), loaded: true };
+  else state.profiles[source] = { ...createStoryboardDefaults().profiles[source],
     model: record.model || '', sampler: record.sampler || '', scheduler: record.scheduler || '',
     width: record.width || '', height: record.height || '', steps: record.steps || '', cfg: record.cfg || '', seed: record.seed ?? '',
     loaded: true,
-  });
+  };
   state.prompt = String(snap?.prompt || record.prompt || '');
   state.negative = String(snap?.negative || record.negative || '');
   state.promptDraft.artistString = String(snap?.artistString || snap?.payload?.artistString || record.artistString || '');
@@ -16304,14 +16325,16 @@ function storyboardCaptureWorkbench(root, sourceId = storyboardState().source, {
   const prompt = root.querySelector('.sd-storyboard-prompt');
   const negative = root.querySelector('.sd-storyboard-negative');
   const selectedArtist = storyboardSelectedArtistPreset(state);
-  const displayedLayer = storyboardPromptLayerForArtist(state, selectedArtist, sourceId, profile.model);
-  if (prompt) {
+  let binding = null;
+  try { binding = resolveStoryboardProfileBinding(sourceId, profile); } catch (_) { /* Keep invalid input visible for repair. */ }
+  const displayedLayer = binding ? storyboardPromptLayerForArtist(state, selectedArtist, sourceId, binding.remoteModelId, binding.capabilityModelId) : null;
+  if (prompt && displayedLayer) {
     const nextPrompt = String(prompt.value || '').slice(0, 12000);
-    if (nextPrompt.trim() !== displayedLayer.positive) storyboardRememberPromptLayer(state, selectedArtist, sourceId, profile.model, 'positive', nextPrompt);
+    if (nextPrompt.trim() !== displayedLayer.positive) storyboardRememberPromptLayer(state, selectedArtist, sourceId, binding.remoteModelId, 'positive', nextPrompt);
   }
-  if (negative) {
+  if (negative && displayedLayer) {
     const nextNegative = String(negative.value || '').slice(0, 12000);
-    if (nextNegative.trim() !== displayedLayer.negative) storyboardRememberPromptLayer(state, selectedArtist, sourceId, profile.model, 'negative', nextNegative);
+    if (nextNegative.trim() !== displayedLayer.negative) storyboardRememberPromptLayer(state, selectedArtist, sourceId, binding.remoteModelId, 'negative', nextNegative);
   }
   const shotRows = Array.from(root.querySelectorAll('[data-storyboard-shot-index]'));
   if (shotRows.length) {
@@ -16366,14 +16389,13 @@ function storyboardCaptureWorkbench(root, sourceId = storyboardState().source, {
     state.compositionPolicy.userEdited = Boolean(state.compositionPolicy.ruleOverride);
   }
   profile.loaded = true;
-  const providerModel = root.querySelector('.sd-storyboard-model-select');
-  if (providerModel) {
-    const requestedModel = String(providerModel.value || '').trim();
-    profile.model = storyboardResolveModelId(sourceId, requestedModel);
-  }
+  // The model change callback owns selection. Capturing old controls must not
+  // attach them to the DOM's newly selected model before its memory is loaded.
+  if (binding) Object.assign(profile, { model: binding.remoteModelId, capabilityModelId: binding.capabilityModelId });
   const selectedStyleId = state.parameterPresetSelection[sourceId] || '';
   const selectedStyle = state.parameterPresets.find((item) => item.id === selectedStyleId && item.source === sourceId);
   if (selectedStyle?.profile?.model && selectedStyle.profile.model !== profile.model) state.parameterPresetSelection[sourceId] = '';
+  if (selectedStyle?.profile?.capabilityModelId && selectedStyle.profile.capabilityModelId !== profile.capabilityModelId) state.parameterPresetSelection[sourceId] = '';
   const connection = state.connections[sourceId];
   if (connection) {
     const presetField = root.querySelector('.sd-storyboard-connection-preset');
@@ -16918,7 +16940,7 @@ function storyboardCompilerRequestConfig(state, profile) {
   return {
     providerId: state.source,
     providerLabel: provider?.label || state.source,
-    modelId: profile.model || '',
+    modelId: resolveStoryboardProfileBinding(state.source, profile).capabilityModelId,
     maxShots: ensemble ? Math.max(1, Math.min(4, Number(state.routing.maxShotsPerFloor) || 3)) : 1,
     manualSupplement: state.pendingParagraphSelection?.mode === 'manual_supplement',
     allowedRatioIds,
@@ -17057,7 +17079,8 @@ async function storyboardCompilerResult(raw, context, capabilities, state, contr
       promptAtoms: item?.prompt_atoms || item?.promptAtoms || { global: rawPrompt ? [rawPrompt] : [], negative: [item?.negative || item?.negative_prompt || ''].filter(Boolean) },
     });
     if (!shotSpec.id) shotSpec.id = item?.id || uid('shotspec');
-    const prompt = rawPrompt || compileStoryboardPrompt({ providerId: state.source, modelId: storyboardProviderProfile(state).model, shot: shotSpec }).prompt;
+    const profile = storyboardProviderProfile(state);
+    const prompt = rawPrompt || compileStoryboardPrompt({ providerId: state.source, remoteModelId: profile.model, capabilityModelId: profile.capabilityModelId, shot: shotSpec }).prompt;
     if (!prompt) return null;
     return {
       id: uid('shotdraft'), prompt,
@@ -17087,6 +17110,8 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false } = {}
   if (storyboardCompilerBusy) return false;
   const { state, profile } = storyboardCaptureWorkbench(root);
   if (!state.enabled) { toast('请先启用分镜。', 'warning'); return false; }
+  try { resolveStoryboardProfileBinding(state.source, profile); }
+  catch (error) { toast(error.message, 'warning'); return false; }
   const floor = storyboardTargetFloor(state);
   if (floor < 0 || !ctx().chat?.[floor]) { toast('当前没有可用于自动取景的正文。', 'warning'); return false; }
   storyboardCompilerBusy = true;
@@ -17106,7 +17131,7 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false } = {}
       jsonSchemaStrict: true,
     });
     if (plan?.status === 'cancelled') return false;
-    const result = await storyboardCompilerResult(raw, context, getStoryboardCapabilities(state.source, profile.model), state, contractRequest);
+    const result = await storyboardCompilerResult(raw, context, getStoryboardCapabilities(state.source, resolveStoryboardProfileBinding(state.source, profile).capabilityModelId), state, contractRequest);
     const compilerInput = {
       floor: context.floor,
       mode: state.promptMode,
@@ -17251,7 +17276,8 @@ function storyboardAddLibraryTag(tagId) {
   const field = tag.positive === false ? 'negative' : 'positive';
   const profile = storyboardProviderProfile(state);
   const artist = storyboardSelectedArtistPreset(state);
-  const layer = storyboardPromptLayerForArtist(state, artist, state.source, profile.model);
+  if (profile.modelBindingError) return toast(profile.modelBindingError, 'warning');
+  const layer = storyboardPromptLayerForArtist(state, artist, state.source, profile.model, profile.capabilityModelId);
   const separator = state.source === 'novel' ? ', ' : '\n';
   const next = [layer[field], value].map((item) => String(item || '').trim()).filter(Boolean).join(separator).slice(0, 12000);
   storyboardRememberPromptLayer(state, artist, state.source, profile.model, field, next);
@@ -17345,7 +17371,8 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
   const stillCurrent = () => (!guard.chatKey || guard.chatKey === String(getChatKey() || ''))
     && !guard.cancelled?.()
     && storyboardState().enabled;
-  const policy = getStoryboardCapabilities(sourceId, modelId).contentPolicy;
+  const binding = resolveStoryboardProfileBinding(sourceId, { model: modelId, capabilityModelId: guard.capabilityModelId });
+  const policy = getStoryboardCapabilities(sourceId, binding.capabilityModelId).contentPolicy;
   if (!shot?.sensitive || policy !== 'filtered') return { ...shot, originalPrompt: String(shot?.prompt || ''), safetyAdapted: false };
   const originalPrompt = String(shot.prompt || '');
   const legacySafePrompt = String(shot.safePrompt || '').trim();
@@ -17366,7 +17393,7 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
     const request = contract.buildStoryboardSafetyContractRequest(shot.shotSpec || shot, {
       providerId: sourceId,
       providerLabel: provider?.label || sourceId,
-      modelId,
+      modelId: binding.capabilityModelId,
       sourcePrompt: originalPrompt,
     });
     const contractOptions = {
@@ -17428,7 +17455,7 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
     if (!stillCurrent()) return { ...shot, originalPrompt, safetyAdapted: false, safetyAborted: true };
     if (result.ok) {
       const safeSpec = contract.adaptStoryboardSafetyContract(result.data, shot.shotSpec || shot);
-      const compiled = safeSpec ? compileStoryboardPrompt({ providerId: sourceId, modelId, shot: safeSpec }) : null;
+      const compiled = safeSpec ? compileStoryboardPrompt({ providerId: sourceId, remoteModelId: binding.remoteModelId, capabilityModelId: binding.capabilityModelId, shot: safeSpec }) : null;
       if (compiled?.prompt) {
         return {
           ...shot,
@@ -17513,10 +17540,11 @@ async function storyboardGenerateProductionPacket(root, packetId) {
   }
   const profile = storyboardProviderProfile(state);
   const shotInput = workOrderRuntime.directorWorkOrderToStoryboardShot(workOrder, currentChatKey);
+  if (profile.modelBindingError) return toast(profile.modelBindingError, 'warning');
   if (!shotInput) return toast('导演工作单无法映射为分镜。', 'warning');
   shotInput.directorDecision = decision;
   const shotSpec = normalizeStoryboardShotSpec(shotInput);
-  const compiled = compileStoryboardPrompt({ providerId: state.source, modelId: profile.model, shot: shotSpec });
+  const compiled = compileStoryboardPrompt({ providerId: state.source, remoteModelId: profile.model, capabilityModelId: profile.capabilityModelId, shot: shotSpec });
   const prompt = String(compiled.prompt || workOrder.payload.visual.description || workOrder.payload.visual.subject || '').trim();
   if (!prompt) return toast('这条导演素材暂时没有可生成的画面信息。', 'warning');
   const title = String(workOrder.payload.visual.subject || '世界侧镜头').trim();
@@ -17558,6 +17586,8 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
   const { state, profile, workflowResult } = storyboardCaptureWorkbench(root);
   const generationChatKey = String(getChatKey() || '');
   if (!state.enabled) return toast('请先启用分镜。', 'warning');
+  try { resolveStoryboardProfileBinding(state.source, profile); }
+  catch (error) { return toast(error.message, 'warning'); }
   if (automatic && plan?.manualReviewRequired) return false;
   if (state.source === 'comfy' && (!workflowResult.ok || workflowResult.removedFields.length || profile.comfyWorkflowNotice)) {
     return toast(profile.comfyWorkflowNotice || storyboardWorkflowIssue(workflowResult), 'warning');
@@ -17630,12 +17660,18 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
     const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, connectionPresetId: '', parameterPresetId: '' };
     const sourceId = STORYBOARD_PROVIDER_REGISTRY[route.providerId] ? route.providerId : state.source;
     let shotProfile = sourceId === state.source ? storyboardProfileSnapshot(profile, sourceId) : storyboardProfileSnapshot(storyboardProviderProfile(state, sourceId), sourceId);
+    if (route.modelId && route.modelId !== shotProfile.model) {
+      const binding = resolveStoryboardProfileBinding(sourceId, { model: route.modelId });
+      shotProfile = getStoryboardRememberedProfile(state.modelProfiles, sourceId, binding.remoteModelId, binding.capabilityModelId)
+        || { ...createStoryboardDefaults().profiles[sourceId] };
+      Object.assign(shotProfile, { model: binding.remoteModelId, capabilityModelId: binding.capabilityModelId });
+    }
     const parameterPreset = storyboardParameterPresets(sourceId, route.modelId).find((item) => item.id === route.parameterPresetId);
     if (parameterPreset) shotProfile = { ...shotProfile, ...clone(parameterPreset.profile), loaded: true };
-    if (route.modelId) shotProfile.model = route.modelId;
     if (manualSupplement) shotProfile.count = '1';
     const effectiveShot = await storyboardAdaptShotForModel(shot, sourceId, shotProfile.model, state, {
       chatKey: generationChatKey,
+      capabilityModelId: shotProfile.capabilityModelId,
       cancelled: () => plan?.status === 'cancelled',
     });
     if (effectiveShot.safetyAborted || plan?.status === 'cancelled' || generationChatKey !== String(getChatKey() || '') || !storyboardState().enabled) return false;
@@ -19267,14 +19303,19 @@ function bindStoryboardTabEvents(root) {
     const sourceId = state.source;
     const previousModel = String(state.profiles[sourceId]?.model || STORYBOARD_PROVIDER_REGISTRY[sourceId]?.defaultModel || '');
     const requestedModel = String(event.target.value || '');
+    let binding;
+    try {
+      binding = resolveStoryboardModelBinding(sourceId, { remoteModelId: requestedModel,
+        capabilityModelId: !getStoryboardModel(sourceId, requestedModel) && requestedModel === previousModel ? state.profiles[sourceId]?.capabilityModelId : '' });
+    } catch (error) { toast(error.message, 'warning'); renderModal(); return; }
     storyboardCaptureWorkbench(root, sourceId, { rememberModel: false });
     state.modelProfiles ||= {};
     const captured = clone(state.profiles[sourceId]);
     if (previousModel) rememberStoryboardModelProfile(state.modelProfiles, sourceId, { ...captured, model: previousModel });
-    const remembered = getStoryboardRememberedProfile(state.modelProfiles, sourceId, requestedModel);
+    const remembered = getStoryboardRememberedProfile(state.modelProfiles, sourceId, binding.remoteModelId, binding.capabilityModelId);
     state.profiles[sourceId] = remembered
-      ? { ...clone(remembered), model: requestedModel, loaded: true }
-      : { ...createStoryboardDefaults().profiles[sourceId], model: requestedModel, loaded: false };
+      ? { ...clone(remembered), model: binding.remoteModelId, capabilityModelId: binding.capabilityModelId, loaded: true }
+      : { ...createStoryboardDefaults().profiles[sourceId], model: binding.remoteModelId, capabilityModelId: binding.capabilityModelId, loaded: false };
     rememberStoryboardModelProfile(state.modelProfiles, sourceId, state.profiles[sourceId]);
     state.parameterPresetSelection[sourceId] = '';
     saveSettings();

@@ -10,6 +10,8 @@ import {
   normalizeStoryboardParameterProfile,
   getStoryboardRememberedProfile,
   rememberStoryboardModelProfile,
+  resolveStoryboardModelBinding,
+  getStoryboardModel,
 } from '../qianmu-storyboard.js';
 
 const V3 = 'nai-diffusion-3', V45 = 'nai-diffusion-4-5-full';
@@ -167,6 +169,7 @@ test('real model-change handler saves previous controls then restores the select
   vm.runInNewContext(source.slice(begin, end), {
     root: { querySelector: () => ({ addEventListener: (type, fn) => { assert.equal(type, 'change'); handler = fn; } }) }, state,
     clone: structuredClone, createStoryboardDefaults, rememberStoryboardModelProfile, getStoryboardRememberedProfile, STORYBOARD_PROVIDER_REGISTRY,
+    resolveStoryboardModelBinding, getStoryboardModel, toast: (message) => assert.fail(message),
     storyboardCaptureWorkbench: (_root, family, options) => {
       assert.equal(options.rememberModel, false);
       Object.assign(state.profiles[family], controls, { model: requested });

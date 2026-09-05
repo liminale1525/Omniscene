@@ -21,7 +21,7 @@ const sandbox = vm.createContext({
   saveSettings: () => { saves++; },
 });
 vm.runInContext([
-  'storyboardState', 'storyboardProfile', 'storyboardConnectionState', 'storyboardResolveModelId',
+  'storyboardState', 'storyboardProfile', 'storyboardConnectionState',
   'storyboardProviderProfile', 'storyboardVibeAmount', 'storyboardRememberCardState', 'snapshotAccState',
 ].map(fn).join('\n'), sandbox);
 const state = vm.runInContext('storyboardState()', sandbox);

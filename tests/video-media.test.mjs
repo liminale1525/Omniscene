@@ -159,7 +159,7 @@ test('the media resolver is shipped as an idle feature chunk', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
   assert.doesNotMatch(source, /^import[^\n]*qianmu-video-media\.js/m);
-assert.match(source, /videoMedia:\s*\{[\s\S]*import\('\.\/qianmu-video-media\.js\?v=1\.59\.27'\)/);
+assert.match(source, /videoMedia:\s*\{[\s\S]*import\('\.\/qianmu-video-media\.js\?v=1\.59\.28'\)/);
   assert.ok(release.files.includes('qianmu-video-media.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('videoMedia'\)/);

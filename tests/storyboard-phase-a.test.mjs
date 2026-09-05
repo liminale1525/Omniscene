@@ -93,7 +93,7 @@ const presetBinding = source.slice(source.indexOf("const presetList = root.query
 assert.doesNotMatch(presetBinding, /confirmDialog\('删除条目'/, 'entry deletion must be immediate and undoable');
 assert.doesNotMatch(presetBinding, /insertBefore\(dragged/, 'dragging must not continuously move DOM rows');
 
-assert.match(source, /getStoryboardNovelParameterSpec\(profile\.model\)/);
+assert.match(source, /getStoryboardNovelParameterSpec\(profile\.capabilityModelId\)/);
 assert.match(source, /data-storyboard-field="sampler">\$\{novelSamplerOptions\}/);
 assert.match(source, /capabilities\.cfgRescale/);
 assert.match(styles, /v1\.57 cascade guard/);

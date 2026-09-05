@@ -93,7 +93,7 @@ assert.match(source, /storyboardCleanWithTagRules\(targetMessage\?\.mes \|\| '',
 // Artist strings remain entirely user-controlled and lead the provider prompt at request time.
 assert.match(contractSource, /画师串由用户另行管理，任何字段都不得写画师名/);
 assert.doesNotMatch(source, /"artist_string"|"artist_suggestion"/);
-assert.match(source, /function storyboardEffectivePrompts/);
+assert.match(source, /function storyboardPromptsForArtist/);
 assert.match(source, /storyboardJoinPrompt\(\[artistString, layer\.positive, prompt\], sourceId\)/);
 assert.match(source, /compileStoryboardPrompt\(\{[\s\S]*artistString/);
 assert.match(source, /const compiled = manuallyLocked[\s\S]*compileStoryboardPrompt/);

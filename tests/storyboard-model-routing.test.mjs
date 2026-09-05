@@ -77,7 +77,7 @@ assert.equal(Object.hasOwn(normalized.routing.rules[0], 'sensitive'), false, 'co
 
 assert.doesNotMatch(browserSource, /modelPresets[\s\S]*item\.model === profile\.model/, 'API presets must not be filtered by concrete model');
 assert.match(browserSource, /const channelPresets = connection\.group\?\.presets \|\| \[\]/, 'API presets must be listed by image channel');
-assert.match(browserSource, /const requestedModel = String\(legacy\.model \|\| provider\?\.defaultModel/, 'the selected image model must come from drawing settings, not the connection preset');
+assert.match(browserSource, /const legacy = profileOverride \|\| state\.profiles\[providerId\][\s\S]*resolveStoryboardProfileBinding\(providerId, legacy\)/, 'the selected image model must come from drawing settings, not the connection preset');
 assert.doesNotMatch(browserSource, /data-storyboard-routing-mode=/, 'the old single-model versus ensemble selector must be removed');
 assert.match(browserSource, /class="sd-storyboard-routing-enabled"/, 'the router needs one master switch');
 assert.match(browserSource, /class="text_pole sd-storyboard-route-model"/, 'each shot assignment must choose a concrete model');

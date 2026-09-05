@@ -7,6 +7,7 @@ import {
   createStoryboardDefaults, normalizeStoryboardState, normalizeStoryboardParameterProfile,
   getStoryboardRememberedProfile, rememberStoryboardModelProfile,
   resolveStoryboardModelBinding, resolveStoryboardJobModelIdentity, sanitizeStoryboardSnapshot,
+  getStoryboardModel,
 } from '../qianmu-storyboard.js';
 
 const V3 = 'nai-diffusion-3', V45 = 'nai-diffusion-4-5-full', V5 = 'nai-diffusion-5-full';
@@ -225,6 +226,7 @@ test('real canonical model switches keep capability and parameter fields togethe
   vm.runInNewContext(source.slice(begin, end), {
     state, createStoryboardDefaults, STORYBOARD_PROVIDER_REGISTRY, clone: structuredClone,
     rememberStoryboardModelProfile, getStoryboardRememberedProfile,
+    resolveStoryboardModelBinding, getStoryboardModel, toast: (message) => assert.fail(message),
     root: { querySelector: () => ({ addEventListener: (_type, fn) => { handler = fn; } }) },
     storyboardCaptureWorkbench: () => { Object.assign(state.profiles.novel, { model: requested, cfg: '0' }); },
     saveSettings: () => {}, renderModal: () => {},

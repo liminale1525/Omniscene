@@ -73,7 +73,7 @@ assert.match(source, /function storyboardGenerationPayload[\s\S]*compileStoryboa
 assert.match(source, /function storyboardStartLog[\s\S]*function storyboardFinishLog[\s\S]*分镜日志/, '分镜必须记录成功、失败与诊断信息');
 assert.match(source, /STORYBOARD_QUEUE_LIMIT[\s\S]*storyboardQueueJob[\s\S]*storyboardPumpQueue/, '分镜必须使用有上限的生成队列');
 assert.match(source, /storyboardActiveJobs\.size < concurrency/, '镜组队列必须按配置执行真实并发');
-assert.match(source, /routedConnection[\s\S]*const fixedModel[\s\S]*model: fixedModel[\s\S]*storyboardGenerationPayload\(state, providerProfile/, '镜组路由必须使用固定目录中的真实模型并按该模型裁剪能力');
+assert.match(source, /routedConnection[\s\S]*const binding = resolveStoryboardProfileBinding[\s\S]*model: binding\.remoteModelId[\s\S]*capabilityModelId: binding\.capabilityModelId[\s\S]*storyboardGenerationPayload\(state, providerProfile/, '镜组任务必须保留远端实际名并按明确能力档裁剪参数');
 assert.match(source, /function storyboardRemoveQueuedLog/, '等待任务必须可单独移除');
 assert.match(source, /移出等待/, '日志必须提供明确的移出等待操作');
 assert.match(source, /storyboardDiscardActive[\s\S]*discardRequested[\s\S]*放弃进行中/, '斩断未暴露的 ST 请求时必须明确为放弃收片');
@@ -91,9 +91,9 @@ assert.match(css, /#chat \.mes \.sd-storyboard-inline/, '正文分镜样式必�
 assert.match(source, /storyboardInjectMessageButtons[\s\S]*dataset\.storyboardChatAction = 'capture-floor'/, '正文每层必须提供半自动取景快捷入口');
 assert.match(source, /function storyboardChooseCaptureMode[\s\S]*智能提取[\s\S]*手动选段补图/, '正文取景入口必须支持智能提取与多段手动补图');
 assert.match(source, /storyboardParameterPresets[\s\S]*保存分镜样式[\s\S]*parameterPresetSelection/, '分镜参数样式必须可按模型保存和切换');
-assert.match(source, /rememberStoryboardModelProfile\(state\.modelProfiles, sourceId, \{ \.\.\.captured, model: previousModel \}\)[\s\S]*getStoryboardRememberedProfile\(state\.modelProfiles, sourceId, requestedModel\)/, '每个具体模型必须通过隔离读写入口记住最后一次参数修改');
+assert.match(source, /rememberStoryboardModelProfile\(state\.modelProfiles, sourceId, \{ \.\.\.captured, model: previousModel \}\)[\s\S]*getStoryboardRememberedProfile\(state\.modelProfiles, sourceId, binding\.remoteModelId, binding\.capabilityModelId\)/, '每个具体模型必须通过隔离读写入口记住最后一次参数修改');
 assert.doesNotMatch(source, /sd-storyboard-reuse-record|sd-storyboard-lightbox-reuse/, '阅片室不得保留复用或重新生成入口');
-assert.match(source, /getStoryboardCapabilities\(state\.source, profile\.model\)[\s\S]*capabilities\.negative[\s\S]*capabilities\.steps/, '绘制参数必须按供应商与具体模型能力裁剪');
+assert.match(source, /getStoryboardCapabilities\(state\.source, profile\.capabilityModelId\)[\s\S]*capabilities\.negative[\s\S]*capabilities\.steps/, '绘制参数必须按供应商与具体模型能力档裁剪');
 assert.match(source, /openaiBackground[\s\S]*openaiOutputFormat[\s\S]*seedreamGuidanceScale[\s\S]*seedreamSequential[\s\S]*novelSm[\s\S]*novelVarietyBoost/, '各模型的官方参数必须在前端可调且进入真实请求');
 assert.match(source, /storyboardParseWorkflow[\s\S]*storyboardGatewayRequest/, 'ComfyUI 必须把有效 API Workflow 交给千幕网关');
 assert.match(source, /storyboardCaptureComfyWorkflow[\s\S]*sanitizeStoryboardWorkflow[\s\S]*comfyWorkflowNotice/, 'ComfyUI Workflow 必须在进入持久化设置前结构化清理凭据字段');
