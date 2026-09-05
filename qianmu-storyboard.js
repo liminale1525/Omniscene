@@ -1847,6 +1847,13 @@ export function normalizeStoryboardParameterProfile(value, providerId) {
     const value = Object.hasOwn(p, key) ? p[key] : undefined;
     base[key] = value === undefined ? fallback : (typeof fallback === 'boolean' ? flag(value) : str(value, key === 'comfyWorkflow' ? 2 * 1024 * 1024 : 2048));
   }
+  // Optional metadata: old profiles retain their shape. Never turn a malformed
+  // explicit binding into an unbound profile that could select another model.
+  if (Object.hasOwn(p, 'capabilityModelId') && p.capabilityModelId != null && p.capabilityModelId !== '') {
+    const capability = p.capabilityModelId;
+    const validId = (id) => typeof id === 'string' && id.trim().length > 0 && id.trim().length <= 240 && !/[\u0000-\u001f\u007f]/.test(id);
+    base.capabilityModelId = validId(capability) && Object.hasOwn(p, 'model') && validId(p.model) ? capability.trim() : '[invalid-capability]';
+  }
   if (providerId === 'comfy') {
     const rawWorkflow = Object.hasOwn(p, 'comfyWorkflow') ? p.comfyWorkflow : '';
     const result = sanitizeStoryboardWorkflow(rawWorkflow);
@@ -1863,35 +1870,89 @@ function legacyProfiles(value) {
   return Object.fromEntries(Object.keys(STORYBOARD_PROVIDER_REGISTRY).map((id) => [id, normalizeStoryboardParameterProfile(Object.hasOwn(r, id) ? r[id] : {}, id)]));
 }
 
-function rememberedModelId(providerId, value) {
-  const provider = getStoryboardProvider(providerId);
-  if (!provider || typeof value !== 'string' || /[\u0000-\u001f\u007f]/.test(value)) return '';
-  const id = value.trim();
-  return id && id.length <= 240 && (getStoryboardModel(providerId, id) || provider.customModelId) ? id : '';
+function rememberedModelBinding(providerId, modelId, capabilityModelId = '') {
+  try {
+    return resolveStoryboardModelBinding(providerId, { remoteModelId: modelId, capabilityModelId });
+  } catch (_) { return null; }
 }
 
-export function getStoryboardRememberedProfile(memory, providerId, modelId) {
-  const id = rememberedModelId(providerId, modelId);
-  const bucket = id && obj(memory) && Object.hasOwn(memory, providerId) ? memory[providerId] : null;
-  if (!obj(bucket) || !Object.hasOwn(bucket, id) || !obj(bucket[id])) return null;
+function usesLegacyModelMemory(binding) {
+  const provider = getStoryboardProvider(binding.modelFamily);
+  return Boolean(getStoryboardModel(provider.id, binding.remoteModelId))
+    || (provider.customModelId && binding.capabilityModelId === provider.defaultModel);
+}
+
+function boundModelProfiles(memory, providerId) {
+  const bindings = obj(memory) && Object.hasOwn(memory, 'bindings') && obj(memory.bindings) ? memory.bindings : null;
+  return bindings && Object.hasOwn(bindings, providerId) && Array.isArray(bindings[providerId]) ? bindings[providerId] : [];
+}
+
+function sameModelBinding(profile, binding) {
+  return obj(profile) && Object.hasOwn(profile, 'model') && Object.hasOwn(profile, 'capabilityModelId')
+    && profile.model === binding.remoteModelId && profile.capabilityModelId === binding.capabilityModelId;
+}
+
+function findRememberedModelProfile(memory, providerId, modelId, capabilityModelId = '') {
+  const binding = rememberedModelBinding(providerId, modelId, capabilityModelId);
+  if (!binding) return null;
+  const id = binding.remoteModelId;
+  const bucket = obj(memory) && Object.hasOwn(memory, providerId) ? memory[providerId] : null;
+  const cached = usesLegacyModelMemory(binding)
+    ? (obj(bucket) && Object.hasOwn(bucket, id) && obj(bucket[id]) ? bucket[id] : null)
+    : boundModelProfiles(memory, providerId).find((profile) => sameModelBinding(profile, binding));
+  if (!cached) return null;
+  const savedBinding = rememberedModelBinding(providerId, id, Object.hasOwn(cached, 'capabilityModelId') ? cached.capabilityModelId : '');
+  if (!savedBinding || savedBinding.capabilityModelId !== binding.capabilityModelId) return null;
+  return { cached, id };
+}
+
+export function getStoryboardRememberedProfile(memory, providerId, modelId, capabilityModelId = '') {
+  const found = findRememberedModelProfile(memory, providerId, modelId, capabilityModelId);
+  if (!found) return null;
   // Return a detached, whitelisted value. Reading never creates or reorders settings.
-  return normalizeStoryboardParameterProfile({ ...bucket[id], model: id }, providerId);
+  return normalizeStoryboardParameterProfile({ ...found.cached, model: found.id }, providerId);
 }
 
 export function rememberStoryboardModelProfile(memory, providerId, profile) {
-  const id = obj(profile) && rememberedModelId(providerId, profile.model);
-  if (!obj(memory) || !id) return false;
+  const binding = obj(profile) && Object.hasOwn(profile, 'model') && rememberedModelBinding(providerId, profile.model,
+    Object.hasOwn(profile, 'capabilityModelId') ? profile.capabilityModelId : '');
+  if (!obj(memory) || !binding) return false;
+  const id = binding.remoteModelId;
   const remembered = normalizeStoryboardParameterProfile({ ...profile, model: id }, providerId);
   let bucket = Object.hasOwn(memory, providerId) && obj(memory[providerId]) ? memory[providerId] : null;
   if (!bucket) {
     bucket = {};
     Object.defineProperty(memory, providerId, { value: bucket, configurable: true, enumerable: true, writable: true });
   }
-  // Define data properties even for __proto__; never invoke inherited setters.
-  if (Object.hasOwn(bucket, id)) delete bucket[id];
-  Object.defineProperty(bucket, id, { value: remembered, configurable: true, enumerable: true, writable: true });
-  const keys = Object.keys(bucket), overflow = keys.length - STORYBOARD_MODEL_PROFILE_LIMIT;
-  for (const key of keys.filter((key) => key !== id).slice(0, Math.max(0, overflow))) delete bucket[key];
+  const legacy = usesLegacyModelMemory(binding);
+  let bound = boundModelProfiles(memory, providerId);
+  if (legacy) {
+    // Define data properties even for __proto__; never invoke inherited setters.
+    if (Object.hasOwn(bucket, id)) delete bucket[id];
+    Object.defineProperty(bucket, id, { value: remembered, configurable: true, enumerable: true, writable: true });
+  } else {
+    let bindings = Object.hasOwn(memory, 'bindings') && obj(memory.bindings) ? memory.bindings : null;
+    if (!bindings) {
+      bindings = {};
+      Object.defineProperty(memory, 'bindings', { value: bindings, configurable: true, enumerable: true, writable: true });
+    }
+    bound = bound.filter((entry) => !sameModelBinding(entry, binding));
+    bound.push({ ...remembered, capabilityModelId: binding.capabilityModelId });
+    Object.defineProperty(bindings, providerId, { value: bound, configurable: true, enumerable: true, writable: true });
+  }
+  // One combined budget, with deterministic legacy-first eviction; the edited
+  // entry always survives. This is not a chronological LRU across namespaces.
+  let overflow = Object.keys(bucket).length + bound.length - STORYBOARD_MODEL_PROFILE_LIMIT;
+  for (const key of Object.keys(bucket)) {
+    if (overflow <= 0) break;
+    if (legacy && key === id) continue;
+    delete bucket[key]; overflow--;
+  }
+  while (overflow > 0 && bound.length) {
+    const index = bound.findIndex((entry) => legacy || !sameModelBinding(entry, binding));
+    if (index < 0) break;
+    bound.splice(index, 1); overflow--;
+  }
   return true;
 }
 
@@ -1903,9 +1964,11 @@ function modelProfileMemory(value, currentProfiles = {}) {
     for (const [modelId, profile] of Object.entries(source).slice(-STORYBOARD_MODEL_PROFILE_LIMIT)) {
       if (obj(profile)) rememberStoryboardModelProfile(memory, providerId, { ...profile, model: modelId });
     }
+    for (const profile of boundModelProfiles(raw, providerId).slice(-STORYBOARD_MODEL_PROFILE_LIMIT)) {
+      if (obj(profile)) rememberStoryboardModelProfile(memory, providerId, profile);
+    }
     const current = Object.hasOwn(currentProfiles, providerId) && obj(currentProfiles[providerId]) ? currentProfiles[providerId] : {};
-    const currentModel = rememberedModelId(providerId, current.model);
-    if (currentModel && !Object.hasOwn(memory[providerId], currentModel)) rememberStoryboardModelProfile(memory, providerId, current);
+    if (!findRememberedModelProfile(memory, providerId, current.model, current.capabilityModelId)) rememberStoryboardModelProfile(memory, providerId, current);
   }
   return memory;
 }

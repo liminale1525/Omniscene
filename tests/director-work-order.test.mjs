@@ -136,7 +136,7 @@ test('world-side storyboard runtime dispatches a validated work order before pro
 test('director work orders remain lazy and ship inside the release boundary', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
-assert.match(source, /directorWorkOrders:\s*\{[\s\S]*import\('\.\/qianmu-director-work-order\.js\?v=1\.59\.26'\)/);
+assert.match(source, /directorWorkOrders:\s*\{[\s\S]*import\('\.\/qianmu-director-work-order\.js\?v=1\.59\.27'\)/);
   const init = source.slice(source.indexOf('function init()'), source.indexOf('function cleanupRuntime'));
   assert.doesNotMatch(init, /featureRuntime\.load\('directorWorkOrders'\)/);
   assert.ok(release.files.includes('qianmu-director-work-order.js'));
