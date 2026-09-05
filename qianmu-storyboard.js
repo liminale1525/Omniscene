@@ -2073,7 +2073,7 @@ function isSensitiveField(value) {
   if (/^(?:credential|secret)[-_.]?id$/.test(key)) return false;
   return key === 'key' || key === 'token' || /(^|[-_.])(api[-_.]?key|access[-_.]?key|secret[-_.]?key|access[-_.]?token|refresh[-_.]?token|bearer[-_.]?token|secret|authorization|auth|headers?|cookies?|password|passphrase|credential|credentials)(?:$|[-_.])/.test(key);
 }
-function isReservedProviderField(value) { return ['model', 'prompt', 'input', 'apikey', 'authorization', 'url', 'baseurl', 'modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol'].includes(String(value || '').replace(/[-_]/g, '').toLowerCase()); }
+function isReservedProviderField(value) { return ['model', 'prompt', 'input', 'apikey', 'authorization', 'url', 'baseurl', 'modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion'].includes(String(value || '').replace(/[-_]/g, '').toLowerCase()); }
 function isBinaryField(value) { return /^(?:data|base64|b64|b64_json|imageData|image_data|bytes)$/i.test(String(value || '')); }
 function looksLikeBase64(value) { const text = String(value || '').replace(/\s+/g, ''); return /^data:image\/[^;]+;base64,/i.test(text) || text.length >= 256 && text.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(text); }
 function status(value) { if (value === 'generating') return 'running'; return ['queued', 'running', 'success', 'failed', 'cancelled', 'skipped'].includes(value) ? value : 'failed'; }

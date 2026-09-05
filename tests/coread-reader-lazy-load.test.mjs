@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
 
 assert.doesNotMatch(source, /^import[^\n]*qianmu-reader\.js/m, 'the companion parser must stay outside the startup module graph');
-assert.match(source, /readerCore:\s*\{[\s\S]*import\('\.\/qianmu-reader\.js\?v=1\.59\.29'\)[\s\S]*reader = module/, 'the companion parser must load through the shared feature runtime');
+assert.match(source, /readerCore:\s*\{[\s\S]*import\('\.\/qianmu-reader\.js\?v=1\.59\.30'\)[\s\S]*reader = module/, 'the companion parser must load through the shared feature runtime');
 assert.match(source, /function renderCoreadRuntimeGate\(\)[\s\S]*runtime\.status === 'idle'[\s\S]*ensureCoreadReaderRuntime\(\{ rerender: true \}\)[\s\S]*sd-coread-runtime-retry/, 'the companion page must load on first entry and expose an explicit retry state');
 assert.match(source, /case 'coread': return COREAD_ENABLED \? \(reader \? renderCoreadTab\(\) : renderCoreadRuntimeGate\(\)\)/, 'the companion page must not render reader-dependent content before its parser is ready');
 assert.match(source, /function bindCoreadTabEvents\(root\) \{[\s\S]*if \(!reader\) return;[\s\S]*bindLibraryViewEvents\(root\)/, 'the companion page must not bind reader-dependent actions before its parser is ready');

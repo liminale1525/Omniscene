@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import * as serviceCapabilities from '../qianmu-service-capabilities.js';
+import { imageGatewayCapabilities } from '../qianmu-image-gateway.js';
 import {
   STORYBOARD_PROVIDER_REGISTRY, STORYBOARD_MODEL_REGISTRY, STORYBOARD_PIPELINE_LOG_LIMIT,
   createStoryboardDefaults, getStoryboardModel, resolveStoryboardJobModelIdentity,
@@ -174,8 +176,21 @@ test('actual log creation retains identity and archive snapshots retain the same
   assert.match(section('storyboardCreateRecord'), /snapshot: sanitizeStoryboardSnapshot\(log\?\.snapshot/);
 });
 
-function runHarness() {
-  const stats = { assets: 0, keys: 0, fetches: 0, direct: 0, warnings: [], failures: [], gatewayRequests: [] };
+function runHarness(options = {}) {
+  const stats = { assets: 0, keys: 0, fetches: 0, direct: 0, probes: 0, warnings: [], failures: [], gatewayRequests: [] };
+  const confirmBinding = load('storyboardConfirmGatewayModelBinding', {
+    getStoryboardModel, storyboardGatewayCapabilityPromise: null,
+    storyboardRequestHeaders: () => ({ 'Content-Type': 'application/json' }),
+    featureRuntime: { load: async () => ({ ...serviceCapabilities,
+      probeQianmuImageCapabilities: async () => {
+        stats.probes++;
+        options.onProbe?.();
+        return serviceCapabilities.probeQianmuImageCapabilities({ fetchImpl: async () => new Response(JSON.stringify(
+          options.compatible ? imageGatewayCapabilities() : { ok: true, version: 2 },
+        )) });
+      },
+    }) },
+  });
   const run = load('storyboardRunJob', {
     MODULE_NAME: 'qianmu-test',
     storyboardPlanForJob: () => null, storyboardState: () => ({ enabled: true }),
@@ -184,9 +199,10 @@ function runHarness() {
     storyboardPrepareGatewayAssets: async () => { stats.assets++; return { references: [], vibes: [] }; },
     storyboardResolveApiKey: async () => { stats.keys++; return 'mock-key'; },
     storyboardGatewayRequest: load('storyboardGatewayRequest'), getStoryboardModel,
+    storyboardConfirmGatewayModelBinding: confirmBinding,
     directImageRuntime: async () => ({
-      generateDirectImage: async () => { stats.direct++; throw new Error('simulated network failure'); },
-      isDirectImageTransportError: () => true,
+      generateDirectImage: async () => { stats.direct++; if (options.directSuccess) return { ok: true, images: [] }; throw new Error('simulated network failure'); },
+      isDirectImageTransportError: () => !options.directRejected,
     }),
     storyboardRequestHeaders: () => ({ 'Content-Type': 'application/json' }),
     fetch: async (_url, init) => { stats.fetches++; stats.gatewayRequests.push(JSON.parse(init.body)); throw new Error('simulated gateway network failure'); },
@@ -194,7 +210,7 @@ function runHarness() {
     storyboardFinishLog: (_log, status, detail) => stats.failures.push({ status, detail }),
     toast: (message) => stats.warnings.push(message), console: { error: () => {} },
   });
-  return { stats, run };
+  return { stats, run, confirmBinding };
 }
 
 test('request-time validation rejects changed identity before assets, keys or network', async () => {
@@ -207,6 +223,7 @@ test('request-time validation rejects changed identity before assets, keys or ne
   assert.equal(stats.keys, 0);
   assert.equal(stats.direct, 0);
   assert.equal(stats.fetches, 0);
+  assert.equal(stats.probes, 0);
   assert.equal(stats.failures[0].status, 'failed');
   assert.match(stats.failures[0].detail.error, /不一致/);
 });
@@ -216,6 +233,7 @@ test('an NAI alias cannot fall back to a gateway with unknown capability-binding
   const job = makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } });
   await run(job, {});
   assert.equal(stats.direct, 1);
+  assert.equal(stats.probes, 1);
   assert.equal(stats.fetches, 0);
   assert.equal(stats.failures[0].status, 'failed');
   assert.match(stats.failures[0].detail.error, /尚未确认网关支持/);
@@ -226,9 +244,59 @@ test('existing canonical NAI and custom OpenAI jobs retain their same-origin fal
     const { stats, run } = runHarness();
     await run(makeJob({ source, profile: { model } }), {});
     assert.equal(stats.direct, 1);
+    assert.equal(stats.probes, 0);
     assert.equal(stats.fetches, 1);
     assert.equal(stats.gatewayRequests[0].provider, source);
     assert.equal(stats.gatewayRequests[0].model, model);
     assert.equal(stats.gatewayRequests[0].capabilityModelId, source === 'novel' ? V3 : 'gpt-image-2');
   }
+});
+
+test('NAI alias fallback performs one read-only handshake and submits its exact supported binding', async () => {
+  const { stats, run } = runHarness({ compatible: true });
+  const job = makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } });
+  await run(job, {});
+  assert.equal(stats.probes, 1);
+  assert.equal(stats.fetches, 1);
+  assert.equal(stats.gatewayRequests[0].model, 'vendor/NAI-alias');
+  assert.equal(stats.gatewayRequests[0].capabilityModelId, V45);
+  assert.equal(stats.gatewayRequests[0].modelBindingVersion, 1);
+});
+
+test('direct success and upstream rejection do not probe the optional gateway or generate twice', async () => {
+  for (const options of [{ directSuccess: true }, { directRejected: true }]) {
+    const { stats, run } = runHarness(options);
+    await run(makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } }), {});
+    assert.equal(stats.probes, 0);
+    assert.equal(stats.fetches, 0);
+  }
+});
+
+test('cancellation during capability inspection cannot submit a paid fallback request', async () => {
+  const job = makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } });
+  const { stats, run } = runHarness({ compatible: true, onProbe: () => { job.discardRequested = true; } });
+  await run(job, {});
+  assert.equal(stats.probes, 1);
+  assert.equal(stats.fetches, 0);
+  assert.equal(stats.failures[0].status, 'cancelled');
+});
+
+test('gateway capability inspection is shared only while in flight, never retained for subsequent jobs', async () => {
+  const { stats, confirmBinding } = runHarness({ compatible: true });
+  const job = makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } });
+  const results = await Promise.all([confirmBinding(job), confirmBinding(job)]);
+  assert.deepEqual(results, [1, 1]);
+  assert.equal(stats.probes, 1);
+  await confirmBinding(job);
+  assert.equal(stats.probes, 2);
+});
+
+test('a failed compatibility probe does not poison a later request after updating the service', async () => {
+  const options = { compatible: false };
+  const { stats, confirmBinding } = runHarness(options);
+  const job = makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } });
+  await assert.rejects(confirmBinding(job), { code: 'image_binding_incompatible' });
+  options.compatible = true;
+  assert.equal(await confirmBinding(job), 1);
+  assert.equal(stats.probes, 2);
 });

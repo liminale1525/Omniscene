@@ -120,7 +120,7 @@ test('NAI sampler, scheduler, Vibe and reference permissions follow capability I
 });
 
 test('model metadata never becomes a vendor advanced parameter, and plans do not mutate input', () => {
-  const providerOptions = { capabilityModelId: V5, remote_model_id: 'wrong', MODEL_FAMILY: 'wrong', connectionPresetId: 'private', PROTOCOL: 'wrong', style: 'soft' };
+  const providerOptions = { capabilityModelId: V5, remote_model_id: 'wrong', MODEL_FAMILY: 'wrong', connectionPresetId: 'private', PROTOCOL: 'wrong', modelBindingVersion: 9, style: 'soft' };
   const original = input({ remoteModelId: 'relay/alias', capabilityModelId: V3, params: { providerOptions } });
   const before = structuredClone(original);
   const plan = buildStoryboardProviderPlan(original);
@@ -137,8 +137,8 @@ for (const [name, generate] of Object.entries(transports)) {
   test(`${name}: actual request uses the alias, retains cfg including zero, and excludes metadata`, async () => {
     for (const cfg of [0, 5.5]) {
       const plan = buildStoryboardProviderPlan(input({ remoteModelId: 'vendor/nai-artist:custom', capabilityModelId: V3, params: { cfg, scheduler: 'karras' } }));
-      const payload = { ...plan.gatewayRequest, apiKey: 'mock-key', baseUrl: 'https://relay.example' };
-      payload.parameters.providerOptions = { ...payload.parameters.providerOptions, capabilityModelId: V5, PROTOCOL: 'wrong', style: 'soft' };
+      const payload = { ...plan.gatewayRequest, apiKey: 'mock-key', baseUrl: 'https://relay.example', modelBindingVersion: 1 };
+      payload.parameters.providerOptions = { ...payload.parameters.providerOptions, capabilityModelId: V5, PROTOCOL: 'wrong', modelBindingVersion: 9, style: 'soft' };
       const before = structuredClone(payload);
       const bodies = [];
       const output = await generate(payload, transportOptions(async (_url, init) => { bodies.push(JSON.parse(init.body)); return imageResponse(); }));
@@ -150,6 +150,7 @@ for (const [name, generate] of Object.entries(transports)) {
       assert.equal(bodies[0].parameters.style, 'soft');
       assert.equal(JSON.stringify(bodies).includes('capabilityModelId'), false);
       assert.equal(JSON.stringify(bodies).includes('PROTOCOL'), false);
+      assert.equal(JSON.stringify(bodies).includes('modelBindingVersion'), false);
       assert.deepEqual(payload, before);
     }
   });

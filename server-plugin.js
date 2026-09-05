@@ -3,10 +3,10 @@
 import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import {
-  IMAGE_GATEWAY_PROVIDERS,
   checkImageConnection,
   generateImage,
   imageGatewayErrorPayload,
+  imageGatewayCapabilities,
   listImageModels,
 } from './qianmu-image-gateway.js';
 import {
@@ -156,12 +156,7 @@ export async function init(router) {
     services: ['doubao-tts', 'storyboard-image', 'minimax-h3'],
   }));
 
-  router.get('/image/capabilities', (_req, res) => res.json({
-    ok: true,
-    version: 2,
-    modelListing: true,
-    providers: Object.values(IMAGE_GATEWAY_PROVIDERS).map(({ id, label, protocol, requiresKey }) => ({ id, label, protocol, requiresKey, modelListing: true })),
-  }));
+  router.get('/image/capabilities', async (_req, res) => prepareImageResponse(res).json(imageGatewayCapabilities(await pluginVersion())));
 
   const prepareImageResponse = (res) => {
     res.set('Cache-Control', 'no-store');

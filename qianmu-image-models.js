@@ -2,6 +2,7 @@
 export const IMAGE_MODEL_LIST_LIMIT = 4000;
 export const IMAGE_MODEL_PAGE_LIMIT = 10;
 export const IMAGE_MODEL_ID_LIMIT = 240;
+export const IMAGE_MODEL_BINDING_VERSION = 1;
 export const NOVEL_STATIC_MODELS = Object.freeze([
   ['safe-diffusion', 'Anime Curated V1'],
   ['nai-diffusion', 'Anime Full V1'],
@@ -21,7 +22,7 @@ const object = (value) => value && typeof value === 'object' && !Array.isArray(v
 const firstText = (...values) => values.find((value) => typeof value === 'string' && value.trim())?.trim() || '';
 
 export function isImageModelMetadataField(value) {
-  return ['modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol'].includes(String(value).replace(/[-_]/g, '').toLowerCase());
+  return ['modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion'].includes(String(value).replace(/[-_]/g, '').toLowerCase());
 }
 
 export function novelModelCapabilities(model, capabilityModelId = '') {

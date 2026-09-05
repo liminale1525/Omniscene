@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, isImageModelMetadataField } from './qianmu-image-models.js';
+import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, isImageModelMetadataField } from './qianmu-image-models.js';
 import { randomUUID } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -49,6 +49,17 @@ export class ImageGatewayError extends Error {
     this.retryable = Boolean(options.retryable);
     this.upstreamStatus = Number(options.upstreamStatus) || 0;
   }
+}
+
+export function imageGatewayCapabilities(serviceVersion = '') {
+  return {
+    ok: true, plugin: 'qianmu-tts', version: 3, serviceVersion: String(serviceVersion).slice(0, 80), modelListing: true,
+    providers: Object.values(IMAGE_GATEWAY_PROVIDERS).map(({ id, label, protocol, requiresKey }) => ({ id, label, protocol, requiresKey, modelListing: true })),
+    modelBinding: {
+      version: IMAGE_MODEL_BINDING_VERSION,
+      providers: { novel: { protocol: 'novelai', capabilityModelIds: NOVEL_STATIC_MODELS.map(([id]) => id) } },
+    },
+  };
 }
 
 function asString(value, max = 500) {
@@ -147,6 +158,12 @@ function normalizeReferences(value, budget) {
 
 export function sanitizeImageRequest(input) {
   const source = plainObject(input);
+  if (Object.hasOwn(source, 'modelBindingVersion')) {
+    if (source.modelBindingVersion !== IMAGE_MODEL_BINDING_VERSION) throw new ImageGatewayError(409, 'model_binding_version_mismatch', '生图模型绑定协议不兼容，请同步更新千幕前端与增强服务并重启 ST');
+    if (source.provider !== 'novel' || typeof source.capabilityModelId !== 'string' || !source.capabilityModelId.trim()) {
+      throw new ImageGatewayError(400, 'invalid_model_binding_contract', '生图请求缺少受支持的模型能力绑定');
+    }
+  }
   const provider = asString(source.provider, 40).toLowerCase();
   const definition = IMAGE_GATEWAY_PROVIDERS[provider];
   if (!definition) throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');

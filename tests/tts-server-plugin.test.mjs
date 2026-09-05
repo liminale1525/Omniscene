@@ -105,7 +105,12 @@ assert.equal(streamed.completed, true);
 
 const capabilities = mockResponse();
 await routes.get('GET /image/capabilities')({}, capabilities);
-assert.equal(capabilities.body.version, 2);
+assert.equal(capabilities.body.version, 3);
+assert.equal(capabilities.body.plugin, 'qianmu-tts');
+assert.equal(capabilities.body.serviceVersion, packageJson.version);
+assert.equal(capabilities.body.modelBinding.version, 1);
+assert.ok(capabilities.body.modelBinding.providers.novel.capabilityModelIds.includes('nai-diffusion-4-5-full'));
+assert.equal(capabilities.headers['cache-control'], 'no-store');
 assert.equal(capabilities.body.modelListing, true);
 assert.ok(capabilities.body.providers.some((provider) => provider.id === 'openai'));
 
