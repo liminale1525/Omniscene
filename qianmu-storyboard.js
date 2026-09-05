@@ -471,7 +471,7 @@ export function normalizeStoryboardState(value) {
   const knownVibeIds = new Set(state.vibeLibrary.map((vibe) => vibe.id)); state.selectedVibeIds = ids(state.selectedVibeIds, 16).filter((id) => knownVibeIds.has(id));
   if (!state.promptPresets.some((preset) => preset.id === state.promptCompiler.instructionPresetId)) state.promptCompiler.instructionPresetId = '';
   if (!state.promptPresets.some((preset) => preset.id === state.editingPromptPresetId)) { state.editingPromptPresetId = ''; state.editingPromptItemId = ''; state.promptItemDraft = null; }
-  state.compositionPolicy = normalizeStoryboardCompositionPolicy(state.compositionPolicy); state.routing = normalizeRouting(state.routing, { connections: state.connections, parameterPresets: state.parameterPresets }); state.shotPlans = shotPlans(state.shotPlans, state); state.taskStates = taskStates(state.taskStates); const collapsedInput = obj(state.collapsedCards) ? state.collapsedCards : {}; state.collapsedCards = Object.fromEntries(Object.entries(collapsedInput).slice(0, 200).map(([k, v]) => [str(k, 120), Boolean(v)]).filter(([k]) => k)); if (!Object.hasOwn(collapsedInput, 'production')) state.collapsedCards.production = true; if (!Object.hasOwn(collapsedInput, 'worldbook')) state.collapsedCards.worldbook = true; state.logs = legacyLogs(state.logs); state.pipelineLogs = pipelineLogs(state.pipelineLogs);
+  state.compositionPolicy = normalizeStoryboardCompositionPolicy(state.compositionPolicy); state.routing = normalizeRouting(state.routing); state.shotPlans = shotPlans(state.shotPlans, state); state.taskStates = taskStates(state.taskStates); const collapsedInput = obj(state.collapsedCards) ? state.collapsedCards : {}; state.collapsedCards = Object.fromEntries(Object.entries(collapsedInput).slice(0, 200).map(([k, v]) => [str(k, 120), Boolean(v)]).filter(([k]) => k)); if (!Object.hasOwn(collapsedInput, 'production')) state.collapsedCards.production = true; if (!Object.hasOwn(collapsedInput, 'worldbook')) state.collapsedCards.worldbook = true; state.logs = legacyLogs(state.logs); state.pipelineLogs = pipelineLogs(state.pipelineLogs);
   const visiblePipelineIds = new Set(state.logs.map((log) => log.pipelineId).filter(Boolean));
   // v1/v2 日志没有 pipelineId；旧数据先按相同上限保留，只有新契约完整时才做一一配对裁剪。
   if (visiblePipelineIds.size) state.pipelineLogs = state.pipelineLogs.filter((log) => visiblePipelineIds.has(log.id));
@@ -1429,19 +1429,24 @@ export function prepareStoryboardShotGroup(value = {}) {
   return { shots: kept, skipped, strategy: policy.groupStrategy, manualOverride: manual, continuityLedger, coverageMap, sceneGroups, rhythm: evaluateStoryboardShotRhythm(kept) };
 }
 
-function normalizeRouting(value, catalogs = {}) {
-  const r = obj(value) ? value : {}, hasConnectionCatalog = obj(catalogs.connections), hasParameterCatalog = Array.isArray(catalogs.parameterPresets);
+function normalizeRouting(value) {
+  const r = obj(value) ? value : {};
   const target = (input = {}, fallbackProviderId = 'novel') => {
+    input = obj(input) ? input : {};
     const providerId = getStoryboardProvider(input.providerId) ? input.providerId : fallbackProviderId;
     if (!providerId) return { providerId: '', modelId: '', connectionPresetId: '', parameterPresetId: '' };
-    const requestedConnection = cleanId(input.connectionPresetId), requestedParameters = cleanId(input.parameterPresetId);
-    const connectionPreset = hasConnectionCatalog && requestedConnection ? catalogs.connections[providerId]?.presets?.find((preset) => preset.id === requestedConnection) : null;
-    const connectionPresetId = hasConnectionCatalog && requestedConnection && !connectionPreset ? '' : requestedConnection;
-    const requestedModel = str(input.modelId, 240);
-    const modelId = resolveStoryboardModelId(providerId, requestedModel);
-    const builtinParameter = getStoryboardBuiltinParameterPresets(providerId, modelId).some((preset) => preset.id === requestedParameters);
-    const parameterPresetId = hasParameterCatalog && requestedParameters && !builtinParameter && !catalogs.parameterPresets.some((preset) => preset.id === requestedParameters && preset.source === providerId && (!preset.profile?.model || preset.profile.model === modelId)) ? '' : requestedParameters;
-    return { providerId, modelId, connectionPresetId, parameterPresetId };
+    // Keep broken references repairable. Clearing them would silently use today's draft connection/parameters.
+    const connectionPresetId = cleanId(input.connectionPresetId), parameterPresetId = cleanId(input.parameterPresetId);
+    try {
+      const binding = resolveStoryboardProfileBinding(providerId, { model: input.modelId, capabilityModelId: input.capabilityModelId });
+      return { providerId, modelId: binding.remoteModelId, capabilityModelId: binding.capabilityModelId, connectionPresetId, parameterPresetId };
+    } catch {
+      const safeId = (value, fallback) => typeof value === 'string' && value.trim().length <= 240 && !/[\u0000-\u001f\u007f]/.test(value) ? value.trim() : fallback;
+      const modelId = safeId(input.modelId, '') || '[invalid-model]';
+      return { providerId, modelId,
+        capabilityModelId: modelId === '[invalid-model]' ? '[invalid-capability]' : input.capabilityModelId == null || input.capabilityModelId === '' ? '' : safeId(input.capabilityModelId, '[invalid-capability]') || '[invalid-capability]',
+        connectionPresetId, parameterPresetId };
+    }
   };
   const rules = dedupeById((Array.isArray(r.rules) ? r.rules : []).filter(obj).map((rule) => ({ id: cleanId(rule.id), name: str(rule.name || '未命名分工', 80), shotTypes: uniqueStrings(rule.shotTypes, 30, 60), target: target(rule.target, ''), enabled: rule.enabled !== false, priority: int(rule.priority, -1000, 1000, 0) })).filter((rule) => rule.id && rule.target.providerId)).slice(0, 50).sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
   const enabled = r.enabled === undefined ? r.mode === 'ensemble' : Boolean(r.enabled);

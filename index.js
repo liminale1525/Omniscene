@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.28';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.28';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.28';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.29';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.29';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.29';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.28';
+} from './qianmu-llm-output.js?v=1.59.29';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -135,6 +135,7 @@ import {
   getStoryboardBuiltinParameterPresets,
   getStoryboardCapabilities,
   getStoryboardModel,
+  getStoryboardProvider,
   getStoryboardRememberedProfile,
   getStoryboardNovelParameterSpec,
   normalizeStoryboardState,
@@ -164,143 +165,143 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.28';
+} from './qianmu-storyboard.js?v=1.59.29';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.28';
+const VERSION = '1.59.29';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.28'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.29'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.28').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.29').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.28'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.29'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.28'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.29'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.28'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.29'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.28'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.29'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.28'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.29'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.28'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.29'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.28'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.29'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.28'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.29'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.28'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.29'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.28'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.29'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.28'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.29'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.28'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.29'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.28'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.29'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.28'),
+    load: () => import('./qianmu-video-task.js?v=1.59.29'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.28'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.29'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.28'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.29'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.28'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.29'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.28'),
+    load: () => import('./qianmu-video-store.js?v=1.59.29'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.28'),
+    load: () => import('./qianmu-video-result.js?v=1.59.29'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.28'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.29'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.28'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.29'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.28'),
+    load: () => import('./qianmu-video-media.js?v=1.59.29'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.28'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.29'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.28'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.29'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.28'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.29'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.28'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.29'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.28'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.29'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.28'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.29'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.28'),
-        import('./qianmu-theaters.js?v=1.59.28'),
+        import('./builtin-theaters.js?v=1.59.29'),
+        import('./qianmu-theaters.js?v=1.59.29'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -13381,12 +13382,18 @@ const STORYBOARD_SHOT_TYPE_LABELS = Object.freeze({ portrait: '人物', group: '
 
 function storyboardRoutingTargetOptions(state, providerId, target = {}) {
   const provider = STORYBOARD_PROVIDER_REGISTRY[providerId] || STORYBOARD_PROVIDER_REGISTRY[state.source];
-  const modelId = (STORYBOARD_MODEL_REGISTRY[provider.id] || []).some((item) => item.id === target.modelId)
-    ? target.modelId
-    : provider.defaultModel;
+  const modelId = target.modelId || provider.defaultModel;
+  let issue = '';
+  try { resolveStoryboardProfileBinding(provider.id, { model: modelId, capabilityModelId: target.capabilityModelId }); }
+  catch (error) { issue = `<small class="sd-storyboard-safety-notice" role="status">${htmlEscape(error.message)}</small>`; }
   const connections = state.connections[provider.id]?.presets || [];
-  const parameters = storyboardParameterPresets(provider.id, modelId);
-  return `<select class="text_pole sd-storyboard-route-provider" aria-label="生图渠道">${Object.values(STORYBOARD_PROVIDER_REGISTRY).map((item) => `<option value="${item.id}" ${provider.id === item.id ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('')}</select><select class="text_pole sd-storyboard-route-model" aria-label="模型">${storyboardModelOptions(provider.id, modelId)}</select><select class="text_pole sd-storyboard-route-connection" aria-label="API 预设"><option value="">当前渠道 API</option>${connections.map((item) => `<option value="${htmlEscape(item.id)}" ${target.connectionPresetId === item.id ? 'selected' : ''}>${htmlEscape(item.name)}</option>`).join('')}</select><select class="text_pole sd-storyboard-route-style" aria-label="绘制样式"><option value="">不套用样式</option>${parameters.map((item) => `<option value="${htmlEscape(item.id)}" ${target.parameterPresetId === item.id ? 'selected' : ''}>${htmlEscape(item.name)}</option>`).join('')}</select>`;
+  const parameters = storyboardParameterPresets(provider.id, modelId, target.capabilityModelId, state);
+  const missingConnection = target.connectionPresetId && !connections.some((item) => item.id === target.connectionPresetId)
+    ? `<option value="${htmlEscape(target.connectionPresetId)}" selected>API 预设已失效 · 请重选</option>` : '';
+  const missingParameters = target.parameterPresetId && !parameters.some((item) => item.id === target.parameterPresetId)
+    ? `<option value="${htmlEscape(target.parameterPresetId)}" selected>参数方案已失效 · 请重选</option>` : '';
+  if (!issue && (missingConnection || missingParameters)) issue = '<small class="sd-storyboard-safety-notice" role="status">请重新选择失效的镜组配置</small>';
+  return `<select class="text_pole sd-storyboard-route-provider" aria-label="生图渠道">${Object.values(STORYBOARD_PROVIDER_REGISTRY).map((item) => `<option value="${item.id}" ${provider.id === item.id ? 'selected' : ''}>${htmlEscape(item.label)}</option>`).join('')}</select><select class="text_pole sd-storyboard-route-model" aria-label="模型">${storyboardModelOptions(provider.id, modelId, target.capabilityModelId)}</select><select class="text_pole sd-storyboard-route-connection" aria-label="API 预设"><option value="">当前渠道 API</option>${missingConnection}${connections.map((item) => `<option value="${htmlEscape(item.id)}" ${target.connectionPresetId === item.id ? 'selected' : ''}>${htmlEscape(item.name)}</option>`).join('')}</select><select class="text_pole sd-storyboard-route-style" aria-label="绘制样式"><option value="">不套用样式</option>${missingParameters}${parameters.map((item) => `<option value="${htmlEscape(item.id)}" ${target.parameterPresetId === item.id ? 'selected' : ''}>${htmlEscape(item.name)}</option>`).join('')}</select>${issue}`;
 }
 
 function renderStoryboardRouting(state) {
@@ -15779,8 +15786,8 @@ function storyboardProfileSnapshot(profile, sourceId) {
   return Object.fromEntries(keys.map((key) => [key, clone(profile?.[key] ?? fallback[key])]));
 }
 
-function storyboardParameterPresets(sourceId = storyboardState().source, modelId = '', capabilityModelId = '') {
-  const state = storyboardState();
+function storyboardParameterPresets(sourceId = storyboardState().source, modelId = '', capabilityModelId = '', stateOverride = null) {
+  const state = stateOverride || storyboardState();
   const current = storyboardProviderProfile(state, sourceId);
   let binding;
   try {
@@ -15922,7 +15929,30 @@ function storyboardGenerationPayload(state, profile, { sourceId = state.source, 
   };
 }
 
-function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceId = state.source, modelId = '', connectionPresetId = '', planId = '', planShotId = '', recentArtistIds = [], requestIndex = 1, requestTotal = 1 } = {}) {
+function storyboardResolveRoutingProfile(state, route, baseProfile = null) {
+  const sourceId = route.providerId;
+  const binding = resolveStoryboardProfileBinding(sourceId, { model: route.modelId, capabilityModelId: route.capabilityModelId });
+  if (route.connectionPresetId && !state.connections[sourceId]?.presets?.some((item) => item.id === route.connectionPresetId)) {
+    const error = new Error('镜组 API 预设已失效，请重新选择'); error.code = 'missing_route_connection'; throw error;
+  }
+  const current = baseProfile || storyboardProviderProfile(state, sourceId);
+  let sameBinding = false;
+  try {
+    const previous = resolveStoryboardProfileBinding(sourceId, current);
+    sameBinding = previous.remoteModelId === binding.remoteModelId && previous.capabilityModelId === binding.capabilityModelId;
+  } catch (_) { /* A valid route can repair an invalid workbench selection in another family. */ }
+  let profile = sameBinding ? storyboardProfileSnapshot(current, sourceId)
+    : getStoryboardRememberedProfile(state.modelProfiles, sourceId, binding.remoteModelId, binding.capabilityModelId)
+      || { ...createStoryboardDefaults().profiles[sourceId] };
+  if (route.parameterPresetId) {
+    const preset = storyboardParameterPresets(sourceId, binding.remoteModelId, binding.capabilityModelId, state).find((item) => item.id === route.parameterPresetId);
+    if (!preset) { const error = new Error('镜组参数方案已失效或与模型不匹配，请重新选择'); error.code = 'invalid_route_parameters'; throw error; }
+    profile = { ...profile, ...clone(preset.profile), loaded: true };
+  }
+  return storyboardProviderProfile(state, sourceId, { ...profile, model: binding.remoteModelId, capabilityModelId: binding.capabilityModelId });
+}
+
+function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceId = state.source, profileSourceId = state.source, modelId = '', capabilityModelId, connectionPresetId = '', planId = '', planShotId = '', recentArtistIds = [], requestIndex = 1, requestTotal = 1 } = {}) {
   const deliveryPolicy = storyboardProductionDeliveryPolicy(shot || {}, {
     target: state.target,
     inlineByDefault: state.inlineByDefault,
@@ -15936,20 +15966,11 @@ function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceI
   const connectionState = storyboardConnectionState(state, sourceId);
   const routedConnection = connectionState.group?.presets?.find((item) => item.id === connectionPresetId) || null;
   const connection = routedConnection || connectionState.draft || connectionState.active;
-  const baseProviderProfile = sourceId === state.source ? profile : storyboardProviderProfile(state, sourceId);
-  const binding = resolveStoryboardProfileBinding(sourceId, {
-    model: modelId || baseProviderProfile.model,
-    capabilityModelId: !modelId || modelId === baseProviderProfile.model ? baseProviderProfile.capabilityModelId : '',
-  });
-  const targetProfile = modelId && modelId !== baseProviderProfile.model
-    ? getStoryboardRememberedProfile(state.modelProfiles, sourceId, binding.remoteModelId, binding.capabilityModelId)
-      || createStoryboardDefaults().profiles[sourceId]
-    : baseProviderProfile;
-  const providerProfile = storyboardProviderProfile(state, sourceId, {
-    ...targetProfile,
-    model: binding.remoteModelId,
-    capabilityModelId: binding.capabilityModelId,
-  });
+  const baseProviderProfile = sourceId === profileSourceId ? profile : storyboardProviderProfile(state, sourceId);
+  const providerProfile = storyboardResolveRoutingProfile(state, {
+    providerId: sourceId, modelId: modelId || baseProviderProfile.model, connectionPresetId,
+    capabilityModelId: capabilityModelId ?? (!modelId || modelId === baseProviderProfile.model ? baseProviderProfile.capabilityModelId : ''),
+  }, baseProviderProfile);
   const shotSpec = normalizeStoryboardShotSpec(shot?.shotSpec || {
     ...shot,
     promptAtoms: { global: [prompt], negative: [negative] },
@@ -17588,6 +17609,14 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
   if (!state.enabled) return toast('请先启用分镜。', 'warning');
   try { resolveStoryboardProfileBinding(state.source, profile); }
   catch (error) { return toast(error.message, 'warning'); }
+  if (state.routing.enabled) {
+    try {
+      for (const rule of state.routing.rules.filter((item) => item.enabled)) {
+        try { storyboardResolveRoutingProfile(state, rule.target); }
+        catch (error) { throw new Error(`${rule.name || '镜组分工'}：${error.message}`); }
+      }
+    } catch (error) { return toast(error.message, 'warning'); }
+  }
   if (automatic && plan?.manualReviewRequired) return false;
   if (state.source === 'comfy' && (!workflowResult.ok || workflowResult.removedFields.length || profile.comfyWorkflowNotice)) {
     return toast(profile.comfyWorkflowNotice || storyboardWorkflowIssue(workflowResult), 'warning');
@@ -17611,7 +17640,7 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
   if (deliveryPolicy.target === 'floor' && (!String(state.floor || '').trim() || !Number.isInteger(Number(state.floor)))) {
     return toast('请输入有效的正文楼层。', 'warning');
   }
-  state.routing.single = { providerId: state.source, modelId: profile.model, connectionPresetId: '', parameterPresetId: '' };
+  state.routing.single = { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
   const routingEnabled = Boolean(state.routing.enabled);
   const availableDrafts = Array.isArray(state.promptDraft.shots)
     ? state.promptDraft.shots.filter((item) => String(item.prompt || '').trim())
@@ -17657,17 +17686,11 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
   const resolvedArtistIds = [];
   for (let index = 0; index < planned.length; index++) {
     const shot = planned[index];
-    const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, connectionPresetId: '', parameterPresetId: '' };
+    const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
     const sourceId = STORYBOARD_PROVIDER_REGISTRY[route.providerId] ? route.providerId : state.source;
-    let shotProfile = sourceId === state.source ? storyboardProfileSnapshot(profile, sourceId) : storyboardProfileSnapshot(storyboardProviderProfile(state, sourceId), sourceId);
-    if (route.modelId && route.modelId !== shotProfile.model) {
-      const binding = resolveStoryboardProfileBinding(sourceId, { model: route.modelId });
-      shotProfile = getStoryboardRememberedProfile(state.modelProfiles, sourceId, binding.remoteModelId, binding.capabilityModelId)
-        || { ...createStoryboardDefaults().profiles[sourceId] };
-      Object.assign(shotProfile, { model: binding.remoteModelId, capabilityModelId: binding.capabilityModelId });
-    }
-    const parameterPreset = storyboardParameterPresets(sourceId, route.modelId).find((item) => item.id === route.parameterPresetId);
-    if (parameterPreset) shotProfile = { ...shotProfile, ...clone(parameterPreset.profile), loaded: true };
+    let shotProfile;
+    try { shotProfile = storyboardResolveRoutingProfile(state, route, sourceId === state.source ? profile : null); }
+    catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
     if (manualSupplement) shotProfile.count = '1';
     const effectiveShot = await storyboardAdaptShotForModel(shot, sourceId, shotProfile.model, state, {
       chatKey: generationChatKey,
@@ -17680,11 +17703,14 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
     const providerRequests = planStoryboardProviderRequests(sourceId, shotProfile.count);
     for (const request of providerRequests) {
       const requestProfile = { ...shotProfile, count: String(request.imageCount) };
-      const job = storyboardCreateJob(state, requestProfile, {
-        shot: effectiveShot, sourceId, modelId: route.modelId, connectionPresetId: route.connectionPresetId,
-        planId: plan?.id || '', planShotId: planShot?.id || '', recentArtistIds: resolvedArtistIds,
-        requestIndex: request.requestIndex, requestTotal: request.requestTotal,
-      });
+      let job;
+      try {
+        job = storyboardCreateJob(state, requestProfile, {
+          shot: effectiveShot, sourceId, profileSourceId: sourceId, modelId: route.modelId, capabilityModelId: shotProfile.capabilityModelId, connectionPresetId: route.connectionPresetId,
+          planId: plan?.id || '', planShotId: planShot?.id || '', recentArtistIds: resolvedArtistIds,
+          requestIndex: request.requestIndex, requestTotal: request.requestTotal,
+        });
+      } catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
       if (job.artistPresetId) resolvedArtistIds.push(job.artistPresetId);
       if (planShot && request.requestIndex === 1) Object.assign(planShot, {
         shotSpec: clone(job.shotSpec), compiledPrompt: clone(job.compiledPrompt), compositionDecision: clone(job.compositionDecision),
@@ -19822,7 +19848,8 @@ function bindStoryboardTabEvents(root) {
   root.querySelector('.sd-storyboard-routing-enabled')?.addEventListener('change', (event) => {
     state.routing.enabled = Boolean(event.target.checked);
     state.routing.mode = state.routing.enabled ? 'ensemble' : 'single';
-    state.routing.single = { providerId: state.source, modelId: storyboardProviderProfile(state).model, connectionPresetId: '', parameterPresetId: '' };
+    const profile = storyboardProviderProfile(state);
+    state.routing.single = { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
     saveSettings(); renderModal();
   });
   root.querySelector('.sd-storyboard-route-max')?.addEventListener('change', (event) => {
@@ -19837,11 +19864,11 @@ function bindStoryboardTabEvents(root) {
   root.querySelector('.sd-storyboard-route-confirm')?.addEventListener('change', (event) => { state.routing.confirmMultipleRequests = event.target.checked; saveSettings(); });
   root.querySelector('.sd-storyboard-add-route')?.addEventListener('click', () => {
     if (!root.isConnected || storyboardState() !== state) return;
-    const modelId = storyboardProviderProfile(state).model;
+    const { model: modelId, capabilityModelId } = storyboardProviderProfile(state);
     const rules = state.routing.rules;
     rules.push({
       id: uid('shotroute'), name: `分工 ${rules.length + 1}`, shotTypes: [],
-      target: { providerId: state.source, modelId, connectionPresetId: '', parameterPresetId: '' }, enabled: true,
+      target: { providerId: state.source, modelId, capabilityModelId, connectionPresetId: '', parameterPresetId: '' }, enabled: true,
       priority: rules.length,
     });
     saveSettings(); renderModal();
@@ -19854,11 +19881,23 @@ function bindStoryboardTabEvents(root) {
     row.querySelector('.sd-storyboard-route-enabled')?.addEventListener('change', (event) => { rule.enabled = event.target.checked; saveSettings(); });
     row.querySelector('.sd-storyboard-route-provider')?.addEventListener('change', (event) => {
       const providerId = event.target.value;
-      rule.target = { providerId, modelId: STORYBOARD_PROVIDER_REGISTRY[providerId]?.defaultModel || '', connectionPresetId: '', parameterPresetId: '' }; saveSettings(); renderModal();
+      const provider = getStoryboardProvider(providerId);
+      if (!provider) return;
+      rule.target = { providerId, modelId: provider.defaultModel, capabilityModelId: provider.defaultModel, connectionPresetId: '', parameterPresetId: '' }; saveSettings(); renderModal();
     });
-    row.querySelector('.sd-storyboard-route-model')?.addEventListener('change', (event) => { rule.target.modelId = event.target.value; rule.target.parameterPresetId = ''; saveSettings(); renderModal(); });
-    row.querySelector('.sd-storyboard-route-connection')?.addEventListener('change', (event) => { rule.target.connectionPresetId = event.target.value; saveSettings(); });
-    row.querySelector('.sd-storyboard-route-style')?.addEventListener('change', (event) => { rule.target.parameterPresetId = event.target.value; saveSettings(); });
+    row.querySelector('.sd-storyboard-route-model')?.addEventListener('change', (event) => {
+      try {
+        const binding = resolveStoryboardProfileBinding(rule.target.providerId, {
+          model: event.target.value,
+          capabilityModelId: !getStoryboardModel(rule.target.providerId, event.target.value) && event.target.value === rule.target.modelId ? rule.target.capabilityModelId : '',
+        });
+        Object.assign(rule.target, { modelId: binding.remoteModelId, capabilityModelId: binding.capabilityModelId, parameterPresetId: '' });
+        saveSettings();
+      } catch (error) { toast(error.message, 'warning'); }
+      renderModal();
+    });
+    row.querySelector('.sd-storyboard-route-connection')?.addEventListener('change', (event) => { rule.target.connectionPresetId = event.target.value; saveSettings(); renderModal(); });
+    row.querySelector('.sd-storyboard-route-style')?.addEventListener('change', (event) => { rule.target.parameterPresetId = event.target.value; saveSettings(); renderModal(); });
     row.querySelector('.sd-storyboard-delete-route')?.addEventListener('click', async () => {
       if (!await confirmDialog('删除镜头分工', `确定删除「${rule.name}」？`)) return;
       state.routing.rules = state.routing.rules.filter((item) => item.id !== rule.id); saveSettings(); renderModal();

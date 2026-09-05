@@ -299,11 +299,11 @@ assert.equal(materialState.vibeLibrary.length, 1);
 assert.deepEqual(materialState.vibeLibrary[0].providerIds, ['novel']);
 assert.deepEqual(materialState.vibeLibrary[0].modelIds, ['nai-diffusion-4-5-full']);
 assert.deepEqual(materialState.selectedVibeIds, ['vibe-a']);
-assert.equal(materialState.routing.single.connectionPresetId, '');
+assert.equal(materialState.routing.single.connectionPresetId, 'missing', 'broken explicit connections must not silently become the current draft');
 assert.equal(materialState.routing.single.parameterPresetId, 'nai-params');
 assert.equal(materialState.routing.rules.length, 1);
 assert.equal(materialState.routing.rules[0].target.providerId, 'openai');
-assert.equal(materialState.routing.rules[0].target.connectionPresetId, '');
+assert.equal(materialState.routing.rules[0].target.connectionPresetId, 'wrong-provider');
 const invalidRoute = routeStoryboardShot({ shotType: 'portrait' }, { mode: 'ensemble', rules: [{ id: 'bad', target: { providerId: 'removed-provider' } }], single: { providerId: 'openai' } });
 assert.equal(invalidRoute.providerId, 'openai', 'an obsolete routing rule must fall back, never silently reroute to another paid provider');
 

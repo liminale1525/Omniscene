@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
 const direct = await readFile(new URL('../qianmu-image-direct.js', import.meta.url), 'utf8');
 
-assert.match(source, /import\('\.\/qianmu-image-direct\.js\?v=1\.59\.28'\)/, '生图渠道必须按需接入浏览器直连适配层');
+assert.match(source, /import\('\.\/qianmu-image-direct\.js\?v=1\.59\.29'\)/, '生图渠道必须按需接入浏览器直连适配层');
 assert.match(source, /await storyboardSaveConnection\(root, \{ quiet: true, clearKey: false \}\)/, '测试连接不得预先清空 API Key');
 assert.match(source, /catch \(error\) \{[\s\S]*storyboardDraftApiKeys\.set\(sourceId, typedKey\)/, '连接失败后必须保留刚输入的 Key');
 assert.match(source, /STORYBOARD_BROWSER_CREDENTIALS_KEY = 'qianmu\.storyboard\.credentials\.v1'/, '预设凭据必须拥有不依赖服务端 secrets 暴露的当前浏览器存储');

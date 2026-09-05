@@ -43,7 +43,7 @@ function environment(capability = V3, model = alias, extra = {}) {
     'storyboardPromptsForArtist', 'storyboardJoinPrompt', 'storyboardParameterPresets',
     'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCreate',
     'storyboardProfileSnapshot', 'storyboardCaptureWorkbench', 'storyboardGenerationPayload',
-    'storyboardCreateJob', 'storyboardGatewayRequest', 'storyboardLoadLogToWorkbench', 'storyboardSafeShotSpecFromPrompt', 'storyboardAdaptShotForModel'];
+    'storyboardResolveRoutingProfile', 'storyboardRoutingTargetOptions', 'storyboardCreateJob', 'storyboardGatewayRequest', 'storyboardLoadLogToWorkbench', 'storyboardSafeShotSpecFromPrompt', 'storyboardAdaptShotForModel'];
   for (const call of section('renderStoryboardCreate').matchAll(/\b(renderStoryboard\w+)\(/g)) {
     if (!names.includes(call[1])) context[call[1]] = () => '';
   }
@@ -141,6 +141,140 @@ test('built-in parameter styles keep the real alias and user styles match both n
 function rootWith(fields = {}) {
   return { querySelector: (selector) => fields[selector] || null, querySelectorAll: () => [] };
 }
+
+test('routing restores different capabilities for the same actual model name without editing workbench state', () => {
+  const { state, context } = environment(V3);
+  Object.assign(state.profiles.novel, { loaded: true, cfg: '1' });
+  storyboard.rememberStoryboardModelProfile(state.modelProfiles, 'novel', { model: alias, capabilityModelId: V45, loaded: true, cfg: '9', sampler: 'k_euler' });
+  const before = structuredClone(state);
+  const profile = context.storyboardResolveRoutingProfile(state, { providerId: 'novel', modelId: alias, capabilityModelId: V45 });
+  assert.equal(profile.cfg, '9');
+  assert.equal(profile.capabilityModelId, V45);
+  const job = context.storyboardCreateJob(state, state.profiles.novel, { modelId: alias, capabilityModelId: V45 });
+  assert.equal(job.profile.cfg, '9');
+  assert.equal(job.modelIdentity.capabilityModelId, V45);
+  assert.deepEqual(state, before);
+});
+
+test('routing validates connection references and exact model/capability parameter references', () => {
+  const { state, context } = environment(V3);
+  state.parameterPresets = [{ id: 'params', source: 'novel', profile: { model: alias, capabilityModelId: V45, cfg: '0', steps: '17' } }];
+  state.connections.novel.presets = [{ id: 'api', model: V5, baseUrl: 'https://route.example', credentialId: 'route-key' }];
+  const route = { providerId: 'novel', modelId: alias, capabilityModelId: V45, connectionPresetId: 'api', parameterPresetId: 'params' };
+  const profile = context.storyboardResolveRoutingProfile(state, route);
+  assert.equal(profile.cfg, '0');
+  assert.equal(profile.steps, '17');
+  assert.equal(profile.model, alias);
+  assert.throws(() => context.storyboardResolveRoutingProfile(state, { ...route, capabilityModelId: V3 }), { code: 'invalid_route_parameters' });
+  assert.throws(() => context.storyboardResolveRoutingProfile(state, { ...route, parameterPresetId: 'missing' }), { code: 'invalid_route_parameters' });
+  assert.throws(() => context.storyboardResolveRoutingProfile(state, { ...route, connectionPresetId: 'missing' }), { code: 'missing_route_connection' });
+  assert.throws(() => context.storyboardCreateJob(state, state.profiles.novel, { connectionPresetId: 'missing' }), { code: 'missing_route_connection' });
+  const builtin = context.storyboardResolveRoutingProfile(state, { providerId: 'novel', modelId: alias, capabilityModelId: V5, parameterPresetId: 'builtin:nai-v5-official' });
+  assert.equal(builtin.model, alias);
+  assert.equal(builtin.capabilityModelId, V5);
+});
+
+test('route rendering keeps bound aliases selected and exposes stale references without changing state', () => {
+  const { state, context } = environment(V3);
+  const route = { providerId: 'novel', modelId: 'vendor/<alias>', capabilityModelId: V45, connectionPresetId: 'missing-api', parameterPresetId: 'missing-style' };
+  const before = structuredClone(state);
+  const html = context.storyboardRoutingTargetOptions(state, 'novel', route);
+  assert.match(html, /value="vendor\/&lt;alias&gt;" selected/);
+  assert.match(html, /value="missing-api" selected/);
+  assert.match(html, /value="missing-style" selected/);
+  assert.match(html, /role="status"/);
+  assert.doesNotMatch(html, /<alias>/);
+  assert.deepEqual(state, before);
+});
+
+function routeHandlers(context, state) {
+  const start = source.indexOf("  root.querySelectorAll('[data-storyboard-route-rule]').forEach");
+  const end = source.indexOf("  root.querySelector('.sd-storyboard-use-floor')", start);
+  const callbacks = {};
+  const row = { dataset: { storyboardRouteRule: 'r' }, querySelector: (selector) => ({ addEventListener: (name, callback) => { callbacks[`${selector}:${name}`] = callback; } }) };
+  context.state = state;
+  context.root = { querySelectorAll: () => [row] };
+  vm.runInContext(source.slice(start, end), context);
+  return callbacks;
+}
+
+test('actual routing model/provider handlers switch identities atomically and preserve channel connections on model changes', () => {
+  const { state, context, notices } = environment(V3);
+  const rule = { id: 'r', target: { providerId: 'novel', modelId: alias, capabilityModelId: V45, connectionPresetId: 'api', parameterPresetId: 'params' } };
+  state.routing.rules = [rule];
+  const callbacks = routeHandlers(context, state);
+  callbacks['.sd-storyboard-route-model:change']({ target: { value: V3 } });
+  assert.equal(rule.target.modelId, V3);
+  assert.equal(rule.target.capabilityModelId, V3);
+  assert.equal(rule.target.connectionPresetId, 'api');
+  assert.equal(rule.target.parameterPresetId, '');
+  const before = structuredClone(rule.target);
+  callbacks['.sd-storyboard-route-model:change']({ target: { value: 'new-unbound-alias' } });
+  assert.deepEqual(rule.target, before);
+  assert.ok(notices.length);
+  callbacks['.sd-storyboard-route-provider:change']({ target: { value: 'openai' } });
+  assert.equal(rule.target.capabilityModelId, 'gpt-image-2');
+  assert.equal(rule.target.connectionPresetId, '');
+});
+
+function generationEnvironment() {
+  const env = environment(V3);
+  const { state, context } = env, queued = [];
+  Object.assign(context, {
+    storyboardProductionContext: () => ({}), storyboardQueue: [], storyboardActiveJobs: new Map(), STORYBOARD_QUEUE_LIMIT: 100,
+    storyboardQueueJob: (job) => { queued.push(job); return true; }, confirmDialog: async () => true,
+  });
+  vm.runInContext(section('storyboardGenerate'), context);
+  state.source = 'openai';
+  state.profiles.openai = { ...state.profiles.openai, model: 'gpt-image-2' };
+  state.promptDraft.shots = [{ id: 'garden', prompt: 'quiet garden', shotType: 'environment',
+    shotSpec: { evidence: { quote: 'quiet garden' }, visualDuty: 'establish the quiet location', narrativePurpose: 'establish the scene' } }];
+  state.routing.enabled = true;
+  state.connections.novel.presets = [{ id: 'api', baseUrl: 'https://route.example', credentialId: 'route-key', model: V5 }];
+  state.parameterPresets = [{ id: 'style', source: 'novel', profile: { model: alias, capabilityModelId: V45, steps: '17', count: '2', cfg: '0' } }];
+  state.routing.rules = [{ id: 'r', enabled: true, name: '人物分工', target: { providerId: 'novel', modelId: alias, capabilityModelId: V45, connectionPresetId: 'api', parameterPresetId: 'style' } }];
+  return { ...env, queued };
+}
+
+test('actual generation routes across families and preserves applied style and per-request NAI count', async () => {
+  const { context, queued } = generationEnvironment();
+  assert.equal(await context.storyboardGenerate(null), true);
+  assert.equal(queued.length, 2);
+  for (const job of queued) {
+    assert.equal(job.source, 'novel');
+    assert.equal(job.profile.model, alias);
+    assert.equal(job.profile.capabilityModelId, V45);
+    assert.equal(job.profile.steps, '17');
+    assert.equal(job.profile.cfg, '0');
+    assert.equal(job.profile.count, '1');
+    assert.equal(job.connection.id, 'api');
+    assert.equal(job.connection.baseUrl, 'https://route.example');
+    assert.equal(job.modelIdentity.capabilityModelId, V45);
+    assert.equal(context.storyboardGatewayRequest(job, 'mock-key', { references: [], vibes: [] }).model, alias);
+  }
+});
+
+test('broken active routes stop before extraction/queues, but disabled routing cannot block ordinary generation', async () => {
+  const { state, context, queued, notices } = generationEnvironment();
+  state.routing.rules[0].target.connectionPresetId = 'missing';
+  state.prompt = '';
+  context.storyboardCompilePrompt = async () => { throw new Error('must not call extraction'); };
+  assert.equal(await context.storyboardGenerate(null), false);
+  assert.match(notices.at(-1), /人物分工.*API 预设已失效/);
+  assert.equal(queued.length, 0);
+  state.routing.enabled = false;
+  state.prompt = 'quiet garden';
+  assert.equal(await context.storyboardGenerate(null), true);
+  assert.equal(queued[0].source, 'openai');
+});
+
+test('deleting a routed connection during safety preparation cannot queue a fallback request', async () => {
+  const { state, context, queued, notices } = generationEnvironment();
+  context.storyboardAdaptShotForModel = async (shot) => { state.connections.novel.presets = []; return shot; };
+  assert.equal(await context.storyboardGenerate(null), false);
+  assert.equal(queued.length, 0);
+  assert.match(notices.at(-1), /API 预设已失效/);
+});
 
 test('capture keeps the old identity when the DOM already shows the next selection', () => {
   const { state, context } = environment();

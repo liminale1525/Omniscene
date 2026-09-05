@@ -72,7 +72,7 @@ const normalized = normalizeStoryboardState({
   },
 });
 assert.equal(normalized.routing.rules[0].target.connectionPresetId, 'v5-api', 'a channel preset must remain selectable across models in the same provider');
-assert.equal(normalized.routing.rules[0].target.parameterPresetId, '', 'a route cannot apply a style saved for another model');
+assert.equal(normalized.routing.rules[0].target.parameterPresetId, 'v5-style', 'an incompatible reference stays visible for repair and must be rejected at task preflight');
 assert.equal(Object.hasOwn(normalized.routing.rules[0], 'sensitive'), false, 'content sensitivity is internal metadata, not a routing switch');
 
 assert.doesNotMatch(browserSource, /modelPresets[\s\S]*item\.model === profile\.model/, 'API presets must not be filtered by concrete model');

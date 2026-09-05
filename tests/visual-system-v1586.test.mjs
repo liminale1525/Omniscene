@@ -6,7 +6,7 @@ const styles = await readFile(new URL('style.css', root), 'utf8');
 const source = await readFile(new URL('index.js', root), 'utf8');
 const manifest = JSON.parse(await readFile(new URL('manifest.json', root), 'utf8'));
 
-assert.equal(manifest.version, '1.59.28');
+assert.equal(manifest.version, '1.59.29');
 assert.match(styles, /v1\.58\.6 · 千幕视觉基线/);
 assert.match(styles, /--qm-type-page-title: 20px[\s\S]*--qm-type-card-title: 14px[\s\S]*--qm-type-body: 13px/);
 assert.match(styles, /--qm-type-caption: 11px[\s\S]*--qm-control-height: 38px[\s\S]*--qm-control-radius: 10px/);

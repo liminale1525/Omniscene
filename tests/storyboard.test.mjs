@@ -73,7 +73,7 @@ assert.match(source, /function storyboardGenerationPayload[\s\S]*compileStoryboa
 assert.match(source, /function storyboardStartLog[\s\S]*function storyboardFinishLog[\s\S]*分镜日志/, '分镜必须记录成功、失败与诊断信息');
 assert.match(source, /STORYBOARD_QUEUE_LIMIT[\s\S]*storyboardQueueJob[\s\S]*storyboardPumpQueue/, '分镜必须使用有上限的生成队列');
 assert.match(source, /storyboardActiveJobs\.size < concurrency/, '镜组队列必须按配置执行真实并发');
-assert.match(source, /routedConnection[\s\S]*const binding = resolveStoryboardProfileBinding[\s\S]*model: binding\.remoteModelId[\s\S]*capabilityModelId: binding\.capabilityModelId[\s\S]*storyboardGenerationPayload\(state, providerProfile/, '镜组任务必须保留远端实际名并按明确能力档裁剪参数');
+assert.match(source, /routedConnection[\s\S]*const providerProfile = storyboardResolveRoutingProfile[\s\S]*capabilityModelId:[\s\S]*storyboardGenerationPayload\(state, providerProfile/, '镜组任务必须使用同一绑定解析链生成有效参数');
 assert.match(source, /function storyboardRemoveQueuedLog/, '等待任务必须可单独移除');
 assert.match(source, /移出等待/, '日志必须提供明确的移出等待操作');
 assert.match(source, /storyboardDiscardActive[\s\S]*discardRequested[\s\S]*放弃进行中/, '斩断未暴露的 ST 请求时必须明确为放弃收片');
