@@ -1316,8 +1316,13 @@ export function validateStoryboardShotSpec(value = {}, options = {}) {
 }
 
 export function compileStoryboardPrompt(input = {}) {
+  const modelBinding = resolveStoryboardModelBinding(input.providerId, {
+    model: input.modelId,
+    capabilityModelId: input.capabilityModelId,
+    ...(Object.hasOwn(input, 'remoteModelId') ? { remoteModelId: input.remoteModelId } : {}),
+  });
   const shotInput = input.productionPacket ? adaptProductionPacketToStoryboardShotSpec(input.productionPacket, input.shotOverrides) : input.shot;
-  const validation = validateStoryboardShotSpec(shotInput, { providerId: input.providerId, modelId: input.modelId });
+  const validation = validateStoryboardShotSpec(shotInput, { providerId: input.providerId, modelId: modelBinding.capabilityModelId });
   const shot = validation.shot, common = [
     str(input.artistString, 6000), str(input.artistPositive, 12000), str(input.modelPositive, 12000),
     promptPart(shot.promptAtoms.global), shot.scene,
@@ -1326,7 +1331,7 @@ export function compileStoryboardPrompt(input = {}) {
   ].filter(Boolean).join(', ');
   const characterBlocks = shot.characters.map(characterPrompt).filter(Boolean);
   const environment = promptPart(shot.promptAtoms.environment), quality = promptPart(shot.promptAtoms.quality);
-  const capability = getStoryboardCapabilities(input.providerId, input.modelId);
+  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId);
   const useNativeCharacters = input.providerId === 'novel' && capability.multiCharacter && characterBlocks.length > 0;
   const prompt = [common, ...(useNativeCharacters ? [] : characterBlocks), environment, quality].filter(Boolean).join(', ');
   const antiMix = shot.characters.length > 1 ? 'distinct character traits, correct character actions, no mixed identities, no merged bodies' : '';
@@ -1344,10 +1349,21 @@ export function compileStoryboardPrompt(input = {}) {
     providerOptions.v4_negative_prompt = { caption: { base_caption: negative, char_captions: [] }, legacy_uc: false };
   }
   return {
-    prompt, negative, providerOptions, characterBlocks, validation,
+    prompt, negative, providerOptions, characterBlocks, validation, modelBinding,
     productionContext: shot.productionContext,
     degradation: shot.characters.length > 1 && !useNativeCharacters ? { mode: 'named_character_blocks', reason: capability.multiCharacter ? 'provider_adapter_unavailable' : 'capability_unavailable' } : null,
   };
+}
+
+// Native NAI captions are the actual request text, not a second copy of the editor.
+// Updating only payload.prompt leaves old artist/negative text active on redraw.
+export function synchronizeStoryboardCaptionBase(payload) {
+  const options = payload?.parameters?.providerOptions;
+  for (const [key, field] of [['v4_prompt', 'prompt'], ['v4_negative_prompt', 'negative']]) {
+    const caption = options?.[key]?.caption;
+    if (obj(caption) && typeof payload[field] === 'string') caption.base_caption = payload[field];
+  }
+  return payload;
 }
 
 export function prepareStoryboardShotGroup(value = {}) {

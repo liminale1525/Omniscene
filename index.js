@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.25';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.25';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.25';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.26';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.26';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.26';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.25';
+} from './qianmu-llm-output.js?v=1.59.26';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -126,6 +126,7 @@ import {
   aggregateStoryboardShotTasks,
   buildStoryboardProviderPlan,
   compileStoryboardPrompt,
+  synchronizeStoryboardCaptionBase,
   createStoryboardParagraphAnchor,
   createStoryboardDefaults,
   createStoryboardMessageReference,
@@ -145,6 +146,7 @@ import {
   pruneStoryboardPipelineLogs,
   rememberStoryboardModelProfile,
   resolveStoryboardJobModelIdentity,
+  resolveStoryboardModelBinding,
   resolveStoryboardMessageReference,
   resolveStoryboardComposition,
   restoreStoryboardCompositionPolicy,
@@ -161,143 +163,143 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.25';
+} from './qianmu-storyboard.js?v=1.59.26';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.25';
+const VERSION = '1.59.26';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.25'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.26'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.25').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.26').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.25'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.26'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.25'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.26'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.25'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.26'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.25'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.26'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.25'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.26'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.25'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.26'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.25'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.26'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.25'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.26'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.25'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.26'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.25'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.26'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.25'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.26'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.25'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.26'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.25'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.26'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.25'),
+    load: () => import('./qianmu-video-task.js?v=1.59.26'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.25'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.26'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.25'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.26'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.25'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.26'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.25'),
+    load: () => import('./qianmu-video-store.js?v=1.59.26'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.25'),
+    load: () => import('./qianmu-video-result.js?v=1.59.26'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.25'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.26'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.25'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.26'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.25'),
+    load: () => import('./qianmu-video-media.js?v=1.59.26'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.25'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.26'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.25'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.26'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.25'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.26'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.25'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.26'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.25'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.26'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.25'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.26'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.25'),
-        import('./qianmu-theaters.js?v=1.59.25'),
+        import('./builtin-theaters.js?v=1.59.26'),
+        import('./qianmu-theaters.js?v=1.59.26'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -12007,10 +12009,11 @@ function storyboardPromptDefaultsKey(sourceId, modelId) {
   return `${String(sourceId || '')}:${String(modelId || '')}`.slice(0, 500);
 }
 
-function storyboardProviderPromptDefaults(sourceId, modelId, state = storyboardState()) {
+function storyboardProviderPromptDefaults(sourceId, modelId, state = storyboardState(), capabilityModelId = '') {
+  const capabilityId = resolveStoryboardModelBinding(sourceId, { model: modelId, capabilityModelId }).capabilityModelId;
   const builtin = sourceId !== 'novel' ? STORYBOARD_GENERIC_PROMPT_DEFAULTS : {
-    positive: STORYBOARD_NAI_QUALITY_DEFAULTS[modelId] || STORYBOARD_NAI_QUALITY_DEFAULTS['nai-diffusion-5-full'],
-    negative: STORYBOARD_NAI_NEGATIVE_DEFAULTS[modelId] || STORYBOARD_NAI_NEGATIVE_DEFAULTS['nai-diffusion-5-full'],
+    positive: STORYBOARD_NAI_QUALITY_DEFAULTS[capabilityId] || STORYBOARD_NAI_QUALITY_DEFAULTS['nai-diffusion-5-full'],
+    negative: STORYBOARD_NAI_NEGATIVE_DEFAULTS[capabilityId] || STORYBOARD_NAI_NEGATIVE_DEFAULTS['nai-diffusion-5-full'],
   };
   const remembered = state?.promptDefaults?.[storyboardPromptDefaultsKey(sourceId, modelId)] || {};
   return {
@@ -12028,8 +12031,8 @@ function storyboardJoinPrompt(parts, sourceId) {
   return values.join(sourceId === 'novel' ? ', ' : '\n\n');
 }
 
-function storyboardPromptLayerForArtist(state, artist, sourceId, modelId) {
-  const defaults = storyboardProviderPromptDefaults(sourceId, modelId, state);
+function storyboardPromptLayerForArtist(state, artist, sourceId, modelId, capabilityModelId = '') {
+  const defaults = storyboardProviderPromptDefaults(sourceId, modelId, state, capabilityModelId);
   return {
     positive: String(artist?.positivePrompt || defaults.positive || '').trim(),
     negative: String(artist?.negativePrompt || defaults.negative || '').trim(),
@@ -12051,8 +12054,8 @@ function storyboardRememberPromptLayer(state, artist, sourceId, modelId, field, 
   state.promptDefaults[key] = current;
 }
 
-function storyboardPromptsForArtist(state, artist, sourceId, modelId, { prompt = state.prompt, negative = state.negative, honorBaked = true, fallbackToStateArtist = true } = {}) {
-  const layer = storyboardPromptLayerForArtist(state, artist, sourceId, modelId);
+function storyboardPromptsForArtist(state, artist, sourceId, modelId, { prompt = state.prompt, negative = state.negative, honorBaked = true, fallbackToStateArtist = true, capabilityModelId = '' } = {}) {
+  const layer = storyboardPromptLayerForArtist(state, artist, sourceId, modelId, capabilityModelId);
   const artistString = String(artist?.value ?? (fallbackToStateArtist ? state.promptDraft?.artistString : '') ?? '').trim();
   return {
     prompt: honorBaked && state.promptDraft?.artistPositiveBaked
@@ -12078,18 +12081,20 @@ function storyboardRemovePromptLayer(value, layer) {
 
 function storyboardBasePromptsForArtistRedraw(record, snapshot) {
   const state = storyboardState();
-  const sourceId = snapshot.source || record.source || state.source;
-  const modelId = snapshot.profile?.model || record.model || storyboardProviderProfile(state, sourceId).model;
+  const identity = resolveStoryboardJobModelIdentity(snapshot);
+  const sourceId = identity.modelFamily;
+  const modelId = identity.remoteModelId;
+  const capabilityModelId = identity.capabilityModelId;
   const oldArtist = state.artistPresets.find((item) => item.id === record.artistPresetId)
     || state.artistPresets.find((item) => item.value === record.artistString) || null;
-  const defaults = storyboardProviderPromptDefaults(sourceId, modelId);
+  const defaults = storyboardProviderPromptDefaults(sourceId, modelId, state, capabilityModelId);
   let prompt = String(record.finalPrompt || snapshot.payload?.prompt || record.prompt || snapshot.prompt || '').trim();
-  let negative = String(record.effectiveNegative || snapshot.payload?.negative || record.negative || snapshot.negative || '').trim();
+  let negative = String(snapshot.payload?.negative ?? record.effectiveNegative ?? record.negative ?? snapshot.negative ?? '').trim();
   const oldArtistString = record.artistString || snapshot.artistString;
   if (oldArtistString) prompt = storyboardRemovePromptLayer(prompt, oldArtistString);
   prompt = storyboardRemovePromptLayer(prompt, oldArtist?.positivePrompt || defaults.positive);
   negative = storyboardRemovePromptLayer(negative, oldArtist?.negativePrompt || defaults.negative);
-  return { prompt: prompt || String(record.prompt || snapshot.prompt || '').trim(), negative, sourceId, modelId };
+  return { prompt: prompt || String(record.prompt || snapshot.prompt || '').trim(), negative, sourceId, modelId, capabilityModelId };
 }
 
 function storyboardPageKey(state = storyboardState()) {
@@ -15852,9 +15857,10 @@ function storyboardShotSpecForSelection(shot, selection) {
 }
 
 function storyboardGenerationPayload(state, profile, { sourceId = state.source, prompt = state.prompt, negative = state.negative, shot = null, artistAssignment = null } = {}) {
-  const capabilities = getStoryboardCapabilities(sourceId, profile.model);
+  const modelBinding = resolveStoryboardModelBinding(sourceId, { model: profile.model, capabilityModelId: profile.capabilityModelId });
+  const capabilities = getStoryboardCapabilities(sourceId, modelBinding.capabilityModelId);
   const artist = artistAssignment?.artist || storyboardSelectedArtistPreset(state);
-  const defaults = storyboardProviderPromptDefaults(sourceId, profile.model);
+  const defaults = storyboardProviderPromptDefaults(sourceId, modelBinding.remoteModelId, state, modelBinding.capabilityModelId);
   const artistString = String(artist?.value || state.promptDraft?.artistString || '').trim();
   const shotSpec = normalizeStoryboardShotSpec(shot?.shotSpec || {
     ...shot,
@@ -15864,11 +15870,11 @@ function storyboardGenerationPayload(state, profile, { sourceId = state.source, 
   const manuallyLocked = Boolean(shot?.userEdited || shot?.promptLocked || state.promptDraft?.userEditedCompiled);
   const compiled = manuallyLocked
     ? (() => {
-      const exact = storyboardPromptsForArtist(state, artist, sourceId, profile.model, { prompt, negative, honorBaked: true });
-      return { prompt: exact.prompt, negative: exact.negative, providerOptions: {}, characterBlocks: [], validation: { valid: true, shot: shotSpec, errors: [], warnings: [] }, degradation: { mode: 'manual_flat', reason: 'user_locked_prompt' } };
+      const exact = storyboardPromptsForArtist(state, artist, sourceId, modelBinding.remoteModelId, { prompt, negative, honorBaked: true, capabilityModelId: modelBinding.capabilityModelId });
+      return { prompt: exact.prompt, negative: exact.negative, providerOptions: {}, characterBlocks: [], validation: { valid: true, shot: shotSpec, errors: [], warnings: [] }, modelBinding, degradation: { mode: 'manual_flat', reason: 'user_locked_prompt' } };
     })()
     : compileStoryboardPrompt({
-      providerId: sourceId, modelId: profile.model, shot: shotSpec, artistString,
+      providerId: sourceId, remoteModelId: modelBinding.remoteModelId, capabilityModelId: modelBinding.capabilityModelId, shot: shotSpec, artistString,
       artistPositive: artist ? String(artist.positivePrompt || defaults.positive || '') : '',
       artistNegative: artist ? String(artist.negativePrompt || defaults.negative || '') : '',
       modelPositive: artist ? '' : defaults.positive,
@@ -18566,7 +18572,16 @@ async function storyboardRedrawRecord(record, { artistPreset = undefined, artist
   if (record.linkState === 'inactive_swipe') return toast('请先切回这张图对应的回复版本。', 'warning');
 
   const linkedLog = state.logs.find((item) => item.recordId === record.id || item.recordIds?.includes(record.id));
-  const snapshot = clone(linkedLog?.snapshot || await storyboardReadSnapshotForRecord(record) || {});
+  const redrawChatKey = String(getChatKey() || '');
+  const redrawMessage = ctx().chat[record.floor];
+  const redrawText = String(redrawMessage.mes || '');
+  const redrawSwipe = Number(redrawMessage.swipe_id || 0);
+  // A saved inline edit belongs to this image; the generation log remains historical.
+  const snapshot = clone(await storyboardReadSnapshotForRecord(record) || linkedLog?.snapshot || {});
+  if (redrawChatKey !== String(getChatKey() || '') || ctx().chat?.[record.floor] !== redrawMessage
+    || redrawText !== String(redrawMessage.mes || '') || redrawSwipe !== Number(redrawMessage.swipe_id || 0)) {
+    return toast('正文已切换，请在当前画面重新操作。', 'info');
+  }
   if (!snapshot?.source || !snapshot?.profile || !snapshot?.payload) {
     await storyboardLoadRecordToWorkbench(record);
     return toast('这张旧图缺少完整生成设置，已载入镜头台，请确认后重绘。', 'info');
@@ -18591,9 +18606,14 @@ async function storyboardRedrawRecord(record, { artistPreset = undefined, artist
     artistPool = state.artistPools.find((item) => item.id === assignment.poolId) || artistPool;
     artistRouteSource = assignment.source;
   }
-  const base = replacingArtist ? storyboardBasePromptsForArtistRedraw(record, snapshot) : null;
+  let base = null;
+  try {
+    if (replacingArtist) base = storyboardBasePromptsForArtistRedraw(record, snapshot);
+  } catch (error) {
+    return toast(error.message || '旧图缺少完整模型快照，请载入镜头台确认。', 'warning');
+  }
   const composed = replacingArtist
-    ? storyboardPromptsForArtist(state, resolvedArtist, base.sourceId, base.modelId, { prompt: base.prompt, negative: base.negative, honorBaked: false, fallbackToStateArtist: false })
+    ? storyboardPromptsForArtist(state, resolvedArtist, base.sourceId, base.modelId, { prompt: base.prompt, negative: base.negative, honorBaked: false, fallbackToStateArtist: false, capabilityModelId: base.capabilityModelId })
     : null;
   const finalPrompt = String(composed?.prompt || record.finalPrompt || record.prompt || snapshot.payload.prompt || snapshot.prompt || '').trim();
   const paragraphIndex = record.paragraphAnchor?.paragraphIndex ?? snapshot.paragraphAnchor?.paragraphIndex ?? 0;
@@ -18601,7 +18621,7 @@ async function storyboardRedrawRecord(record, { artistPreset = undefined, artist
   snapshot.negative = replacingArtist ? base.negative : snapshot.negative;
   snapshot.payload.prompt = finalPrompt;
   if (replacingArtist) {
-    snapshot.payload.negative = getStoryboardCapabilities(base.sourceId, base.modelId).negative ? composed.negative : '';
+    snapshot.payload.negative = getStoryboardCapabilities(base.sourceId, base.capabilityModelId).negative ? composed.negative : '';
     snapshot.payload.artistString = composed.artistString;
     snapshot.artistString = composed.artistString;
     snapshot.artistPresetId = resolvedArtist?.id || '';
@@ -18609,6 +18629,7 @@ async function storyboardRedrawRecord(record, { artistPreset = undefined, artist
     snapshot.artistRouteSource = artistRouteSource;
     snapshot.artistRerollCount = artistRerollCount;
   }
+  synchronizeStoryboardCaptionBase(snapshot.payload);
   snapshot.promptMode = 'manual';
   snapshot.promptLocked = true;
 
@@ -18711,7 +18732,11 @@ async function storyboardEditPrompt({ plan = null, record = null } = {}) {
       nextSnapshot.negative = negative;
       nextSnapshot.promptMode = 'manual';
       nextSnapshot.promptLocked = true;
-      if (nextSnapshot.payload) { nextSnapshot.payload.prompt = positive; nextSnapshot.payload.negative = negative; }
+      if (nextSnapshot.payload) {
+        nextSnapshot.payload.prompt = positive;
+        nextSnapshot.payload.negative = negative;
+        synchronizeStoryboardCaptionBase(nextSnapshot.payload);
+      }
       await storyboardStoreSnapshotForRecord(record, nextSnapshot);
     }
     await saveMetadata();
