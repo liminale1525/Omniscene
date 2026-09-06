@@ -159,15 +159,16 @@ test('cache families remain isolated when profiles are edited', () => {
 
 test('real model-change handler saves previous controls then restores the selected model', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
-  const begin = source.indexOf("  root.querySelector('.sd-storyboard-model-select')?.addEventListener('change', (event) => {");
-  const end = source.indexOf("  root.querySelector('.sd-storyboard-compiler-api')", begin);
+  const begin = source.indexOf('function storyboardApplyModelBinding(');
+  const end = source.indexOf('function bindStoryboardModelPicker(', begin);
   assert.ok(begin >= 0 && end > begin);
   const state = createStoryboardDefaults();
   state.profiles.novel = { ...state.profiles.novel, model: V3, loaded: true, steps: '28', cfg: '5' };
   rememberStoryboardModelProfile(state.modelProfiles, 'novel', { model: V45, loaded: true, steps: '24', cfg: '6' });
   let handler, requested, saves = 0, renders = 0, controls = { steps: '32', cfg: '0' };
-  vm.runInNewContext(source.slice(begin, end), {
-    root: { querySelector: () => ({ addEventListener: (type, fn) => { assert.equal(type, 'change'); handler = fn; } }) }, state,
+  const root = { isConnected: true };
+  handler = vm.runInNewContext(`${source.slice(begin, end)}; storyboardApplyModelBinding;`, {
+    storyboardState: () => state,
     clone: structuredClone, createStoryboardDefaults, rememberStoryboardModelProfile, getStoryboardRememberedProfile, STORYBOARD_PROVIDER_REGISTRY,
     resolveStoryboardModelBinding, getStoryboardModel, toast: (message) => assert.fail(message),
     storyboardCaptureWorkbench: (_root, family, options) => {
@@ -177,14 +178,14 @@ test('real model-change handler saves previous controls then restores the select
     saveSettings: () => saves++, renderModal: () => renders++,
   });
   requested = V45;
-  handler({ target: { value: requested } });
+  handler(root, state, 'novel', resolveStoryboardModelBinding('novel', { remoteModelId: requested }));
   assert.equal(state.profiles.novel.model, V45);
   assert.equal(state.profiles.novel.steps, '24');
   assert.equal(state.profiles.novel.cfg, '6');
   assert.equal(getStoryboardRememberedProfile(state.modelProfiles, 'novel', V3).steps, '32');
   controls = { steps: '26', cfg: '6.5' };
   requested = V3;
-  handler({ target: { value: requested } });
+  handler(root, state, 'novel', resolveStoryboardModelBinding('novel', { remoteModelId: requested }));
   assert.equal(state.profiles.novel.steps, '32');
   assert.equal(state.profiles.novel.cfg, '0');
   assert.equal(getStoryboardRememberedProfile(state.modelProfiles, 'novel', V45).steps, '26');
@@ -195,7 +196,7 @@ test('real model-change handler saves previous controls then restores the select
   state.profiles.novel = { ...createStoryboardDefaults().profiles.novel };
   controls = { steps: '35', cfg: '4.5' };
   requested = V45;
-  handler({ target: { value: requested } });
+  handler(root, state, 'novel', resolveStoryboardModelBinding('novel', { remoteModelId: requested }));
   assert.equal(getStoryboardRememberedProfile(state.modelProfiles, 'novel', STORYBOARD_PROVIDER_REGISTRY.novel.defaultModel).steps, '35');
 });
 

@@ -38,7 +38,7 @@ function environment(capability = V3, model = alias, extra = {}) {
     toast: (message) => { notices.push(message); return false; },
     ...extra,
   });
-  const names = ['storyboardConnectionState', 'storyboardProviderProfile', 'storyboardModelOptions',
+  const names = ['storyboardConnectionState', 'storyboardProviderProfile', 'renderStoryboardModelPicker', 'storyboardApplyModelBinding',
     'storyboardCompilerProfileOptions', 'renderStoryboardModelCard', 'storyboardPromptDefaultsKey',
     'storyboardProviderPromptDefaults', 'storyboardPromptLayerForArtist', 'storyboardRememberPromptLayer',
     'storyboardPromptsForArtist', 'storyboardJoinPrompt', 'storyboardParameterPresets',
@@ -89,7 +89,7 @@ test('loaded parameters preserve legal zero/false while missing fields receive t
 test('a current bound alias remains selected and escaped in the actual model control', () => {
   const { state, context } = environment(V45, 'vendor/<alias>');
   const html = context.renderStoryboardModelCard(state);
-  assert.match(html, /value="vendor\/&lt;alias&gt;" selected/);
+  assert.match(html, /value="vendor\/&lt;alias&gt;"/);
   assert.doesNotMatch(html, /value="nai-diffusion-5-full" selected/);
   assert.doesNotMatch(html, /<alias>/);
 });
@@ -99,7 +99,7 @@ test('invalid bindings show a repairable model card instead of crashing the enti
   const before = structuredClone(state.profiles.novel);
   const html = context.renderStoryboardCreate(state);
   assert.match(html, /请重新选择模型/);
-  assert.match(html, /value="unknown-alias" selected/);
+  assert.match(html, /value="unknown-alias"/);
   assert.doesNotMatch(html, /sd-storyboard-params/);
   assert.deepEqual(state.profiles.novel, before);
 });
@@ -180,7 +180,7 @@ test('route rendering keeps bound aliases selected and exposes stale references 
   const route = { providerId: 'novel', modelId: 'vendor/<alias>', capabilityModelId: V45, connectionPresetId: 'missing-api', parameterPresetId: 'missing-style' };
   const before = structuredClone(state);
   const html = context.storyboardRoutingTargetOptions(state, 'novel', route);
-  assert.match(html, /value="vendor\/&lt;alias&gt;" selected/);
+  assert.match(html, /value="vendor\/&lt;alias&gt;"/);
   assert.match(html, /value="missing-api" selected/);
   assert.match(html, /value="missing-style" selected/);
   assert.match(html, /role="status"/);
@@ -204,15 +204,15 @@ test('actual routing model/provider handlers switch identities atomically and pr
   const rule = { id: 'r', target: { providerId: 'novel', modelId: alias, capabilityModelId: V45, connectionPresetId: 'api', parameterPresetId: 'params' } };
   state.routing.rules = [rule];
   const callbacks = routeHandlers(context, state);
-  callbacks['.sd-storyboard-route-model:change']({ target: { value: V3 } });
+  const root = { isConnected: true };
+  context.storyboardApplyModelBinding(root, state, 'novel', { remoteModelId: V3 }, rule);
   assert.equal(rule.target.modelId, V3);
   assert.equal(rule.target.capabilityModelId, V3);
   assert.equal(rule.target.connectionPresetId, 'api');
   assert.equal(rule.target.parameterPresetId, '');
   const before = structuredClone(rule.target);
-  callbacks['.sd-storyboard-route-model:change']({ target: { value: 'new-unbound-alias' } });
+  assert.throws(() => context.storyboardApplyModelBinding(root, state, 'novel', { remoteModelId: 'new-unbound-alias' }, rule), { code: 'missing_capability_model' });
   assert.deepEqual(rule.target, before);
-  assert.ok(notices.length);
   callbacks['.sd-storyboard-route-provider:change']({ target: { value: 'openai' } });
   assert.equal(rule.target.capabilityModelId, 'gpt-image-2');
   assert.equal(rule.target.connectionPresetId, '');
@@ -332,20 +332,13 @@ test('first prompt edit is remembered under the visible default model, not an em
 test('real selection callback with real capture replaces identity atomically and preserves previous alias memory', () => {
   const { state, context } = environment();
   state.profiles.novel.cfg = '0';
-  let handler;
-  const modelControl = { value: V45, addEventListener: (_type, callback) => { handler = callback; } };
-  context.root = rootWith({ '.sd-storyboard-model-select': modelControl });
-  context.state = state;
-  const begin = source.indexOf("  root.querySelector('.sd-storyboard-model-select')?.addEventListener('change', (event) => {");
-  const end = source.indexOf("  root.querySelector('.sd-storyboard-compiler-api')", begin);
-  vm.runInContext(source.slice(begin, end), context);
-  handler({ target: modelControl });
+  const root = { ...rootWith(), isConnected: true };
+  context.storyboardApplyModelBinding(root, state, 'novel', { remoteModelId: V45 });
   assert.equal(state.profiles.novel.model, V45);
   assert.equal(state.profiles.novel.capabilityModelId, V45);
   assert.equal(storyboard.getStoryboardRememberedProfile(state.modelProfiles, 'novel', alias, V3).cfg, '0');
-  modelControl.value = 'new-unbound-alias';
   const before = structuredClone(state.profiles.novel);
-  handler({ target: modelControl });
+  assert.throws(() => context.storyboardApplyModelBinding(root, state, 'novel', { remoteModelId: 'new-unbound-alias' }), { code: 'missing_capability_model' });
   assert.deepEqual(structuredClone(state.profiles.novel), before);
 });
 

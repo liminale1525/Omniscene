@@ -50,9 +50,8 @@ function storedZip(name, payload) {
 assert.deepEqual(Object.keys(IMAGE_GATEWAY_PROVIDERS), ['novel', 'banana', 'openai', 'seedream', 'comfy']);
 
 const browserSource = await readFile(new URL('../index.js', import.meta.url), 'utf8');
-assert.doesNotMatch(browserSource, /fetch\('\/api\/plugins\/qianmu-tts\/image\/models'/, '镜头台使用固定模型目录，不应在切换配置时额外拉取模型');
-assert.doesNotMatch(browserSource, /查看接口全部模型|value="__custom__"|输入兼容模型 ID/, '固定模型目录不得重新暴露接口全集或任意模型 ID');
-assert.match(browserSource, /function storyboardModelOptions[\s\S]*STORYBOARD_MODEL_REGISTRY\[providerId\]/, '模型选择器必须直接来自千幕固定目录');
+assert.match(browserSource, /fetch\('\/api\/plugins\/qianmu-tts\/image\/models'/, '模型拉取复用只读网关端点');
+assert.match(browserSource, /function bindStoryboardModelPicker[\s\S]*models: STORYBOARD_MODEL_REGISTRY\[providerId\]/, '保留内置目录作为离线选择');
 
 const sanitized = sanitizeImageRequest({
   provider: 'openai', apiKey: 'secret', model: 'gpt-image-2', prompt: 'quiet street', negativePrompt: 'watermark',

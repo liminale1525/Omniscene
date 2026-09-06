@@ -5755,6 +5755,20 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
+#story-director-modal .sd-storyboard-model-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+#story-director-modal .sd-storyboard-model-field > span { color: var(--sd-muted); font-size: 12px; text-align: left; }
+#story-director-modal .sd-model-picker { min-width: 0; width: 100%; align-self: start; }
+#story-director-modal .sd-model-picker-input-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--qm-control-height, 40px); gap: 6px; align-items: stretch; }
+#story-director-modal .sd-model-picker-panel { padding: 7px 0 0; min-width: 0; }
+#story-director-modal .sd-model-picker-panel[hidden] { display: none; }
+#story-director-modal .sd-model-picker-list { max-height: 210px; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--sd-hairline); border-radius: 9px; }
+#story-director-modal .sd-model-picker-option { display: flex; flex-direction: column; align-items: stretch; gap: 3px; width: 100%; min-height: 40px; border: 0; border-bottom: 1px solid var(--sd-hairline); border-radius: 0; padding: 7px 9px; margin: 0; color: var(--sd-text); background: transparent; text-align: left; }
+#story-director-modal .sd-model-picker-option span, #story-director-modal .sd-model-picker-option small { overflow-wrap: anywhere; text-align: left; font-size: 12px; }
+#story-director-modal .sd-model-picker-option small { color: var(--sd-muted); font-size: 11px; }
+#story-director-modal .sd-model-picker-option:hover, #story-director-modal .sd-model-picker-option[aria-selected="true"] { color: var(--sd-accent); background: color-mix(in srgb, var(--sd-accent) 12%, transparent); }
+#story-director-modal .sd-model-picker-apply-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding-top: 6px; }
+#story-director-modal .sd-model-picker-status { display: block; color: var(--sd-muted); font-size: 11px; line-height: 1.5; padding-top: 5px; overflow-wrap: anywhere; }
+#story-director-modal .sd-model-picker-more { width: 100%; }
 #story-director-modal .sd-storyboard-model-input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -7671,11 +7685,11 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 /* ST2-01: one local form baseline. Shared modal/reader/notes controls keep their own sizing. */
 #story-director-modal .sd-storyboard-root { --qm-control-height: 40px; --qm-control-radius: 9px; }
 #story-director-modal .sd-storyboard-root :is(label, label > span, label > b, .sd-storyboard-field-label) { text-align: left; min-width: 0; }
-#story-director-modal .sd-storyboard-root :is(.sd-storyboard-connection-preset-row, .sd-storyboard-inline-control, .sd-storyboard-preset-row, .sd-storyboard-preset-control-row, .sd-storyboard-artist-search-row, .sd-storyboard-artist-pool-tools) > .sd-icon-btn {
+#story-director-modal .sd-storyboard-root :is(.sd-model-picker-input-row, .sd-storyboard-connection-preset-row, .sd-storyboard-inline-control, .sd-storyboard-preset-row, .sd-storyboard-preset-control-row, .sd-storyboard-artist-search-row, .sd-storyboard-artist-pool-tools) > .sd-icon-btn {
   box-sizing: border-box; width: var(--qm-control-height) !important; min-width: var(--qm-control-height) !important;
   height: var(--qm-control-height) !important; min-height: var(--qm-control-height) !important; margin: 0 !important;
 }
-#story-director-modal .sd-storyboard-root :is(.sd-storyboard-preset-control-row, .sd-storyboard-connection-actions, .sd-storyboard-model-actions, .sd-storyboard-artist-preview-sources) > .sd-btn {
+#story-director-modal .sd-storyboard-root :is(.sd-model-picker-apply-row, .sd-storyboard-preset-control-row, .sd-storyboard-connection-actions, .sd-storyboard-model-actions, .sd-storyboard-artist-preview-sources) > .sd-btn {
   box-sizing: border-box; height: var(--qm-control-height); min-height: var(--qm-control-height); margin: 0 !important;
   display: inline-flex; align-items: center; justify-content: center; padding-block: 0 !important;
 }

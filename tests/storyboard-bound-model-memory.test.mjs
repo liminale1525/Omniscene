@@ -216,24 +216,24 @@ test('the real profile snapshot preserves only explicit identity, without copyin
 });
 
 test('real canonical model switches keep capability and parameter fields together', () => {
-  const begin = source.indexOf("  root.querySelector('.sd-storyboard-model-select')?.addEventListener('change', (event) => {");
-  const end = source.indexOf("  root.querySelector('.sd-storyboard-compiler-api')", begin);
+  const begin = source.indexOf('function storyboardApplyModelBinding(');
+  const end = source.indexOf('function bindStoryboardModelPicker(', begin);
   assert.ok(begin >= 0 && end > begin);
   const state = createStoryboardDefaults();
   state.profiles.novel = { ...state.profiles.novel, model: V3, capabilityModelId: V3, steps: '31' };
   rememberStoryboardModelProfile(state.modelProfiles, 'novel', { model: V45, capabilityModelId: V45, steps: '28' });
   let handler, requested;
-  vm.runInNewContext(source.slice(begin, end), {
+  handler = vm.runInNewContext(`${source.slice(begin, end)}; storyboardApplyModelBinding;`, {
     state, createStoryboardDefaults, STORYBOARD_PROVIDER_REGISTRY, clone: structuredClone,
     rememberStoryboardModelProfile, getStoryboardRememberedProfile,
     resolveStoryboardModelBinding, getStoryboardModel, toast: (message) => assert.fail(message),
-    root: { querySelector: () => ({ addEventListener: (_type, fn) => { handler = fn; } }) },
+    storyboardState: () => state,
     storyboardCaptureWorkbench: () => { Object.assign(state.profiles.novel, { model: requested, cfg: '0' }); },
     saveSettings: () => {}, renderModal: () => {},
   });
   for (const [model, expectedSteps] of [[V45, '28'], [V3, '31']]) {
     requested = model;
-    handler({ target: { value: requested } });
+    handler({ isConnected: true }, state, 'novel', resolveStoryboardModelBinding('novel', { remoteModelId: requested }));
     assert.equal(state.profiles.novel.model, model);
     assert.equal(state.profiles.novel.capabilityModelId, model);
     assert.equal(state.profiles.novel.steps, expectedSteps);

@@ -108,8 +108,8 @@ assert.deepEqual(summarizeStoryboardGenerationDemand([
 ]), { requestCount: 2, imageCount: 5, hasMultiImageRequest: true }, 'confirmation math must match the one-to-four image request contract');
 
 assert.match(browserSource, /function storyboardConnectionState[\s\S]*draft: group\?\.draft \|\| active/, 'the UI must render the editable draft instead of the saved preset object');
-assert.match(browserSource, /function storyboardModelOptions[\s\S]*const options = STORYBOARD_MODEL_REGISTRY\[providerId\][\s\S]*fixedSelection/, 'official providers must use their curated model catalog');
-assert.match(browserSource, /provider\.customModelId \? `<input class="text_pole sd-storyboard-model-select"/, 'the custom OpenAI-compatible channel must accept a concrete third-party model ID');
+assert.match(browserSource, /models: STORYBOARD_MODEL_REGISTRY\[providerId\]/, 'all families retain their capability catalog');
+assert.match(browserSource, /role="combobox"[\s\S]*maxlength="240"/, 'all online families accept explicit third-party model IDs');
 assert.match(browserSource, /resolveStoryboardProfileBinding\(providerId, legacy\)/, 'workbench IDs must pass through the shared explicit binding resolver');
 assert.doesNotMatch(browserSource, /storyboardFetchedModels|showAllFetchedModels|__custom__/, 'legacy relay-discovery state must not leak back into the workbench');
 assert.match(browserSource, /const connection = routedConnection \|\| connectionState\.draft \|\| connectionState\.active/, 'ordinary generation must use the current draft while an explicit ensemble route may use its saved preset');
