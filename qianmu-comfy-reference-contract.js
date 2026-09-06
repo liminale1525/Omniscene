@@ -22,13 +22,16 @@ export function normalizeComfyReferenceSelection(value) {
     || !Array.isArray(value.items) || !value.items.length || value.items.length > COMFY_REFERENCE_LIMIT) fail('工作流参考配置无效，请重新选择');
   let total = 0;
   const items = value.items.map(item => {
-    if (!item || !hash(item.sha256) || !Number.isInteger(item.bytes) || item.bytes < 1 || item.bytes > COMFY_REFERENCE_BYTES
-      || !['image/png','image/jpeg','image/webp'].includes(item.mime) || typeof item.name !== 'string' || item.name.length > 120 || /[\u0000-\u001f\u007f]/.test(item.name)) fail('参考图记录无效，请重新选择');
-    total += item.bytes;
-    return { url: comfyReferencePath(item.url), name: item.name, mime: item.mime, bytes: item.bytes, sha256: item.sha256 };
+    const normalized = normalizeStaticReferenceReceipt(item); total += normalized.bytes;
+    return normalized;
   });
   if (total > COMFY_REFERENCE_TOTAL) fail('参考图总计须小于 48 MB');
   return { version: 1, enabled: value.enabled, namespace: value.namespace, workflowHash: value.workflowHash, items };
+}
+export function normalizeStaticReferenceReceipt(item) {
+  if (!item || !hash(item.sha256) || !Number.isInteger(item.bytes) || item.bytes < 1 || item.bytes > COMFY_REFERENCE_BYTES
+    || !['image/png','image/jpeg','image/webp'].includes(item.mime) || typeof item.name !== 'string' || item.name.length > 120 || /[\u0000-\u001f\u007f]/.test(item.name)) fail('参考图记录无效，请重新选择');
+  return { url: comfyReferencePath(item.url), name: item.name, mime: item.mime, bytes: item.bytes, sha256: item.sha256 };
 }
 export function retainComfyReferenceSelection(value) {
   try { return normalizeComfyReferenceSelection(value); }

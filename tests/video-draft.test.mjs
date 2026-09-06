@@ -155,7 +155,7 @@ test('blank drafts stay valid for future text planning but never become submissi
 test('the draft contract is an idle release chunk', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
-assert.match(source, /videoDraft:\s*\{[\s\S]*import\('\.\/qianmu-video-draft\.js\?v=1\.59\.63'\)/);
+assert.match(source, /videoDraft:\s*\{[\s\S]*import\('\.\/qianmu-video-draft\.js\?v=1\.59\.64'\)/);
   assert.ok(release.files.includes('qianmu-video-draft.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('videoDraft'\)/);

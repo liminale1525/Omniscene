@@ -29,15 +29,17 @@ export async function saveComfyReferenceFiles(files, {workflow,namespace,save,gu
   if (!inspection.ok || !inspection.capabilities.reference) fail('当前工作流没有接入参考图槽位');
   const workflowHash = await comfyWorkflowReferenceHash(workflow); await guard();
   const items = [];
-  for (const file of captured) {
-    await guard(); const bytes = new Uint8Array(await file.arrayBuffer()); await guard();
-    if (bytes.byteLength !== file.size) fail('参考图文件读取不完整');
-    const mime = mimeOf(bytes), sha256 = await digest(bytes); await guard();
-    const extension = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1];
-    const url = comfyReferencePath(await save({ data: base64(bytes), mime, filename: `qianmu_reference_${sha256}`, extension })); await guard();
-    items.push({ url, name: String(file.name || '参考图').replace(/[\u0000-\u001f\u007f]/g,'').slice(0,120), mime, bytes: bytes.length, sha256 });
-  }
+  for (const file of captured) items.push(await saveStaticReferenceFile(file, {save,guard}));
   return normalizeComfyReferenceSelection({ version: 1, enabled: true, namespace, workflowHash, items });
+}
+export async function saveStaticReferenceFile(file, {save,guard = async () => {}}) {
+  if (!file || !Number.isInteger(file.size) || file.size < 1 || file.size > COMFY_REFERENCE_BYTES) fail('参考图单张须小于 16 MB');
+  await guard(); const bytes = new Uint8Array(await file.arrayBuffer()); await guard();
+  if (bytes.byteLength !== file.size) fail('参考图文件读取不完整');
+  const mime = mimeOf(bytes), sha256 = await digest(bytes); await guard();
+  const extension = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1];
+  const url = comfyReferencePath(await save({ data: base64(bytes), mime, filename: `qianmu_reference_${sha256}`, extension })); await guard();
+  return {url,name:String(file.name || '参考图').replace(/[\u0000-\u001f\u007f]/g,'').slice(0,120),mime,bytes:bytes.length,sha256};
 }
 export async function readComfyReferenceImages({workflow,selection,namespace,guard = async () => {},fetchImpl = fetch, timeoutMs = 30000}) {
   const items = await checkComfyReferenceSelection({workflow,selection,namespace}); await guard();

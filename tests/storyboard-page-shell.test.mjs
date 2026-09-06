@@ -33,8 +33,11 @@ for (const [assetView, title] of Object.entries({ tags: 'TAG LIBRARY', vibes: 'V
   assert.equal(sandbox.storyboardPageTitle(state), title);
 }
 assert.equal(sandbox.storyboardPageTitle({ view: 'characters' }), 'CHARACTERS');
-assert.doesNotMatch(sandbox.renderStoryboardNav(state), /data-storyboard-view="characters"/, 'no unfinished empty character entry');
-assert.equal((sandbox.renderStoryboardNav(state).match(/data-storyboard-view=/g) || []).length, 4);
+assert.match(sandbox.renderStoryboardNav(state), /data-storyboard-view="characters"/, 'the independent archive is now a working navigation entry');
+assert.equal((sandbox.renderStoryboardNav(state).match(/data-storyboard-view=/g) || []).length, 5);
+state.view = 'characters';
+assert.match(sandbox.renderStoryboardTab(), /sd-character-archive-host/);
+assert.doesNotMatch(sandbox.renderStoryboardTab(), /<div>create<\/div>/);
 assert.equal(sandbox.storyboardPageTitle({ view: 'artists', editingArtistPresetId: 'missing' }), 'ARTIST LIBRARY');
 assert.equal(sandbox.storyboardPageTitle({ view: 'artists', editingArtistPresetId: 'new' }), 'ARTIST PROFILE');
 assert.equal(sandbox.storyboardPageTitle({ view: 'artists', editingArtistPresetId: 'a', artistPresets: [{ id: 'a' }] }), 'ARTIST PROFILE');

@@ -10208,3 +10208,54 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-reference-card .sd-btn { min-height: 40px; }
 #story-director-modal .sd-comfy-reference-card > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; list-style: none; cursor: pointer; }
 #story-director-modal .sd-comfy-reference-card > summary::-webkit-details-marker { display: none; }
+#story-director-modal .sd-character-library { min-width: 0; width: 100%; }
+#story-director-modal .sd-storyboard-root > .sd-storyboard-nav { grid-template-columns: repeat(5,minmax(0,1fr)); }
+#story-director-modal .sd-character-library fieldset { min-inline-size: 0; border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }
+#story-director-modal .sd-character-library .sd-card { margin: 0; min-width: 0; }
+#story-director-modal .sd-character-library :is(input:not([type=file]),select) { box-sizing: border-box; height: 40px; min-height: 40px; min-width: 0; width: 100%; margin: 0; font-size: 12px; }
+#story-director-modal .sd-character-library textarea { box-sizing: border-box; width: 100%; min-width: 0; height: 90px; min-height: 72px; resize: vertical; font-size: 12px; line-height: 1.5; margin: 0; }
+#story-director-modal .sd-character-library label:not(.sd-character-cover-upload) { display: grid; gap: 5px; min-width: 0; text-align: left; margin-block: 0 8px; }
+#story-director-modal .sd-character-library label > span { color: var(--sd-muted); font-size: 12px; text-align: left; }
+#story-director-modal .sd-character-library :is(.sd-icon-btn,.sd-btn) { min-height: 40px; border-radius: 8px; }
+#story-director-modal .sd-character-library .sd-icon-btn { flex: 0 0 40px; width: 40px; height: 40px; padding: 8px; }
+#story-director-modal .sd-character-tools { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#story-director-modal .sd-character-tools > input { flex: 1; width: 0; }
+#story-director-modal .sd-character-tools > b { font-size: 12px; white-space: nowrap; }
+#story-director-modal .sd-character-spacer { flex: 1; min-width: 0; }
+#story-director-modal .sd-character-library summary { list-style: none; display: flex; align-items: center; gap: 8px; text-align: left; cursor: pointer; }
+#story-director-modal .sd-character-library summary::-webkit-details-marker { display: none; }
+#story-director-modal .sd-character-library summary > b { flex: 1; font-size: var(--sd-font-body,14px); }
+#story-director-modal .sd-character-current .sd-storyboard-card-body { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 10px; max-height: 260px; overflow-y: auto; }
+#story-director-modal .sd-character-current-person { flex: 1 1 120px; min-width: 0; display: grid; gap: 4px; }
+#story-director-modal .sd-character-current-person .sd-reader-setup-identity { min-width: 0; margin: 0; }
+#story-director-modal .sd-character-current-person .sd-reader-setup-tag b { overflow-wrap: anywhere; }
+#story-director-modal .sd-character-binding-name { border: 0; background: transparent; color: var(--sd-accent); font-size: 12px; padding: 4px; min-height: 32px; overflow-wrap: anywhere; cursor: pointer; }
+#story-director-modal .sd-character-category { --archive-color: #96bda9; }
+#story-director-modal .sd-character-category.is-user { --archive-color: #96b6d6; }
+#story-director-modal .sd-character-category.is-other { --archive-color: #c7acd3; }
+#story-director-modal .sd-character-category summary > b { color: var(--archive-color); }
+#story-director-modal .sd-character-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); grid-auto-rows: clamp(130px,38vw,185px); gap: 8px; max-height: calc(clamp(130px,38vw,185px) * 2 + 8px); overflow-y: auto; scrollbar-width: none; margin-top: 8px; }
+#story-director-modal .sd-character-grid::-webkit-scrollbar { display: none; }
+#story-director-modal .sd-character-file { position: relative; min-width: 0; min-height: 0; padding: 0; border: 1px solid var(--sd-border); border-radius: 6px; background: #8881; color: inherit; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; }
+#story-director-modal .sd-character-file::after { content: ''; position: absolute; right: 0; top: 0; width: 14px; height: 14px; background: linear-gradient(45deg,var(--archive-color) 50%,var(--sd-card-bg,#303436) 51%); pointer-events: none; }
+#story-director-modal .sd-character-file.is-bound { border: 2px solid var(--sd-accent); }
+#story-director-modal .sd-character-file-image { min-height: 0; flex: 1; display: grid; place-items: center; overflow: hidden; }
+#story-director-modal .sd-character-file-image img { width: 100%; height: 100%; object-fit: cover; }
+#story-director-modal .sd-character-file-image > i { width: 26px; height: 26px; color: var(--archive-color); }
+#story-director-modal .sd-character-file > b { width: 100%; box-sizing: border-box; padding: 6px; font-size: 12px; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+#story-director-modal .sd-character-more { grid-column: 1 / -1; align-self: start; }
+#story-director-modal .sd-character-detail-grid { display: grid; grid-template-columns: minmax(85px,30%) minmax(0,1fr); gap: 10px; }
+#story-director-modal .sd-character-main-fields { min-width: 0; }
+#story-director-modal .sd-character-full { grid-column: 1 / -1; min-width: 0; }
+#story-director-modal .sd-character-cover-upload { box-sizing: border-box; width: 100%; aspect-ratio: 3/4; min-width: 0; margin: 0; border: 1px dashed var(--sd-muted); border-radius: 8px; position: relative; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
+#story-director-modal .sd-character-cover-upload > img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+#story-director-modal .sd-character-cover-upload > i { width: 24px; height: 24px; }
+#story-director-modal :is(.sd-character-cover-upload,.sd-character-file-image) svg { width: 24px; height: 24px; }
+#story-director-modal .sd-character-cover-field { min-width: 0; display: grid; align-content: start; gap: 6px; }
+#story-director-modal .sd-character-status { font-size: 12px; line-height: 1.5; color: var(--sd-muted); margin: 4px 0; text-align: left; overflow-wrap: anywhere; }
+#story-director-modal .sd-character-identifier { font-size: 11px; overflow-wrap: anywhere; color: var(--sd-muted); }
+#story-director-modal .sd-character-binding-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+#story-director-modal .sd-character-binding-row > span { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+#story-director-modal .sd-character-binding-row small { display: block; font-size: 11px; color: var(--sd-muted); }
+@media (min-width: 700px) { #story-director-modal .sd-character-grid { grid-template-columns: repeat(auto-fill,minmax(112px,1fr)); } }
+@media (max-width: 340px) { #story-director-modal .sd-character-detail-grid { grid-template-columns: minmax(0,1fr); } #story-director-modal .sd-character-cover-upload { max-width: 120px; } }
