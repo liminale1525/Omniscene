@@ -144,6 +144,7 @@ test('actual job runner falls back only after actual read-only preflight failure
   const state = { enabled: true }, job = { target: 'gallery', source: 'openai' }, log = {}; const finished = [], posts = [];
   const directMethods = [];
   const run = vm.runInNewContext(`${section('storyboardRunJob')}\nstoryboardRunJob`, {
+    storyboardAdmission: { beforeSubmit: async () => {} }, storyboardSettleImageAdmission: async () => {},
     MODULE_NAME: 'test', storyboardState: () => state, storyboardPlanForJob: () => null, storyboardValidatedAnchor: () => ({ valid: true }),
     resolveStoryboardJobModelIdentity: () => ({ capabilityModelId: 'gpt-image-1' }), storyboardMarkLogGenerating: () => {}, storyboardSetPlanStatus: () => {},
     storyboardPrepareGatewayAssets: async () => ({}), storyboardResolveApiKey: async () => 'mock', storyboardGatewayRequest: () => input(),
@@ -172,8 +173,12 @@ test('uncertain retry requires explicit consent and discards stale confirmation 
     const state = { logs: [log] }; let chat = 'chat-a', queued = 0, confirmed = 0;
     const retry = vm.runInNewContext(`${section('storyboardRetryLog')}\nstoryboardRetryLog`, {
       storyboardState: () => state, getChatKey: () => chat, storyboardJobFromLog: () => ({ chatKey: 'chat-a' }),
-      confirmDialog: async () => { confirmed++; if (choice === 'chat-change') chat = 'chat-b'; if (choice === 'snapshot-change') log.snapshot.prompt = 'new'; if (choice === 'removed') state.logs = []; return choice !== 'decline'; },
-      storyboardGalleryRecords: () => [], storyboardQueueJob: () => { queued++; return true; }, toast: () => {},
+      storyboardGalleryRecords: () => [], storyboardQueueJob: async (_job, stillCurrent) => {
+        // The shared admission layer now owns confirmation for every entry.
+        confirmed++; if (choice === 'chat-change') chat = 'chat-b'; if (choice === 'snapshot-change') log.snapshot.prompt = 'new'; if (choice === 'removed') state.logs = [];
+        if (choice === 'decline' || !stillCurrent()) return false;
+        queued++; return true;
+      }, toast: () => {},
     });
     await retry(log); assert.equal(confirmed, 1); assert.equal(queued, choice === 'approve' ? 1 : 0, choice);
   }
@@ -184,8 +189,8 @@ test('known rejected retries remain direct, while accepted-but-unreadable retrie
     const log = { id: 'log', status: 'failed', submissionState, snapshot: {} }; let confirmations = 0, queued = 0;
     const state = { logs: [log] };
     const retry = vm.runInNewContext(`${section('storyboardRetryLog')}\nstoryboardRetryLog`, {
-      storyboardState: () => state, getChatKey: () => 'chat', storyboardJobFromLog: () => ({}), confirmDialog: async () => { confirmations++; return true; },
-      storyboardGalleryRecords: () => [], storyboardQueueJob: () => { queued++; return true; }, toast: () => {},
+      storyboardState: () => state, getChatKey: () => 'chat', storyboardJobFromLog: () => ({}),
+      storyboardGalleryRecords: () => [], storyboardQueueJob: async (_job, stillCurrent) => { if (submissionState === 'accepted') confirmations++; assert.ok(stillCurrent()); queued++; return true; }, toast: () => {},
     });
     await retry(log); assert.equal(queued, 1); assert.equal(confirmations, submissionState === 'accepted' ? 1 : 0);
   }

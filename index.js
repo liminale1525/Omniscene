@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.43';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.43';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.43';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.44';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.44';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.44';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.43';
+} from './qianmu-llm-output.js?v=1.59.44';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -170,147 +170,151 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.43';
+} from './qianmu-storyboard.js?v=1.59.44';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.43';
+const VERSION = '1.59.44';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.43'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.44'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.43'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.44'),
+  },
+  imageAdmission: {
+    label: '生图请求保护',
+    load: () => import('./qianmu-image-admission.js?v=1.59.44'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.43').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.44').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.43'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.44'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.43'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.44'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.43'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.44'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.43'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.44'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.43'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.44'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.43'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.44'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.43'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.44'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.43'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.44'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.43'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.44'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.43'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.44'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.43'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.44'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.43'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.44'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.43'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.44'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.43'),
+    load: () => import('./qianmu-video-task.js?v=1.59.44'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.43'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.44'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.43'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.44'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.43'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.44'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.43'),
+    load: () => import('./qianmu-video-store.js?v=1.59.44'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.43'),
+    load: () => import('./qianmu-video-result.js?v=1.59.44'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.43'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.44'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.43'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.44'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.43'),
+    load: () => import('./qianmu-video-media.js?v=1.59.44'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.43'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.44'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.43'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.44'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.43'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.44'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.43'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.44'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.43'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.44'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.43'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.44'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.43'),
-        import('./qianmu-theaters.js?v=1.59.43'),
+        import('./builtin-theaters.js?v=1.59.44'),
+        import('./qianmu-theaters.js?v=1.59.44'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1147,6 +1151,10 @@ let storyboardAutomaticEpoch = 0;
 let storyboardCredentialRevision = 0;
 let storyboardWorldEntryCache = { key: '', names: [], boundNames: [], books: {}, rows: [], loading: null, error: '' }; // 分镜独立选择，读取链路与「取材」共用
 const storyboardActiveJobs = new Map(); // 正在生成的任务；放弃时不取消可能已计费的上游请求，只丢弃回传
+let storyboardAdmission = null;
+let storyboardAdmissionEpoch = 0;
+const storyboardGenerationPreparing = new Set();
+const storyboardPlanRetries = new WeakSet();
 let storyboardQueue = [];            // 千幕内串行队列，避免同一连接并发误耗额度
 const storyboardPipelineArchiveCache = new Map(); // 已结束的完整流水；settings 只保留轻量日志摘要
 const storyboardPipelineArchiveWrites = new Map();
@@ -7601,10 +7609,11 @@ function storageSettingsSnapshotWithoutDiagnostics() {
 
 async function collectStorageInventory() {
   const storageApi = globalThis.navigator?.storage;
-  const [originEstimate, idb, orphanReaderBlobs] = await Promise.all([
+  const [originEstimate, idb, orphanReaderBlobs, imageAttempts] = await Promise.all([
     storageApi?.estimate?.().catch(() => null) || Promise.resolve(null),
     blobStore.estimateBlobStoreUsage(),
     blobStore.auditOrphanedReaderBlobs(),
+    featureRuntime.load('imageAdmission').then(module => module.manageImageAdmissionStorage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || '生图防重记录暂不可读取' })),
   ]);
   const pressure = blobStore.classifyStoragePressure(originEstimate || {});
   const settingsBytes = storageJsonBytes(storageSettingsSnapshotWithoutDiagnostics());
@@ -7627,9 +7636,10 @@ async function collectStorageInventory() {
   addCategory('settings', settingsBytes, 1, 0);
   addCategory('chat', currentChatBytes, 1, 0);
   addCategory('logs', diagnosticsBytes, 0, diagnosticsBytes);
-  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes;
+  addCategory('logs', imageAttempts.bytes, imageAttempts.count);
+  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes;
   const recoverableBytes = Number(idb.recoverableBytes || 0) + diagnosticsBytes;
-  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes;
+  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes;
   return {
     sampledAt: Date.now(),
     origin: {
@@ -7647,6 +7657,7 @@ async function collectStorageInventory() {
     portableTtsBytes,
     manageableBytes,
     orphanReaderBlobs,
+    imageAttempts,
   };
 }
 
@@ -7713,6 +7724,7 @@ function renderStorageManagementCard() {
     <div class="sd-storage-ios-bar" role="img" aria-label="储存空间分布">${storageBar}</div>
     <div class="sd-storage-legend">${legend || '<p class="sd-muted">暂未发现千幕本地数据。</p>'}</div>
     ${pressureNotice}
+    ${data.imageAttempts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageAttempts.error)}</p>` : ''}
     <p class="sd-storage-scope">此处是浏览器分配给当前 ST 站点来源的空间，不代表 VPS 磁盘总容量；千幕仅统计可明确归因的本地内容。</p>
     <div class="sd-storage-actions"><button type="button" class="sd-btn sd-primary sd-storage-clean" ${data.manageableBytes > 0 ? '' : 'disabled'}><i class="fa-solid fa-sliders"></i>选择清理模块</button><button type="button" class="sd-btn sd-storage-chat-clean" ${data.idb?.chatScopes?.length ? '' : 'disabled'}><i class="fa-solid fa-message"></i>按聊天管理</button></div>
   </section>`;
@@ -7740,6 +7752,7 @@ const STORAGE_ITEM_RISK = Object.freeze({
   video_postproduction: ['不可恢复 · 影片字幕与声轨决策', true],
   __orphan_reader_blobs__: ['无书籍主体引用 · 删除前重查', false],
   __diagnostics__: ['千幕与分镜日志', false],
+  __image_attempts__: ['不可恢复 · 请求防重与自动图数核对；不影响渠道实际账单', true],
 });
 
 function openStorageCleanupDialog(data) {
@@ -7759,6 +7772,7 @@ function openStorageCleanupDialog(data) {
       count: Number(data?.orphanReaderBlobs?.count) || 0,
     }] : []),
     { id: '__diagnostics__', label: '生成与运行日志', bytes: Number(data?.diagnosticsBytes) || 0, count: 0 },
+    { id: '__image_attempts__', label: '生图请求与预算记录（当前账户）', bytes: Number(data?.imageAttempts?.bytes) || 0, count: Number(data?.imageAttempts?.count) || 0 },
   ];
   const fixedNotes = modules.find((item) => item.id === 'notes');
   const favorites = modules.find((item) => item.id === 'favorites');
@@ -8143,6 +8157,11 @@ function bindStorageManagementEvents(root) {
     if (!selected?.length) return;
     try {
       const stores = selected.filter((item) => !item.startsWith('__'));
+      if (selected.includes('__image_attempts__')) {
+        if (storyboardQueue.length || storyboardActiveJobs.size || storyboardGenerationPreparing.size) throw new Error('仍有等待或生成中的画面，请结束后再清理防重记录');
+        const module = await featureRuntime.load('imageAdmission');
+        await module.manageImageAdmissionStorage({ remove: true });
+      }
       if (stores.includes('storyboard_plan_archives')) {
         storyboardPlanArchiveEpoch++;
         if (storyboardPlanArchiveTimer) clearTimeout(storyboardPlanArchiveTimer);
@@ -16228,6 +16247,7 @@ function storyboardStartLog(job) {
       requestIndex: job.requestIndex || 1, requestTotal: job.requestTotal || 1,
       connection: job.connection, payload: job.payload,
       planId: job.planId || '', planShotId: job.planShotId || '',
+      imageAdmission: job.imageAdmission,
     }),
   };
   const pipeline = {
@@ -17664,7 +17684,7 @@ function storyboardJobFromLog(log) {
     || !String(snap.connection?.baseUrl || '').trim()
     || (snap.source !== 'comfy' && (!String(snap.profile.model || '').trim() || !String(snap.connection?.credentialId || '').trim()))) return null;
   return {
-    id: uid('shotjob'), ...snap,
+    ...snap, id: uid('shotjob'), automatic: false,
     payload: clone(snap.payload),
     connection: clone(snap.connection),
     paragraphAnchor: clone(snap.paragraphAnchor || null),
@@ -17672,7 +17692,27 @@ function storyboardJobFromLog(log) {
   };
 }
 
-function storyboardQueueJob(job) {
+async function storyboardImageAdmissionRuntime() {
+  const epoch = storyboardAdmissionEpoch;
+  const module = await featureRuntime.load('imageAdmission');
+  if (epoch !== storyboardAdmissionEpoch) throw new Error('分镜会话已结束，未提交生图');
+  storyboardAdmission ||= module.createImageAdmission({ confirm: confirmDialog });
+  return storyboardAdmission;
+}
+
+async function storyboardSettleImageAdmission(job, outcome) {
+  if (!storyboardAdmission || !job.imageAdmission) return;
+  try { await storyboardAdmission.settle(job, outcome); }
+  catch (error) {
+    // A storage failure must never turn a paid request into a free retry or
+    // discard an image which was already safely archived.
+    console.warn(`[${MODULE_NAME}] image admission settlement`, error?.code || 'storage');
+    if (!job.admissionWarning) toast('生图受理记录未完成保存，请先核对渠道记录，勿重复生成', 'warning');
+    job.admissionWarning = true;
+  }
+}
+
+async function storyboardQueueJob(job, preparationCurrent = () => true) {
   if (!job?.payload?.prompt?.trim()) return toast('请先写下画面描述。', 'warning');
   try { job.modelIdentity = resolveStoryboardJobModelIdentity(job); }
   catch (error) { toast(error?.message || '无法确认任务模型，请载入镜头台确认', 'warning'); return false; }
@@ -17694,7 +17734,30 @@ function storyboardQueueJob(job) {
   if (storyboardQueue.length + storyboardActiveJobs.size >= STORYBOARD_QUEUE_LIMIT) {
     return toast(`等待队列最多 ${STORYBOARD_QUEUE_LIMIT} 项，请先完成或移除部分任务。`, 'warning');
   }
-  const log = storyboardStartLog(job);
+  const state = storyboardState(), chatKey = String(getChatKey() || '');
+  const valid = () => storyboardState() === state && state.enabled && !job.discardRequested
+    && String(getChatKey() || '') === chatKey && preparationCurrent()
+    && (!job.automatic || (state.automation?.autoCapture !== false && state.automation?.autoGenerate !== false))
+    && (job.target === 'gallery' || storyboardValidatedAnchor(job).valid)
+    && storyboardQueue.length + storyboardActiveJobs.size < STORYBOARD_QUEUE_LIMIT;
+  try {
+    const admission = await storyboardImageAdmissionRuntime();
+    await admission.admit(job, { maxAutomatic: getStoryboardGenerationPolicy(state).maxImages,
+      history: [...state.logs, ...storyboardGalleryRecords()], valid });
+    if (!valid()) {
+      await storyboardSettleImageAdmission(job, 'not_submitted');
+      return false;
+    }
+  } catch (error) {
+    toast(error?.message || '未取得生图授权，请核查原任务', 'warning');
+    return false;
+  }
+  let log;
+  try { log = storyboardStartLog(job); }
+  catch (_) {
+    await storyboardSettleImageAdmission(job, 'not_submitted');
+    return toast('生图日志未能保存，未提交本次请求', 'warning');
+  }
   job.logId = log.id;
   storyboardQueue.push(job);
   storyboardSetPlanStatus(storyboardPlanForJob(job), 'queued', { job });
@@ -17959,182 +18022,185 @@ async function storyboardGenerateProductionPacket(root, packetId) {
 }
 
 async function storyboardGenerate(root, { plan = null, automatic = false } = {}) {
-  const { state, profile, workflowResult } = storyboardCaptureWorkbench(root);
-  const generationChatKey = String(getChatKey() || '');
-  if (!state.enabled) return toast('请先启用分镜。', 'warning');
-  try { resolveStoryboardProfileBinding(state.source, profile); }
-  catch (error) { return toast(error.message, 'warning'); }
-  if (state.routing.enabled) {
+  const preparationKey = JSON.stringify([String(getChatKey() || ''), storyboardTargetFloor(storyboardState())]);
+  if (storyboardGenerationPreparing.has(preparationKey)) return toast('本层画面正在准备，请勿重复生成', 'info');
+  storyboardGenerationPreparing.add(preparationKey);
+  try {
+    const { state, profile, workflowResult } = storyboardCaptureWorkbench(root);
+    const generationChatKey = String(getChatKey() || '');
+    if (!state.enabled) return toast('请先启用分镜。', 'warning');
+    try { resolveStoryboardProfileBinding(state.source, profile); }
+    catch (error) { return toast(error.message, 'warning'); }
+    if (state.routing.enabled) {
+      try {
+        for (const rule of state.routing.rules.filter((item) => item.enabled)) {
+          try { storyboardResolveRoutingProfile(state, rule.target); }
+          catch (error) { throw new Error(`${rule.name || '镜组分工'}：${error.message}`); }
+        }
+      } catch (error) { return toast(error.message, 'warning'); }
+    }
+    if (automatic && plan?.manualReviewRequired) return false;
+    if (state.source === 'comfy' && (!workflowResult.ok || workflowResult.removedFields.length || profile.comfyWorkflowNotice)) {
+      return toast(profile.comfyWorkflowNotice || storyboardWorkflowIssue(workflowResult), 'warning');
+    }
+    const productionDraft = state.promptDraft?.shots?.find((item) => storyboardProductionContext(item).packetId) || null;
+    if (productionDraft && storyboardProductionContext(productionDraft).decisionStatus !== 'approved') return toast('世界侧镜头缺少已确认的导演决策。', 'warning');
+    let deliveryPolicy, targetFloor;
+    // Extraction owns its draft writes; this outer guard keeps the surrounding configuration/context stable.
+    const preparationGuard = storyboardCreatePreparationGuard(state, { plan, includeDraft: false });
     try {
-      for (const rule of state.routing.rules.filter((item) => item.enabled)) {
-        try { storyboardResolveRoutingProfile(state, rule.target); }
-        catch (error) { throw new Error(`${rule.name || '镜组分工'}：${error.message}`); }
+      if (productionDraft) {
+        const currentChatKey = String(getChatKey() || '');
+        const decision = storyboardDirectorDecisionSnapshot(productionDraft);
+        const decisionRuntime = await featureRuntime.load('directorDecision');
+        preparationGuard.assertCurrent();
+        if (!decision || !decisionRuntime.canConsumeDirectorDecision(decision, 'storyboard', currentChatKey)) return toast('世界侧镜头的导演决策已失效。', 'warning');
       }
-    } catch (error) { return toast(error.message, 'warning'); }
-  }
-  if (automatic && plan?.manualReviewRequired) return false;
-  if (state.source === 'comfy' && (!workflowResult.ok || workflowResult.removedFields.length || profile.comfyWorkflowNotice)) {
-    return toast(profile.comfyWorkflowNotice || storyboardWorkflowIssue(workflowResult), 'warning');
-  }
-  const productionDraft = state.promptDraft?.shots?.find((item) => storyboardProductionContext(item).packetId) || null;
-  if (productionDraft && storyboardProductionContext(productionDraft).decisionStatus !== 'approved') return toast('世界侧镜头缺少已确认的导演决策。', 'warning');
-  let deliveryPolicy, targetFloor;
-  // Extraction owns its draft writes; this outer guard keeps the surrounding configuration/context stable.
-  const preparationGuard = storyboardCreatePreparationGuard(state, { plan, includeDraft: false });
-  try {
-    if (productionDraft) {
-      const currentChatKey = String(getChatKey() || '');
-      const decision = storyboardDirectorDecisionSnapshot(productionDraft);
-      const decisionRuntime = await featureRuntime.load('directorDecision');
+      deliveryPolicy = storyboardProductionDeliveryPolicy(productionDraft || {}, { target: state.target, inlineByDefault: state.inlineByDefault });
+      targetFloor = deliveryPolicy.target === 'gallery' ? null : storyboardTargetFloor(state);
+      if (!plan && deliveryPolicy.target !== 'gallery' && Number.isInteger(targetFloor) && ctx().chat?.[targetFloor]) {
+        plan = storyboardEnsurePlan(state, targetFloor, ctx().chat[targetFloor], { origin: automatic ? 'automatic' : 'manual', autoGenerate: automatic });
+      }
+      if (plan?.archiveRef) await storyboardReleasePlanArchive(plan);
       preparationGuard.assertCurrent();
-      if (!decision || !decisionRuntime.canConsumeDirectorDecision(decision, 'storyboard', currentChatKey)) return toast('世界侧镜头的导演决策已失效。', 'warning');
-    }
-    deliveryPolicy = storyboardProductionDeliveryPolicy(productionDraft || {}, { target: state.target, inlineByDefault: state.inlineByDefault });
-    targetFloor = deliveryPolicy.target === 'gallery' ? null : storyboardTargetFloor(state);
-    if (!plan && deliveryPolicy.target !== 'gallery' && Number.isInteger(targetFloor) && ctx().chat?.[targetFloor]) {
-      plan = storyboardEnsurePlan(state, targetFloor, ctx().chat[targetFloor], { origin: automatic ? 'automatic' : 'manual', autoGenerate: automatic });
-    }
-    if (plan?.archiveRef) await storyboardReleasePlanArchive(plan);
-    preparationGuard.assertCurrent();
-    if (!state.prompt.trim() && state.promptCompiler.enabled) {
-      const compiled = await storyboardCompilePrompt(root, { plan });
-      if (!compiled) return false;
-    }
-    preparationGuard.assertCurrent();
-  } catch (error) {
-    if (error?.code !== 'storyboard_input_changed') throw error;
-    if (!automatic && preparationGuard.ownsCurrentContext()) toast('生图设置已变化，已停止本次准备；请按当前设置重试', 'info');
-    return false;
-  } finally { preparationGuard.dispose(); }
-  if (!state.prompt.trim()) return toast('请先写下画面描述，或开启 LLM 协作自动取景。', 'warning');
-  if (deliveryPolicy.target === 'floor' && (!String(state.floor || '').trim() || !Number.isInteger(Number(state.floor)))) {
-    return toast('请输入有效的正文楼层。', 'warning');
-  }
-  state.routing.single = { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
-  const routingEnabled = Boolean(state.routing.enabled);
-  const availableDrafts = Array.isArray(state.promptDraft.shots)
-    ? state.promptDraft.shots.filter((item) => String(item.prompt || '').trim())
-    : [];
-  const generationPolicy = getStoryboardGenerationPolicy(state);
-  const plannedSource = availableDrafts.length
-    ? availableDrafts.slice(0, generationPolicy.maxImages)
-    : [{
-      id: uid('shotdraft'), prompt: state.prompt, negative: state.negative,
-      safePrompt: '',
-      paragraphIndex: state.paragraphMode === 'manual' ? state.manualParagraphIndex : state.pendingParagraphIndex,
-      shotType: state.pendingShotType || 'custom', sensitive: state.contentRating === 'nsfw',
-    }];
-  const manualSupplement = plan?.origin === 'manual_supplement';
-  const coverage = prepareStoryboardShotGroup({
-    shots: plannedSource.map((shot) => ({ ...shot.shotSpec, id: shot.id, subject: shot.shotSpec?.subject || shot.title || shot.prompt, narrativePurpose: shot.shotSpec?.narrativePurpose || shot.purpose || shot.prompt, shotRole: shot.shotSpec?.shotRole || shot.role })),
-    policy: state.compositionPolicy, maxShots: generationPolicy.maxImages, manual: manualSupplement,
-  });
-  const allowedShotIds = new Set(coverage.shots.map((shot) => shot.id));
-  const preparedSpecs = new Map(coverage.shots.map((shot) => [shot.id, shot]));
-  const planned = (manualSupplement ? plannedSource.slice(0, 1) : plannedSource.filter((shot) => allowedShotIds.has(shot.id)))
-    .map((shot) => ({ ...shot, shotSpec: preparedSpecs.get(shot.id) || shot.shotSpec }));
-  if (!planned.length) return toast('没有可用的独立画面，未发起生图', 'info');
-  if (!manualSupplement && planned.length < generationPolicy.minImages) toast(`可用画面 ${planned.length}/${generationPolicy.minImages}；不为凑数重复出图`, 'info');
-  if (plan) plan.continuityLedger = clone(coverage.continuityLedger || plan.continuityLedger || {});
-  if (plan) {
-    plan.status = 'prompt_ready';
-    plan.autoGenerate = Boolean(plan.autoGenerate || automatic);
-    plan.promptLocked = Boolean(state.promptDraft?.userEditedCompiled);
-    plan.shots = planned.map((shot, index) => ({
-      ...(plan.shots?.find((item) => item.id === shot.id) || {}),
-      id: shot.id || plan.shots?.[index]?.id || uid('shotplan'),
-      title: shot.title || `镜头 ${index + 1}`, shotType: shot.shotType || 'custom',
-      role: shot.role || 'custom', purpose: shot.purpose || '',
-      prompt: String(shot.prompt || '').trim(), safePrompt: String(shot.safePrompt || '').trim(), negative: String(shot.negative || '').trim(),
-      providerId: '', connectionPresetId: '', parameterPresetId: '', routeRuleId: '',
-      status: 'prompt_ready', resultIds: [], error: '', partialFailureCount: 0, attempt: 0,
-      paragraphAnchor: storyboardAnchorForMessage(ctx().chat?.[targetFloor], targetFloor, shot.prompt, shot.paragraphIndex),
-      paragraphSelection: clone(plan.paragraphSelection || state.pendingParagraphSelection || null), shotSpec: storyboardShotSpecForSelection(shot, plan.paragraphSelection || state.pendingParagraphSelection), compiledPrompt: null, compositionDecision: null,
-      sensitive: Boolean(shot.sensitive), userEdited: Boolean(state.promptDraft?.userEditedCompiled),
-      promptLocked: Boolean(state.promptDraft?.userEditedCompiled),
-    }));
-    plan.updatedAt = Date.now();
-  }
-  const inputGuard = storyboardCreatePreparationGuard(state, { plan });
-  try {
-    const jobs = [];
-    const resolvedArtistIds = [];
-    for (let index = 0; index < planned.length; index++) {
-      const shot = planned[index];
-      const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
-      const sourceId = STORYBOARD_PROVIDER_REGISTRY[route.providerId] ? route.providerId : state.source;
-      let shotProfile;
-      try { shotProfile = storyboardResolveRoutingProfile(state, route, sourceId === state.source ? profile : null); }
-      catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
-      if (automatic || manualSupplement || planned.length > 1) shotProfile.count = '1';
-      const effectiveShot = await storyboardAdaptShotForModel(shot, sourceId, shotProfile.model, state, {
-        chatKey: generationChatKey,
-        capabilityModelId: shotProfile.capabilityModelId,
-        isCurrent: inputGuard.isCurrent,
-        cancelled: () => plan?.status === 'cancelled',
-      });
-      inputGuard.assertCurrent();
-      if (effectiveShot.safetyAborted || plan?.status === 'cancelled' || generationChatKey !== String(getChatKey() || '') || !storyboardState().enabled) return false;
-      const planShot = plan?.shots?.[index] || null;
-      if (planShot) Object.assign(planShot, { providerId: sourceId, connectionPresetId: route.connectionPresetId || '', parameterPresetId: route.parameterPresetId || '', routeRuleId: route.ruleId || '', safetyAdapted: effectiveShot.safetyAdapted, safetyMethod: effectiveShot.safetyMethod || '' });
-      const providerRequests = planStoryboardProviderRequests(sourceId, shotProfile.count);
-      for (const request of providerRequests) {
-        const requestProfile = { ...shotProfile, count: String(request.imageCount) };
-        let job;
-        try {
-          job = storyboardCreateJob(state, requestProfile, {
-            shot: effectiveShot, sourceId, profileSourceId: sourceId, modelId: route.modelId, capabilityModelId: shotProfile.capabilityModelId, connectionPresetId: route.connectionPresetId,
-            planId: plan?.id || '', planShotId: planShot?.id || '', recentArtistIds: resolvedArtistIds,
-            requestIndex: request.requestIndex, requestTotal: request.requestTotal,
-          });
-        } catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
-        if (job.artistPresetId) resolvedArtistIds.push(job.artistPresetId);
-        if (planShot && request.requestIndex === 1) Object.assign(planShot, {
-          shotSpec: clone(job.shotSpec), compiledPrompt: clone(job.compiledPrompt), compositionDecision: clone(job.compositionDecision),
-          paragraphSelection: clone(job.paragraphSelection || plan.paragraphSelection || null),
-        });
-        job.automatic = Boolean(automatic);
-        jobs.push(job);
+      if (['queued', 'generating'].includes(plan?.status)) return toast('本层画面已在等待或生成中', 'info');
+      if (!state.prompt.trim() && state.promptCompiler.enabled) {
+        const compiled = await storyboardCompilePrompt(root, { plan });
+        if (!compiled) return false;
       }
+      preparationGuard.assertCurrent();
+    } catch (error) {
+      if (error?.code !== 'storyboard_input_changed') throw error;
+      if (!automatic && preparationGuard.ownsCurrentContext()) toast('生图设置已变化，已停止本次准备；请按当前设置重试', 'info');
+      return false;
+    } finally { preparationGuard.dispose(); }
+    if (!state.prompt.trim()) return toast('请先写下画面描述，或开启 LLM 协作自动取景。', 'warning');
+    if (deliveryPolicy.target === 'floor' && (!String(state.floor || '').trim() || !Number.isInteger(Number(state.floor)))) {
+      return toast('请输入有效的正文楼层。', 'warning');
     }
-    const remainingSlots = STORYBOARD_QUEUE_LIMIT - storyboardQueue.length - storyboardActiveJobs.size;
-    if (jobs.length > remainingSlots) {
-      return toast(`当前队列只剩 ${Math.max(0, remainingSlots)} 个空位，请先完成或移除部分任务。`, 'warning');
+    state.routing.single = { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
+    const routingEnabled = Boolean(state.routing.enabled);
+    const availableDrafts = Array.isArray(state.promptDraft.shots)
+      ? state.promptDraft.shots.filter((item) => String(item.prompt || '').trim())
+      : [];
+    const generationPolicy = getStoryboardGenerationPolicy(state);
+    const plannedSource = availableDrafts.length
+      ? availableDrafts.slice(0, generationPolicy.maxImages)
+      : [{
+        id: uid('shotdraft'), prompt: state.prompt, negative: state.negative,
+        safePrompt: '',
+        paragraphIndex: state.paragraphMode === 'manual' ? state.manualParagraphIndex : state.pendingParagraphIndex,
+        shotType: state.pendingShotType || 'custom', sensitive: state.contentRating === 'nsfw',
+      }];
+    const manualSupplement = plan?.origin === 'manual_supplement';
+    const coverage = prepareStoryboardShotGroup({
+      shots: plannedSource.map((shot) => ({ ...shot.shotSpec, id: shot.id, subject: shot.shotSpec?.subject || shot.title || shot.prompt, narrativePurpose: shot.shotSpec?.narrativePurpose || shot.purpose || shot.prompt, shotRole: shot.shotSpec?.shotRole || shot.role })),
+      policy: state.compositionPolicy, maxShots: generationPolicy.maxImages, manual: manualSupplement,
+    });
+    const allowedShotIds = new Set(coverage.shots.map((shot) => shot.id));
+    const preparedSpecs = new Map(coverage.shots.map((shot) => [shot.id, shot]));
+    const planned = (manualSupplement ? plannedSource.slice(0, 1) : plannedSource.filter((shot) => allowedShotIds.has(shot.id)))
+      .map((shot) => ({ ...shot, shotSpec: preparedSpecs.get(shot.id) || shot.shotSpec }));
+    if (!planned.length) return toast('没有可用的独立画面，未发起生图', 'info');
+    if (!manualSupplement && planned.length < generationPolicy.minImages) toast(`可用画面 ${planned.length}/${generationPolicy.minImages}；不为凑数重复出图`, 'info');
+    if (plan) plan.continuityLedger = clone(coverage.continuityLedger || plan.continuityLedger || {});
+    if (plan) {
+      plan.status = 'prompt_ready';
+      plan.autoGenerate = Boolean(plan.autoGenerate || automatic);
+      plan.promptLocked = Boolean(state.promptDraft?.userEditedCompiled);
+      plan.shots = planned.map((shot, index) => ({
+        ...(plan.shots?.find((item) => item.id === shot.id) || {}),
+        id: shot.id || plan.shots?.[index]?.id || uid('shotplan'),
+        title: shot.title || `镜头 ${index + 1}`, shotType: shot.shotType || 'custom',
+        role: shot.role || 'custom', purpose: shot.purpose || '',
+        prompt: String(shot.prompt || '').trim(), safePrompt: String(shot.safePrompt || '').trim(), negative: String(shot.negative || '').trim(),
+        providerId: '', connectionPresetId: '', parameterPresetId: '', routeRuleId: '',
+        status: 'prompt_ready', resultIds: [], error: '', partialFailureCount: 0, attempt: 0,
+        paragraphAnchor: storyboardAnchorForMessage(ctx().chat?.[targetFloor], targetFloor, shot.prompt, shot.paragraphIndex),
+        paragraphSelection: clone(plan.paragraphSelection || state.pendingParagraphSelection || null), shotSpec: storyboardShotSpecForSelection(shot, plan.paragraphSelection || state.pendingParagraphSelection), compiledPrompt: null, compositionDecision: null,
+        sensitive: Boolean(shot.sensitive), userEdited: Boolean(state.promptDraft?.userEditedCompiled),
+        promptLocked: Boolean(state.promptDraft?.userEditedCompiled),
+      }));
+      plan.updatedAt = Date.now();
     }
-    const generationDemand = summarizeStoryboardGenerationDemand(jobs);
-    const requiresPlanConfirmation = generationDemand.requestCount > 1 && state.routing.confirmMultipleRequests !== false;
-    const requiresCountConfirmation = generationDemand.hasMultiImageRequest;
-    if (!automatic && (requiresPlanConfirmation || requiresCountConfirmation)) {
-      const providers = jobs.map((job) => STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || '模型');
-      const detail = generationDemand.requestCount > 1
-        ? `${generationDemand.requestCount} 次生图请求（${providers.join('、')}），预计生成 ${generationDemand.imageCount} 张图片`
-        : `1 次生图请求，预计生成 ${generationDemand.imageCount} 张图片`;
-      if (!await confirmDialog('确认生成数量', `本次将发起 ${detail}。是否继续？`)) return false;
-    }
-    let queued = 0;
-    inputGuard.assertCurrent();
-    for (const job of jobs) if (storyboardQueueJob(job)) queued++;
-    if (queued > 0 && !automatic && plan?.manualReviewRequired) {
-      plan.manualReviewRequired = false;
-      for (const shot of plan.shots || []) shot.requiresManualConfirmation = false;
-      saveSettings();
-    }
-    return queued > 0;
-  } catch (error) {
-    if (error?.code !== 'storyboard_input_changed') throw error;
-    if (inputGuard.ownsCurrentContext() && !automatic) toast('生图设置已变化，未提交旧任务；请按当前设置生成', 'info');
-    return false;
-  } finally { inputGuard.dispose(); }
+    const inputGuard = storyboardCreatePreparationGuard(state, { plan });
+    try {
+      const jobs = [];
+      const resolvedArtistIds = [];
+      for (let index = 0; index < planned.length; index++) {
+        const shot = planned[index];
+        const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
+        const sourceId = STORYBOARD_PROVIDER_REGISTRY[route.providerId] ? route.providerId : state.source;
+        let shotProfile;
+        try { shotProfile = storyboardResolveRoutingProfile(state, route, sourceId === state.source ? profile : null); }
+        catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
+        if (automatic || manualSupplement || planned.length > 1) shotProfile.count = '1';
+        const effectiveShot = await storyboardAdaptShotForModel(shot, sourceId, shotProfile.model, state, {
+          chatKey: generationChatKey,
+          capabilityModelId: shotProfile.capabilityModelId,
+          isCurrent: inputGuard.isCurrent,
+          cancelled: () => plan?.status === 'cancelled',
+        });
+        inputGuard.assertCurrent();
+        if (effectiveShot.safetyAborted || plan?.status === 'cancelled' || generationChatKey !== String(getChatKey() || '') || !storyboardState().enabled) return false;
+        const planShot = plan?.shots?.[index] || null;
+        if (planShot) Object.assign(planShot, { providerId: sourceId, connectionPresetId: route.connectionPresetId || '', parameterPresetId: route.parameterPresetId || '', routeRuleId: route.ruleId || '', safetyAdapted: effectiveShot.safetyAdapted, safetyMethod: effectiveShot.safetyMethod || '' });
+        const providerRequests = planStoryboardProviderRequests(sourceId, shotProfile.count);
+        for (const request of providerRequests) {
+          const requestProfile = { ...shotProfile, count: String(request.imageCount) };
+          let job;
+          try {
+            job = storyboardCreateJob(state, requestProfile, {
+              shot: effectiveShot, sourceId, profileSourceId: sourceId, modelId: route.modelId, capabilityModelId: shotProfile.capabilityModelId, connectionPresetId: route.connectionPresetId,
+              planId: plan?.id || '', planShotId: planShot?.id || '', recentArtistIds: resolvedArtistIds,
+              requestIndex: request.requestIndex, requestTotal: request.requestTotal,
+            });
+          } catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
+          if (job.artistPresetId) resolvedArtistIds.push(job.artistPresetId);
+          if (planShot && request.requestIndex === 1) Object.assign(planShot, {
+            shotSpec: clone(job.shotSpec), compiledPrompt: clone(job.compiledPrompt), compositionDecision: clone(job.compositionDecision),
+            paragraphSelection: clone(job.paragraphSelection || plan.paragraphSelection || null),
+          });
+          job.automatic = Boolean(automatic);
+          job.manualSupplement = Boolean(manualSupplement);
+          jobs.push(job);
+        }
+      }
+      const remainingSlots = STORYBOARD_QUEUE_LIMIT - storyboardQueue.length - storyboardActiveJobs.size;
+      if (jobs.length > remainingSlots) {
+        return toast(`当前队列只剩 ${Math.max(0, remainingSlots)} 个空位，请先完成或移除部分任务。`, 'warning');
+      }
+      const generationDemand = summarizeStoryboardGenerationDemand(jobs);
+      const requiresPlanConfirmation = generationDemand.requestCount > 1 && state.routing.confirmMultipleRequests !== false;
+      const requiresCountConfirmation = generationDemand.hasMultiImageRequest;
+      if (!automatic && (requiresPlanConfirmation || requiresCountConfirmation)) {
+        const providers = jobs.map((job) => STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || '模型');
+        const detail = generationDemand.requestCount > 1
+          ? `${generationDemand.requestCount} 次生图请求（${providers.join('、')}），预计生成 ${generationDemand.imageCount} 张图片`
+          : `1 次生图请求，预计生成 ${generationDemand.imageCount} 张图片`;
+        if (!await confirmDialog('确认生成数量', `本次将发起 ${detail}。是否继续？`)) return false;
+      }
+      let queued = 0;
+      inputGuard.assertCurrent();
+      for (const job of jobs) if (await storyboardQueueJob(job, inputGuard.isCurrent)) queued++;
+      if (queued > 0 && !automatic && plan?.manualReviewRequired) {
+        plan.manualReviewRequired = false;
+        for (const shot of plan.shots || []) shot.requiresManualConfirmation = false;
+        saveSettings();
+      }
+      return queued > 0;
+    } catch (error) {
+      if (error?.code !== 'storyboard_input_changed') throw error;
+      if (inputGuard.ownsCurrentContext() && !automatic) toast('生图设置已变化，未提交旧任务；请按当前设置生成', 'info');
+      return false;
+    } finally { inputGuard.dispose(); }
+  } finally { storyboardGenerationPreparing.delete(preparationKey); }
 }
 
 async function storyboardRetryLog(log) {
   const state = storyboardState(), chatKey = getChatKey(), snapshot = JSON.stringify(log?.snapshot);
   const job = storyboardJobFromLog(log);
   if (!job) return toast('旧记录缺少完整模型或连接快照，请载入镜头台确认。', 'warning');
-  if (['failed', 'cancelled'].includes(log.status) && ['unknown', 'accepted'].includes(log.submissionState)) {
-    if (!await confirmDialog('确认重新生图', '原请求可能已受理或扣费。请先核对渠道记录；继续会发起一次新的生图请求。')) return false;
-    if (storyboardState() !== state || getChatKey() !== chatKey || JSON.stringify(log.snapshot) !== snapshot || !state.logs.some(item => item.id === log.id)) return false;
-  }
   const previous = storyboardGalleryRecords().find((item) => item.id === log.recordId || log.recordIds?.includes(item.id));
   if (previous) {
     job.variantRootId = storyboardGalleryGroupId(previous);
@@ -18145,7 +18211,8 @@ async function storyboardRetryLog(log) {
     toast('原任务属于其他聊天，已安全载入镜头台并改为仅存成片。', 'info');
     return false;
   }
-  return storyboardQueueJob(job);
+  return storyboardQueueJob(job, () => storyboardState() === state && getChatKey() === chatKey
+    && JSON.stringify(log.snapshot) === snapshot && state.logs.some(item => item.id === log.id));
 }
 
 function storyboardDiscardActive() {
@@ -18163,6 +18230,7 @@ function storyboardDiscardActive() {
 function storyboardClearWaitingQueue(reason = '已从等待队列移除') {
   const state = storyboardState();
   for (const job of storyboardQueue) {
+    void storyboardSettleImageAdmission(job, 'not_submitted');
     const log = state.logs.find((item) => item.id === job.logId);
     storyboardFinishLog(log, 'cancelled', { error: reason });
     storyboardSetPlanStatus(storyboardPlanForJob(job), 'cancelled', { error: reason, job });
@@ -18176,6 +18244,7 @@ function storyboardRemoveQueuedLog(log) {
   const index = storyboardQueue.findIndex((job) => job.logId === log?.id);
   if (index < 0) return;
   const [job] = storyboardQueue.splice(index, 1);
+  void storyboardSettleImageAdmission(job, 'not_submitted');
   storyboardFinishLog(log, 'cancelled', { error: '已从等待队列移除' });
   storyboardSetPlanStatus(storyboardPlanForJob(job), 'cancelled', { error: '已从等待队列移除', job });
   renderModal();
@@ -18330,6 +18399,7 @@ function storyboardCreateRecord(job, log, url, index, anchorState, response) {
     shotSpec: clone(job.shotSpec || null), compiledPrompt: clone(job.compiledPrompt || null), compositionDecision: clone(job.compositionDecision || null),
     productionContext: production.productionContext, sourceLabel: production.sourceLabel,
     messageRef: job.messageRef ? clone(job.messageRef) : null,
+    imageAdmission: job.imageAdmission ? clone(job.imageAdmission) : null,
     messageHash: message ? hashText(String(message.mes || '')) : '', swipeId: message ? Number(message.swipe_id || 0) : 0,
     promptMode: job.promptMode || 'manual', promptLocked: Boolean(job.promptLocked),
     linkState: anchorState.valid ? 'active' : anchorState.linkState || 'orphaned', lastKnownFloor: Number.isInteger(job.floor) ? job.floor : null,
@@ -18343,7 +18413,8 @@ function storyboardCreateRecord(job, log, url, index, anchorState, response) {
 
 async function storyboardRunJob(job, log) {
   const plan = storyboardPlanForJob(job);
-  const beforeSubmit = () => {
+  let admissionOutcome = 'not_submitted';
+  const beforeSubmit = async () => {
     const state = storyboardState(), anchor = storyboardValidatedAnchor(job);
     if (job.discardRequested || !state.enabled || (job.automatic && (state.automation?.autoCapture === false || state.automation?.autoGenerate === false))) {
       throw Object.assign(new Error('已停止后续生图提交'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
@@ -18351,6 +18422,14 @@ async function storyboardRunJob(job, log) {
     if (job.target !== 'gallery' && job.messageRef?.messageKey && !anchor.valid && anchor.linkState !== 'foreign') {
       throw Object.assign(new Error('原正文已变化，未继续提交'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
     }
+    try {
+      await storyboardAdmission.beforeSubmit(job, () => !job.discardRequested && storyboardState().enabled
+        && (!job.automatic || (storyboardState().automation?.autoCapture !== false && storyboardState().automation?.autoGenerate !== false))
+        && (job.target === 'gallery' || storyboardValidatedAnchor(job).valid || storyboardValidatedAnchor(job).linkState === 'foreign'));
+    } catch (error) {
+      throw Object.assign(new Error(error?.message || '生图授权已失效'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
+    }
+    admissionOutcome = 'unknown';
     job.submissionState = 'unknown';
     if (log) { log.submissionState = 'unknown'; saveSettings(); }
   };
@@ -18397,7 +18476,7 @@ async function storyboardRunJob(job, log) {
         return;
       }
       if (bindingVersion) gatewayRequest.modelBindingVersion = bindingVersion;
-      beforeSubmit();
+      await beforeSubmit();
       const response = await fetch('/api/plugins/qianmu-tts/image/generate', {
         method: 'POST', headers: storyboardRequestHeaders(), body: JSON.stringify(gatewayRequest),
       });
@@ -18415,6 +18494,8 @@ async function storyboardRunJob(job, log) {
       }
     }
     job.submissionState = 'accepted';
+    admissionOutcome = 'accepted';
+    await storyboardSettleImageAdmission(job, 'accepted');
     if (log) log.submissionState = 'accepted';
     storyboardPipelineStage(log, 'provider_request', 'success', {}, {
       transport,
@@ -18455,6 +18536,7 @@ async function storyboardRunJob(job, log) {
       deliveryState, deferredToOriginalChat: !currentOwnsResult,
     });
     storyboardFinishLog(log, 'success', { recordId: records[0].id, recordIds: records.map((item) => item.id), floor: anchorState.floor });
+    admissionOutcome = 'succeeded';
     storyboardSetPlanStatus(plan, 'completed', {
       resultIds: records.map((item) => item.id), job, floor: currentOwnsResult ? anchorState.floor : null,
       stage: currentOwnsResult ? 'complete' : 'delivery_pending', progress: currentOwnsResult ? 1 : 0.96,
@@ -18466,6 +18548,7 @@ async function storyboardRunJob(job, log) {
   } catch (error) {
     console.error(`[${MODULE_NAME}] storyboard generation failed`, error);
     const submissionState = error?.submissionState || job.submissionState || 'not_submitted';
+    admissionOutcome = submissionState;
     if (job.discardRequested || error?.code === 'storyboard_submission_cancelled') {
       const message = job.discardRequested ? '用户放弃收片' : error.message;
       storyboardFinishLog(log, 'cancelled', { error: message, submissionState });
@@ -18480,7 +18563,7 @@ async function storyboardRunJob(job, log) {
       storyboardSetPlanStatus(plan, 'failed', { error: message, job });
       toast(`分镜生成失败：${message}`, 'error');
     }
-  }
+  } finally { await storyboardSettleImageAdmission(job, admissionOutcome); }
 }
 
 async function storyboardRunQueuedJob(job) {
@@ -19297,19 +19380,34 @@ async function storyboardRetryPlan(plan) {
   const floor = Number(plan?.floor);
   const message = Number.isInteger(floor) ? ctx().chat?.[floor] : null;
   if (!plan || plan.origin !== 'manual_supplement' || !message) return toast('原正文位置已不存在，无法原位重试。', 'warning');
-  if (plan.archiveRef) await storyboardReleasePlanArchive(plan);
-  state.target = 'floor'; state.floor = String(floor); state.paragraphMode = 'manual';
-  state.pendingParagraphSelection = clone(plan.paragraphSelection);
-  state.manualParagraphIndex = plan.paragraphSelection?.insertAfterIndex ?? null;
-  state.prompt = ''; state.negative = ''; state.promptMode = 'auto';
-  state.promptDraft.compiled = ''; state.promptDraft.negative = ''; state.promptDraft.shots = [];
-  plan.status = 'screening'; plan.updatedAt = Date.now();
-  saveSettings(); storyboardScheduleInlineRender(20, plan.floor);
-  const compiled = await storyboardCompilePrompt(null, { plan, quiet: false });
-  if (!compiled) return false;
-  const generated = await storyboardGenerate(null, { plan, automatic: false });
-  if (generated) { state.pendingParagraphSelection = null; saveSettings(); }
-  return generated;
+  if (storyboardPlanRetries.has(plan) || ['screening', 'compiling', 'queued', 'generating'].includes(plan.status)) return toast('这幅补图正在处理中，请勿重复提交', 'info');
+  const chatKey = String(getChatKey() || ''), source = String(message.mes || ''), swipe = message.swipe_id;
+  const stillCurrent = () => storyboardState() === state && state.enabled && String(getChatKey() || '') === chatKey
+    && ctx().chat?.[floor] === message && String(message.mes || '') === source && message.swipe_id === swipe;
+  storyboardPlanRetries.add(plan);
+  try {
+    // Once provider work exists, retry its frozen request rather than paying for
+    // another LLM extraction and accidentally inventing a new logical shot.
+    const previous = [...state.logs].filter(log => log.snapshot?.planId === plan.id)
+      .sort((a, b) => Number(b.queuedAt || 0) - Number(a.queuedAt || 0))[0];
+    if (previous) return await storyboardRetryLog(previous);
+    if ((plan.shots || []).some(shot => Number(shot.attempt) > 0 || shot.resultIds?.length)) return toast('旧生图快照已不在日志中，请从阅片室核对后重绘，未重新提取', 'warning');
+    if (plan.archiveRef) await storyboardReleasePlanArchive(plan);
+    if (!stillCurrent()) return false;
+    if ((plan.shots || []).some(shot => Number(shot.attempt) > 0 || shot.resultIds?.length)) return toast('补图已有生图记录，请先从阅片室核对原请求', 'warning');
+    state.target = 'floor'; state.floor = String(floor); state.paragraphMode = 'manual';
+    state.pendingParagraphSelection = clone(plan.paragraphSelection);
+    state.manualParagraphIndex = plan.paragraphSelection?.insertAfterIndex ?? null;
+    state.prompt = ''; state.negative = ''; state.promptMode = 'auto';
+    state.promptDraft.compiled = ''; state.promptDraft.negative = ''; state.promptDraft.shots = [];
+    plan.status = 'screening'; plan.updatedAt = Date.now();
+    saveSettings(); storyboardScheduleInlineRender(20, plan.floor);
+    const compiled = await storyboardCompilePrompt(null, { plan, quiet: false });
+    if (!compiled || !stillCurrent()) return false;
+    const generated = await storyboardGenerate(null, { plan, automatic: false });
+    if (generated) { state.pendingParagraphSelection = null; saveSettings(); }
+    return generated;
+  } finally { storyboardPlanRetries.delete(plan); }
 }
 
 async function storyboardOnChatClick(event) {
@@ -33297,6 +33395,9 @@ function cleanupRuntime(resetSettings = false) {
     clean('speech', () => ttsStopChat());
     clean('storyboard queue', () => {
       storyboardResetAutomaticCapture();
+      storyboardAdmissionEpoch++;
+      void storyboardAdmission?.close();
+      storyboardAdmission = null;
       for (const job of storyboardActiveJobs.values()) {
         job.discardRequested = true;
         storyboardSyncTaskState(job, 'cancelled', { error: '扩展已停用或更新', plan: storyboardPlanForJob(job) });

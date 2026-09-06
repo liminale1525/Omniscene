@@ -55,7 +55,7 @@ test('submitting and unknown requests remain occupied regardless of elapsed time
   for (const status of ['submitting', 'unknown', 'accepted', 'succeeded']) {
     const ledger = status === 'submitting' ? submitted() : finish(submitted(), status).ledger;
     const summary = summarizeImageAttempts(ledger, scope, NOW + 30 * 24 * 60 * 60_000);
-    assert.equal(summary.automaticUsed, 1, status); assert.equal(summary.ledger.entries[0].status, status);
+    assert.equal(summary.automaticUsed, 1, status); assert.equal(summary.ledger.entries[0].status, status === 'submitting' ? 'unknown' : status);
     assert.equal(reserve(ledger, request({ attemptId: 'b', logicalShotId: 'b', operationKey: 'b', maxAutomatic: 1 })).code, 'budget_exhausted');
   }
 });
@@ -92,6 +92,8 @@ test('accepted, uncertain and successful work cannot be released by a late gener
   }
   const succeeded = finish(submitted(), 'succeeded').ledger;
   assert.equal(finish(succeeded, 'unknown').code, 'unsafe_release');
+  const accepted = finish(submitted(), 'accepted').ledger;
+  assert.equal(finish(accepted, 'unknown').ledger.entries[0].status, 'accepted', 'cleanup cannot downgrade known acceptance');
 });
 
 test('late successful recovery upgrades an uncertain result but stale owners cannot settle it', () => {

@@ -141,9 +141,13 @@ test('incomplete legacy history does not borrow current models, credentials or p
   assert.ok(restore({ snapshot: comfy }), 'legacy Comfy workflows do not require an API credential');
 });
 
-test('queue freezes identity before logging and rejects conflicting jobs without submitting', () => {
+test('queue freezes identity before logging and rejects conflicting jobs without submitting', async () => {
   const queued = [], logs = [], warnings = [];
+  const state = { enabled: true, logs: [] };
   const queue = load('storyboardQueueJob', {
+    storyboardState: () => state, getChatKey: () => 'chat', storyboardValidatedAnchor: () => ({ valid: true }),
+    storyboardImageAdmissionRuntime: async () => ({ admit: async () => true }),
+    getStoryboardGenerationPolicy: () => ({ maxImages: 3 }), storyboardGalleryRecords: () => [],
     toast: (message) => warnings.push(message), STORYBOARD_QUEUE_LIMIT: 20,
     storyboardQueue: queued, storyboardActiveJobs: new Map(),
     storyboardStartLog: (job) => { logs.push(structuredClone(job)); return { id: 'log-a' }; },
@@ -151,11 +155,11 @@ test('queue freezes identity before logging and rejects conflicting jobs without
     saveSettings: () => {}, renderModal: () => {}, storyboardPumpQueue: () => {},
   });
   const job = makeJob();
-  assert.equal(queue(job), true);
+  assert.equal(await queue(job), true);
   assert.equal(Object.isFrozen(job.modelIdentity), true);
   assert.equal(logs[0].modelIdentity.remoteModelId, V3);
   const wrong = makeJob({ modelIdentity: job.modelIdentity, profile: { model: V5 } });
-  assert.equal(queue(wrong), false);
+  assert.equal(await queue(wrong), false);
   assert.equal(queued.length, 1);
   assert.equal(logs.length, 1);
   assert.match(warnings[0], /不一致/);
@@ -193,6 +197,7 @@ function runHarness(options = {}) {
     }) },
   });
   const run = load('storyboardRunJob', {
+    storyboardAdmission: { beforeSubmit: async () => {} }, storyboardSettleImageAdmission: async () => {},
     MODULE_NAME: 'qianmu-test',
     storyboardPlanForJob: () => null, storyboardState: () => ({ enabled: true }),
     storyboardValidatedAnchor: () => ({ valid: true, floor: null }),

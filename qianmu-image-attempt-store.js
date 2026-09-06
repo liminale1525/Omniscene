@@ -1,4 +1,4 @@
-import { imageAttemptScopeKey, normalizeImageAttempts, claimImageAttempt, beginImageAttempt, settleImageAttempt, summarizeImageAttempts } from './qianmu-image-attempts.js';
+import { imageAttemptScopeKey, normalizeImageAttempts, claimImageAttempt, beginImageAttempt, continueImageAttempt, importImageAttempts, settleImageAttempt, summarizeImageAttempts } from './qianmu-image-attempts.js';
 
 // Separate, lazy database: image budget upgrades must not block voice, reading or
 // legacy public data stores. No database is opened at module import/factory time.
@@ -94,13 +94,64 @@ export function createImageAttemptStore({ indexedDB = globalThis.indexedDB, dbNa
   }
 
   return {
-    async claim(scope, input) {
-      const capturedScope = { ...scope }, captured = { ...input };
-      return operate(capturedScope, (value, at) => claimImageAttempt(value, capturedScope, captured, at), { create: true });
+    async manage(namespace, { remove = false } = {}) {
+      // Validate the account without opening storage. Only the selected account's
+      // metadata is visited; another ST account's records are never cleared.
+      imageAttemptScopeKey({ namespace, chatKey: '_', messageKey: '_', revisionId: '_' });
+      const db = await ensureOpen();
+      const prefix = `${JSON.stringify([namespace]).slice(0, -1)},`;
+      return new Promise((resolve, reject) => {
+        let tx, failure, finished = false;
+        const summary = { bytes: 0, count: 0, scopes: 0, pending: 0, uncertain: 0, corrupt: 0 };
+        const finish = cause => {
+          if (finished) return;
+          finished = true; clearTimeout(timer); transactions.delete(tx);
+          if (cause || disposed) reject(cause || storageProblem()); else resolve(summary);
+        };
+        const timer = setTimeout(() => { failure = storageProblem(); try { tx?.abort(); } catch (_) {} finish(failure); }, timeout);
+        try {
+          tx = db.transaction(STORE, remove ? 'readwrite' : 'readonly'); transactions.add(tx);
+          tx.oncomplete = () => finish(); tx.onabort = () => finish(failure || storageProblem());
+          tx.onerror = () => { failure ||= storageProblem(); };
+          const cursor = tx.objectStore(STORE).openCursor(IDBKeyRange.bound(prefix, `${prefix}\uffff`));
+          cursor.onsuccess = () => {
+            const row = cursor.result;
+            if (!row) return;
+            try {
+              const parts = JSON.parse(row.key);
+              if (parts[0] !== namespace) { row.continue(); return; }
+              const scope = { namespace, chatKey: parts[1], messageKey: parts[2], revisionId: parts[3] };
+              summary.scopes++;
+              if (summary.scopes > capacity) throw storageProblem();
+              summary.bytes += new TextEncoder().encode(JSON.stringify(row.value)).byteLength;
+              try {
+                const totals = summarizeImageAttempts(row.value, scope, now());
+                summary.count += totals.attempts; summary.pending += totals.pending; summary.uncertain += totals.uncertain;
+              } catch (_) {
+                summary.corrupt++;
+                // Do not clear a recognizable live dispatch just because some
+                // other field in its ledger is corrupt.
+                summary.pending += (row.value?.entries || []).filter?.(entry => ['reserved', 'submitting'].includes(entry?.status))?.length || 0;
+              }
+              if (remove && summary.pending) throw problem('image_attempt_busy', '仍有等待或生成中的画面，请结束后再清理防重记录');
+              if (remove) row.delete();
+              row.continue();
+            } catch (cause) { failure = cause; tx.abort(); }
+          };
+        } catch (cause) { finish(cause?.code ? cause : storageProblem()); }
+      });
+    },
+    async claim(scope, input, history = []) {
+      const capturedScope = { ...scope }, captured = { ...input }, seeds = history.map(row => ({ ...row }));
+      return operate(capturedScope, (value, at) => claimImageAttempt(importImageAttempts(value, capturedScope, seeds, at), capturedScope, captured, at), { create: true });
     },
     async begin(scope, identity) {
       const capturedScope = { ...scope }, captured = { ...identity };
       return operate(capturedScope, (value, at) => beginImageAttempt(value, capturedScope, captured, at));
+    },
+    async continue(scope, identity) {
+      const capturedScope = { ...scope }, captured = { ...identity };
+      return operate(capturedScope, (value, at) => continueImageAttempt(value, capturedScope, captured, at));
     },
     async settle(scope, details) {
       const capturedScope = { ...scope }, captured = { ...details };

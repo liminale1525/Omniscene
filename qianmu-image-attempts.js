@@ -53,6 +53,11 @@ function expireReservations(ledger, now) {
   for (const row of ledger.entries) if (row.status === 'reserved' && row.expiresAt <= now) {
     row.status = 'released'; row.updatedAt = now; row.revision++;
   }
+  // A vanished page must not leave a permanent busy lock. Expired dispatches
+  // remain occupied and require explicit confirmation; they never become free.
+  for (const row of ledger.entries) if (row.status === 'submitting' && row.expiresAt <= now) {
+    row.status = 'unknown'; row.updatedAt = now; row.revision++;
+  }
 }
 function countAutomatic(ledger) {
   return new Set(ledger.entries.filter(row => row.automaticSlot && OCCUPIED.has(row.status)).map(row => row.logicalShotId)).size;
@@ -108,8 +113,35 @@ export function beginImageAttempt(value, scope, { attemptId, ownerId }, now) {
   const row = ledger.entries.find(entry => entry.attemptId === id(attemptId, '请求编号'));
   if (!row || row.ownerId !== id(ownerId, '页面会话')) return result(ledger, false, 'missing_reservation');
   if (row.status !== 'reserved') return result(ledger, false, 'not_reserved');
-  row.status = 'submitting'; row.updatedAt = now; row.revision++;
+  row.status = 'submitting'; row.updatedAt = now; row.expiresAt = now + IMAGE_RESERVATION_TTL_MS; row.revision++;
   return result(ledger, true, 'submitting', { attempt: { ...row } });
+}
+
+// Used only by a live in-memory dispatch receipt, never to resume stored jobs.
+export function continueImageAttempt(value, scope, { attemptId, ownerId }, now) {
+  now = time(now);
+  const ledger = normalizeImageAttempts(value, scope);
+  const row = ledger.entries.find(entry => entry.attemptId === id(attemptId, '请求编号'));
+  if (!row || row.ownerId !== id(ownerId, '页面会话') || !['submitting', 'unknown', 'accepted'].includes(row.status)) return result(ledger, false, 'missing_dispatch');
+  row.updatedAt = now; row.expiresAt = now + IMAGE_RESERVATION_TTL_MS;
+  return result(ledger, true, 'dispatch_live', { attempt: { ...row } });
+}
+
+export function importImageAttempts(value, scope, seeds, now) {
+  now = time(now);
+  const ledger = normalizeImageAttempts(value, scope);
+  if (!Array.isArray(seeds) || seeds.length > IMAGE_ATTEMPT_LIMIT) fail('image_attempt_history', '旧生图记录过多，请先核查并整理');
+  for (const seed of seeds) {
+    const attemptId = id(seed?.attemptId, '旧请求编号');
+    if (ledger.entries.some(row => row.attemptId === attemptId)) continue;
+    if (!['unknown', 'accepted', 'succeeded'].includes(seed.status)) fail('image_attempt_history', '旧生图受理状态不完整');
+    if (ledger.entries.length >= IMAGE_ATTEMPT_LIMIT) fail('image_attempt_history', '生图防重记录已满，请先核查并整理');
+    ledger.entries.push(readEntry({ ...seed, ownerId: 'historical-import', revision: 1,
+      kind: seed.automaticSlot ? 'automatic' : 'manual', automaticSlot: Boolean(seed.automaticSlot),
+      createdAt: now, updatedAt: now, expiresAt: now,
+    }));
+  }
+  return ledger;
 }
 
 export function settleImageAttempt(value, scope, { attemptId, ownerId, outcome }, now) {
@@ -120,7 +152,7 @@ export function settleImageAttempt(value, scope, { attemptId, ownerId, outcome }
   const outcomes = { not_submitted: 'released', rejected: 'rejected', unknown: 'unknown', accepted: 'accepted', succeeded: 'succeeded' };
   if (!Object.hasOwn(outcomes, outcome)) fail('image_attempt_outcome', '缺少明确的受理状态');
   const target = outcomes[outcome];
-  if (row.status === target) return result(ledger, true, 'unchanged', { attempt: { ...row } });
+  if (row.status === target || (row.status === 'accepted' && target === 'unknown')) return result(ledger, true, 'unchanged', { attempt: { ...row } });
   if (row.status === 'succeeded' || (['accepted', 'unknown'].includes(row.status) && ['released', 'rejected'].includes(target))) return result(ledger, false, 'unsafe_release');
   if (['released', 'rejected'].includes(row.status) || (row.status === 'reserved' && !['released', 'rejected'].includes(target))) return result(ledger, false, 'invalid_transition');
   row.status = target; row.updatedAt = now; row.revision++;

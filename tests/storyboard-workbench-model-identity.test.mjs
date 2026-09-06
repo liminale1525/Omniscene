@@ -270,6 +270,7 @@ function generationEnvironment() {
   const env = environment(V3);
   const { state, context } = env, queued = [];
   Object.assign(context, {
+    storyboardGenerationPreparing: new Set(),
     storyboardProductionContext: () => ({}), storyboardQueue: [], storyboardActiveJobs: new Map(), STORYBOARD_QUEUE_LIMIT: 100,
     storyboardQueueJob: (job) => { queued.push(job); return true; }, confirmDialog: async () => true,
   });
@@ -307,6 +308,22 @@ test('automatic single shot also ignores saved variant count, but explicit manua
     assert.equal(await context.storyboardGenerate(null,{automatic}),true);
     assert.equal(queued.length,automatic?1:2);
   }
+});
+
+test('real generation and asynchronous queue preserve the preparation guard across a manual NAI variant batch', async () => {
+  const { state, context } = generationEnvironment(), queued = []; let admitted = 0, sequence = 0;
+  Object.assign(context, {
+    uid: () => `job-${++sequence}`, storyboardQueue: queued,
+    storyboardImageAdmissionRuntime: async () => ({ admit: async (_job, options) => {
+      await Promise.resolve(); assert.equal(options.valid(), true); admitted++;
+    } }),
+    storyboardStartLog: job => { const log = { id: `log-${sequence}`, snapshot: structuredClone(job) }; state.logs.push(log); return log; },
+    storyboardPlanForJob: () => null, storyboardSetPlanStatus: () => {}, storyboardPumpQueue: () => {},
+  });
+  vm.runInContext(section('storyboardQueueJob'), context);
+  assert.equal(await context.storyboardGenerate(null), true);
+  assert.equal(admitted, 2); assert.equal(queued.length, 2); assert.equal(state.logs.length, 2);
+  assert.equal(context.storyboardGenerationPreparing.size, 0);
 });
 
 test('explicit manual multi-shot selection still has one output per shot and confirms only that demand',async()=>{
@@ -520,6 +537,7 @@ test('a late image-setting load cannot overwrite the workbench after changing ch
 test('invalid profiles stop both compiler and generation before any external work', async () => {
   const { state, context, notices } = environment('', 'invalid-unbound');
   context.storyboardCompilerBusy = false;
+  context.storyboardGenerationPreparing = new Set();
   context.storyboardCaptureWorkbench = () => ({ state, profile: state.profiles.novel, workflowResult: { ok: true, removedFields: [] } });
   context.featureRuntime = { load: () => assert.fail('external work must not begin') };
   vm.runInContext(section('storyboardCompilePrompt') + section('storyboardGenerate'), context);
