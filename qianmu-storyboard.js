@@ -1176,7 +1176,7 @@ export function storyboardProductionDeliveryPolicy(value = {}, requested = {}) {
   return {
     productionContext,
     track: productionContext.track,
-    sourceLabel: STORYBOARD_PRODUCTION_TRACK_LABELS[productionContext.track],
+    sourceLabel: value.recipeUnavailable ? '原图找回 · 原配置未保留' : STORYBOARD_PRODUCTION_TRACK_LABELS[productionContext.track],
     target: requiresExplicitInsert ? 'gallery' : requestedTarget,
     inlineByDefault: requiresExplicitInsert ? false : requested.inlineByDefault !== false,
     requiresExplicitInsert,

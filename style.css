@@ -10080,3 +10080,9 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-storyboard-service-inbox .sd-storyboard-log-actions > span {
   min-width: 0; overflow-wrap: anywhere; font-size: var(--sd-type-caption, 12px);
 }
+#story-director-modal .sd-service-inbox-toolbar { display: flex; gap: .4rem; }
+#story-director-modal .sd-service-inbox-toolbar > button { flex: 1; min-width: 0; }
+#story-director-modal .sd-service-inbox-usage { margin: .5rem 0; font-size: var(--sd-type-caption, 12px); text-align: start; }
+#story-director-modal .sd-storyboard-service-inbox .sd-storyboard-log-actions small { display: block; color: var(--sd-text-muted); font-size: inherit; }
+#story-director-modal .sd-service-inbox-history { margin-top: .6rem; font-size: var(--sd-type-caption, 12px); }
+#story-director-modal .sd-service-inbox-history > div { display: flex; justify-content: space-between; gap: .4rem; padding-block: .3rem; }

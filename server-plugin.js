@@ -183,13 +183,13 @@ export async function init(router, options = {}) {
       imageServiceAccount(req);
       // Construction checks the trusted host path but performs no disk/network IO.
       tasksFor(req);
-      return res.json({ ok: true, schemaVersion: IMAGE_SERVICE_TASK_VERSION, taskLocatorVersion: 1, accountBindingVersion: 1, providers: ['novel'], protocols: ['novelai'],
+      return res.json({ ok: true, schemaVersion: IMAGE_SERVICE_TASK_VERSION, taskLocatorVersion: 1, accountBindingVersion: 1, catalogVersion: 1, providers: ['novel'], protocols: ['novelai'],
         scope: 'coordinated-endpoints-only', resultRetrieval: true, resultAcknowledgement: true, explicitCacheCleanup: true,
         maxPending: 32, maxActive: 2, automaticRestartReplay: false,
       });
     } catch (error) { const result = imageServiceTaskErrorPayload(error); return res.status(result.status).json(result.body); }
   });
-  for (const action of ['submit', 'query', 'result', 'acknowledge', 'discard']) {
+  for (const action of ['submit', 'query', 'result', 'acknowledge', 'discard', 'catalog']) {
     router.post(`/image/tasks/${action}`, async (req, res) => {
       prepareImageResponse(res);
       const controller = new AbortController();

@@ -30,7 +30,7 @@ export function createImageService({ dataRoot, store = createImageServiceStore({
   generate = generateImage, materialize = materializeImageResult, gatewayOptions = {}, queueOptions = {} } = {}) {
   const cache = results || createImageServiceResults({ dataRoot, store });
   const queue = createImageServiceQueue({ ...queueOptions, store, ownerId: randomUUID() });
-  const jobs = new Map(), retrieving = new Map(); let closed = false, admitted = 0, admissionBytes = 0;
+  const jobs = new Map(), retrieving = new Map(), catalogs = new Set(); let closed = false, admitted = 0, admissionBytes = 0;
   const context = (request, input, allowLocator = false) => {
     const account = imageServiceAccount(request);
     if (input?.schemaVersion !== IMAGE_SERVICE_TASK_VERSION) throw fail('version', '增强生图任务协议不兼容，请同步更新前后端');
@@ -88,6 +88,38 @@ export function createImageService({ dataRoot, store = createImageServiceStore({
     return work.finally(() => { if (retrieving.get(id) === work) retrieving.delete(id); });
   }
   return {
+    async catalog(request, input) {
+      const account = imageServiceAccount(request);
+      if (closed || catalogs.size >= 2) throw fail('catalog_busy', '服务目录正在读取，请稍后刷新');
+      if (input?.schemaVersion !== 1 || input.expectedAccount !== account.namespace) throw fail('authentication_changed', 'ST 登录账户已变化，请重新读取目录', 'not_submitted', 401);
+      // Capture pagination before IO. The body cannot select another account.
+      const page = { cursor: input.cursor ? structuredClone(input.cursor) : null, limit: input.limit === undefined ? 40 : input.limit };
+      const work = (async () => {
+        const inventory = await cache.inventory(account.namespace); validAccount(request, account);
+        const listed = await store.inspectAccount(account.namespace, { ...page, select: inventory.entries }); validAccount(request, account);
+        const selected = new Map(listed.selected.map(row => [JSON.stringify([row.channelKey,row.attemptId]), row]));
+        const views = new Map();
+        const originals = inventory.entries.map(meta => {
+          const row = selected.get(JSON.stringify([meta.channelKey,meta.attemptId]));
+          const value = { ...account, channelKey: meta.channelKey, attemptId: meta.attemptId };
+          const matches = row && row.fence === meta.fence && row.requestDigest === meta.requestDigest;
+          const live = jobs.has(jobKey(value)) || retrieving.has(jobKey(value));
+          const view = { ...(imageServiceTaskView(matches ? row : null) || { attemptId: meta.attemptId, status: 'unverified', createdAt: meta.createdAt }),
+            taskLocator: { version: 1, channelKey: meta.channelKey }, live, model: meta.model, cacheReceipt: meta.receipt,
+            cacheBytes: meta.imageBytes, metadataBytes: meta.metadataBytes, temporaryBytes: meta.temporaryBytes, reservedBytes: meta.reservedBytes,
+            imageCount: meta.imageCount, resultStored: meta.ready, resultAvailable: Boolean(matches && (meta.ready || meta.remote)),
+            canDiscard: Boolean(matches && !live && !['reserved','submitting'].includes(row.status)), recipeAvailable: false };
+          views.set(JSON.stringify([meta.channelKey,meta.attemptId]), view); return view;
+        });
+        return { ok: true, schemaVersion: 1, catalogVersion: 1, totals: { ...inventory.totals, tasks: listed.total },
+          originals: originals.sort((a,b) => b.createdAt-a.createdAt),
+          tasks: listed.entries.map(row => views.get(JSON.stringify([row.channelKey,row.attemptId])) || {
+            ...imageServiceTaskView(row), taskLocator: { version: 1, channelKey: row.channelKey }, resultAvailable: false, canDiscard: false }),
+          nextCursor: listed.nextCursor, sampledAt: Date.now() };
+      })();
+      catalogs.add(work);
+      try { return await work; } finally { catalogs.delete(work); }
+    },
     async submit(request, input, { signal } = {}) {
       if (closed) throw fail('closed', '增强服务正在停止，未提交新请求');
       const value = context(request, input);
@@ -173,7 +205,7 @@ export function createImageService({ dataRoot, store = createImageServiceStore({
       return { ok: true, ...(await cache.discard(resultIdentity(value, row), input.receipt, { valid: () => imageServiceAccountStillMatches(request, value) })) };
     },
     async close() {
-      closed = true; queue.close(); await Promise.allSettled([...jobs.values()].map(job => job.done).concat([...retrieving.values()])); await store.close();
+      closed = true; queue.close(); await Promise.allSettled([...jobs.values()].map(job => job.done).concat([...retrieving.values()], [...catalogs])); await store.close();
     },
     inspect() { return { ...queue.inspect(), tasks: jobs.size, admitted, admissionBytes }; },
   };

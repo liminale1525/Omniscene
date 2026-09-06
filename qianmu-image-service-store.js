@@ -159,6 +159,43 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
     } catch (cause) { return Promise.reject(safeError(cause)); }
   };
   return {
+    readOnly(operation) {
+      if (typeof operation !== 'function') return Promise.reject(error('transaction', '缺少服务读取操作'));
+      return enqueue(async () => { await initialize(false); return operation(); });
+    },
+    inspectAccount(namespace, { cursor = null, limit = 40, select = [] } = {}) {
+      const validLocator = value => HASH.test(value?.channelKey || '') && typeof value.attemptId === 'string' && value.attemptId.length > 0 && value.attemptId.length <= 240 && !/[\u0000-\u001f\u007f]/.test(value.attemptId);
+      if (typeof namespace !== 'string' || !namespace || namespace.length > 240 || /[\u0000-\u001f\u007f]/.test(namespace)
+        || !Number.isInteger(limit) || limit < 1 || limit > 50
+        || (cursor !== null && !validLocator(cursor)) || !Array.isArray(select) || select.length > 128 || select.some(value => !validLocator(value))) return Promise.reject(error('identity', '任务目录分页信息无效'));
+      const after = cursor ? `${cursor.channelKey}\0${cursor.attemptId}` : '';
+      const wanted = new Set(select.map(value => `${value.channelKey}\0${value.attemptId}`));
+      return enqueue(async () => {
+        if (!await initialize(false)) return { entries: [], selected: [], total: 0, nextCursor: null };
+        const stream = await io.opendir(directory), keys = []; let files = 0;
+        for await (const entry of stream) {
+          if (++files > channelLimit + 32) throw error('full', '任务目录需要整理');
+          if (/^[a-f0-9]{64}\.json$/.test(entry.name)) {
+            if (!entry.isFile() || keys.length >= channelLimit) throw error('path', '任务目录包含异常记录');
+            keys.push(entry.name.slice(0, -5));
+          } else if (!entry.isFile() || !/^(?:\.(?:transaction|maintenance)\.lock|\.write-[a-f0-9-]{36}\.tmp)$/.test(entry.name)) throw error('path', '任务目录包含未知文件，请先核查');
+        }
+        // Bound memory to one channel plus one page, not the whole history.
+        const entries = [], selected = []; let total = 0, remaining = 0;
+        for (const channelKey of keys.sort()) {
+          const record = await readRecord(channelKey);
+          const owned = (record?.state.entries || []).filter(row => row.namespace === namespace).sort((a,b) => a.attemptId < b.attemptId ? -1 : a.attemptId > b.attemptId ? 1 : 0);
+          total += owned.length;
+          for (const row of owned) {
+            const key = `${channelKey}\0${row.attemptId}`;
+            if (wanted.has(key)) selected.push({ ...row, channelKey });
+            if (key > after) { remaining++; if (entries.length < limit) entries.push({ ...row, channelKey }); }
+          }
+        }
+        const last = entries.at(-1);
+        return { entries, selected, total, nextCursor: remaining > entries.length ? { channelKey: last.channelKey, attemptId: last.attemptId } : null };
+      });
+    },
     exclusive(operation) {
       if (typeof operation !== 'function') return Promise.reject(error('transaction', '缺少服务存储操作'));
       return enqueue(() => exclusive(operation));

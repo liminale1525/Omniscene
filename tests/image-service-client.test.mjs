@@ -247,3 +247,24 @@ test('bulk local receipt cleanup cannot interleave with a live generation', asyn
   const count=s.calls.length;const stats=await s.client.manage({remove:true});
   assert.equal(stats.count,1);assert.ok(stats.bytes>0);assert.equal(s.rows.size,0);assert.equal(s.calls.length,count);
 });
+
+test('original-only recovery archives an image without invented recipe, prompt or paragraph binding',async()=>{
+  const s=deliverySetup();let records=[];
+  const original={...job(),originalOnly:true,target:'gallery',inlineByDefault:false};
+  assert.equal(await s.context.storyboardDeliverGatewayResult(original,null,image(original.id),{service:true,checkpoint:async value=>{records=structuredClone(value);}}),true);
+  const record=s.gallery[0];assert.equal(record.recipeUnavailable,true);assert.equal(record.origin,'service_recovered');assert.equal(record.inline,false);assert.equal(record.floor,null);
+  for(const key of ['prompt','finalPrompt','snapshot','snapshotRef','sampler','steps','seed','connection','imageAdmission'])assert.equal(record[key],undefined,key);
+  assert.equal(records[0].recipeUnavailable,true);assert.equal(s.writes,1);
+});
+test('original-only records cannot masquerade as precise-redraw recipes in any common entry',async()=>{
+  const notices=[],context=vm.createContext({toast:message=>{notices.push(message);}});
+  for(const name of ['storyboardSnapshotForRecord','storyboardReadSnapshotForRecord','storyboardLoadRecordToWorkbench','storyboardRedrawRecord','storyboardEditPrompt'])vm.runInContext(section(name),context);
+  const record={recipeUnavailable:true,snapshot:{profile:{model:'invented'}}};
+  assert.equal(context.storyboardSnapshotForRecord(record),null);assert.equal(await context.storyboardReadSnapshotForRecord(record),null);
+  await context.storyboardLoadRecordToWorkbench(record);await context.storyboardRedrawRecord(record);await context.storyboardEditPrompt({record});
+  assert.equal(notices.length,3);assert.ok(notices.every(item=>item.includes('未保留')));
+});
+test('old server without catalog gives an actionable update message and never submits',async()=>{
+  const s=setup({fetch:()=>new Response('Not found',{status:404})});
+  await assert.rejects(s.client.catalog(),/服务目录未就绪，请更新后端并重启 ST/);assert.deepEqual(s.calls.map(item=>item.action),['catalog']);
+});

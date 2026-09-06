@@ -117,6 +117,41 @@ export function createImageServiceResults({ dataRoot, store, maxSlots = 128, max
   }
   const exclusive = operation => store.exclusive(operation).catch(cause => { throw safeError(cause); });
   return {
+    inventory(namespace) {
+      if (typeof namespace !== 'string' || !namespace || namespace.length > 240 || /[\u0000-\u001f\u007f]/.test(namespace)) return Promise.reject(fail('identity', '暂存账户无效'));
+      return store.readOnly(async () => {
+        const root = await locate(), entries = [];
+        const totals = { count: 0, imageBytes: 0, metadataBytes: 0, temporaryBytes: 0, reservedBytes: 0 };
+        if (!root) return { entries, totals };
+        const folders = await fs.opendir(root); let count = 0;
+        for await (const entry of folders) {
+          if (++count > slotLimit || !entry.isDirectory() || !/^[a-f0-9]{64}$/.test(entry.name)) throw fail('corrupt', '暂存目录需要核查');
+          const folder = path.join(root, entry.name); await checkedDirectory(folder);
+          let meta;
+          try { meta = JSON.parse((await read(path.join(folder, 'manifest.json'), 16 * 1024)).toString()); }
+          catch (_) { throw fail('corrupt', '暂存清单无法核查，请保留原记录'); }
+          const owner = identity(meta?.identity);
+          if (slotId(owner) !== entry.name) throw fail('corrupt', '暂存归属不匹配');
+          // Never report another account's paths, counts, signed URLs or bytes.
+          if (owner.namespace !== namespace) continue;
+          const current = await manifest(folder, owner);
+          const sizes = { imageBytes: 0, metadataBytes: 0, temporaryBytes: 0 }; let files = 0;
+          const contents = await fs.opendir(folder);
+          for await (const file of contents) {
+            if (++files > 26 || !file.isFile() || !/^(?:manifest\.json|image-[0-7]\.bin|\.(?:manifest|image)-[a-f0-9-]{36}\.tmp)$/.test(file.name)) throw fail('corrupt', '暂存目录含未知文件，请先核查');
+            const stat = await fs.lstat(path.join(folder, file.name));
+            if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || !Number.isSafeInteger(stat.size) || stat.size > MAX_IMAGE_BYTES) throw fail('corrupt', '暂存文件类型或大小异常');
+            sizes[file.name === 'manifest.json' ? 'metadataBytes' : file.name.startsWith('image-') ? 'imageBytes' : 'temporaryBytes'] += stat.size;
+          }
+          if (meta.status === 'ready' && sizes.imageBytes !== meta.bytes) throw fail('corrupt', '原图容量与清单不符，请先核查');
+          const reservedBytes = meta.status === 'ready' ? 0 : Math.max(0, MAX_IMAGE_BYTES - sizes.imageBytes);
+          entries.push({ ...owner, ...sizes, reservedBytes, receipt: current.receipt, ready: meta.status === 'ready', remote: meta.status === 'remote',
+            imageCount: meta.images.length, model: meta.result?.model || '', createdAt: Number(meta.createdAt) || 0 });
+          totals.count++; for (const name of Object.keys(sizes)) totals[name] += sizes[name]; totals.reservedBytes += reservedBytes;
+        }
+        return { entries, totals };
+      }).catch(cause => { throw safeError(cause); });
+    },
     reserve(rawIdentity) {
       const captured = identity(rawIdentity);
       return exclusive(async () => {

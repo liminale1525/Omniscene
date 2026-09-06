@@ -9,7 +9,7 @@ const id = value => typeof value === 'string' && value.length > 0 && value.lengt
 const states = new Set(['prepared', 'submitted', 'available', 'archived', 'rejected']);
 function checkedRow(value, namespace) {
   if (!value || value.version !== 1 || value.namespace !== namespace || !id(value.attemptId) || !/^[a-f0-9]{64}$/.test(value.channelKey || '') || !states.has(value.status)) throw fail('record', '服务请求记录不完整，请核查原任务');
-  const row = { version: 1, namespace, attemptId: value.attemptId, channelKey: value.channelKey, status: value.status,
+  const row = { version: 1, namespace, attemptId: value.attemptId, channelKey: value.channelKey, status: value.status, originalOnly: value.originalOnly === true,
     createdAt: Number(value.createdAt) || 0, logId: id(value.logId) ? value.logId : '',
     snapshot: sanitizeStoryboardSnapshot(value.snapshot, { source: 'novel' }),
     receipt: /^[a-f0-9]{64}$/.test(value.receipt || '') ? value.receipt : '',
@@ -115,7 +115,8 @@ export function createImageServiceClient({ store = createImageServiceClientStore
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.ok) {
-        const error = fail('response', action === 'capabilities' ? '增强服务未就绪，请更新后端并重启 ST' : data?.message || '服务任务结果未确认，请查询原任务',
+        const error = fail('response', action === 'capabilities' ? '增强服务未就绪，请更新后端并重启 ST'
+          : action === 'catalog' && (!data || [404,405].includes(response.status)) ? '服务目录未就绪，请更新后端并重启 ST' : data?.message || '服务任务结果未确认，请查询原任务',
           ['not_submitted','rejected','unknown','accepted'].includes(data?.submissionState) ? data.submissionState : action === 'submit' ? 'unknown' : 'accepted');
         error.serviceCode = data?.code; error.confirmation = data?.confirmation; throw error;
       }
@@ -174,6 +175,49 @@ export function createImageServiceClient({ store = createImageServiceClientStore
   }
   return {
     probe,
+    async catalog({ cursor = null } = {}) {
+      const namespace = await account();
+      const data = await call('catalog', { schemaVersion: 1, expectedAccount: await accountBinding(namespace), cursor, limit: 40 }, 30000);
+      await assertAccount(namespace);
+      if (data.catalogVersion !== 1 || !Array.isArray(data.originals) || data.originals.length > 128 || !Array.isArray(data.tasks) || data.tasks.length > 50) throw fail('version', '服务目录版本不匹配，请更新后端并重启 ST');
+      return { ...data, namespace };
+    },
+    async rememberOriginal(task, { chatKey } = {}) {
+      task = structuredClone(task);
+      const namespace = await account();
+      if (task?.namespace !== namespace) throw fail('account', 'ST 账户已变化，请重新读取服务目录');
+      if (!id(task?.attemptId) || task.taskLocator?.version !== 1 || !/^[a-f0-9]{64}$/.test(task.taskLocator.channelKey || '') || typeof chatKey !== 'string' || !chatKey || chatKey.length > 512) throw fail('identity', '请先进入要保存原图的聊天');
+      return locked(namespace, task.attemptId, async () => {
+        const previous = await store.get(namespace, task.attemptId);
+        if (previous) {
+          if (previous.channelKey !== task.taskLocator.channelKey) throw fail('conflict', '同编号属于另一连接，请先核查本机领取记录');
+          return previous;
+        }
+        if (!await confirm('找回原图至阅片室', '此设备没有原取景配置。仅保存原图到当前聊天的阅片室，不插入正文，也不套用当前设置作为重绘配置。')) return null;
+        await assertAccount(namespace);
+        const row = checkedRow({ version: 1, namespace, attemptId: task.attemptId, channelKey: task.taskLocator.channelKey, status: 'prepared',
+          originalOnly: true, createdAt: Number(task.createdAt) || Date.now(), snapshot: { source: 'novel', target: 'gallery', chatKey, inlineByDefault: false } }, namespace);
+        const queried = await call('query', await locator(row)); await assertAccount(namespace);
+        if (queried.task?.attemptId !== row.attemptId || queried.task.resultAvailable !== true) throw fail('pending', '原图暂不可领取，请刷新服务目录', 'accepted');
+        await store.put(row); return structuredClone(row);
+      });
+    },
+    async discardOriginal(task) {
+      task = structuredClone(task);
+      const namespace = await account();
+      if (task?.namespace !== namespace) throw fail('account', 'ST 账户已变化，请重新读取服务目录');
+      if (!id(task?.attemptId) || task.taskLocator?.version !== 1 || !/^[a-f0-9]{64}$/.test(task.taskLocator.channelKey || '')) throw fail('identity', '原图记录无效');
+      return locked(namespace, task.attemptId, async () => {
+        const row = { namespace, attemptId: task.attemptId, channelKey: task.taskLocator.channelKey };
+        const queried = await call('query', await locator(row)); await assertAccount(namespace);
+        const current = queried.task;
+        if (!current?.cacheReceipt || current.live || ['reserved','submitting'].includes(current.status)) throw fail('pending', '原任务正在运行或待核查，未清理暂存', 'accepted');
+        if (!await confirm('删除服务器暂存原图', '只删除这项服务器原图暂存，无法撤销。不会删除已归档图片或防重记录，也不会退款；请确认已保存或不再需要。')) return false;
+        await assertAccount(namespace);
+        await call('discard', { ...await locator(row), receipt: current.cacheReceipt, confirmed: true });
+        await assertAccount(namespace); return true;
+      });
+    },
     async list() { const namespace = await account(), rows = await store.list(namespace); await assertAccount(namespace); return rows; },
     async submit(job, request, { beforeSubmit, deliver, valid = () => true, onPrepared = () => {} } = {}) {
       job = structuredClone(job); request = structuredClone(request);
@@ -208,8 +252,9 @@ export function createImageServiceClient({ store = createImageServiceClientStore
         catch (cause) { cause.submissionState = 'accepted'; throw cause; }
       });
     },
-    async retrieve(attemptId, deliver) {
+    async retrieve(attemptId, deliver, { namespace: expectedNamespace } = {}) {
       const namespace = await account();
+      if (expectedNamespace && expectedNamespace !== namespace) throw fail('account', 'ST 账户已变化，请重新读取领取记录');
       if (!id(attemptId)) throw fail('identity', '原请求编号无效');
       return locked(namespace, attemptId, async () => {
         const row = await store.get(namespace, attemptId); if (!row) throw fail('missing', '未找到当前账户的待领取请求');
@@ -224,8 +269,9 @@ export function createImageServiceClient({ store = createImageServiceClientStore
         catch (cause) { cause.submissionState = 'accepted'; throw cause; }
       });
     },
-    async dismiss(attemptId) {
+    async dismiss(attemptId, { namespace: expectedNamespace } = {}) {
       const namespace = await account();
+      if (expectedNamespace && expectedNamespace !== namespace) throw fail('account', 'ST 账户已变化，请重新读取领取记录');
       if (!id(attemptId)) throw fail('identity', '原请求编号无效');
       return locked(namespace, attemptId, async () => {
         const row = await store.get(namespace, attemptId); if (!row) return;
