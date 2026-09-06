@@ -68,7 +68,7 @@ assert.match(nai.providerOptions.v4_prompt.caption.char_captions[0].char_caption
 assert.doesNotMatch(nai.providerOptions.v4_prompt.caption.char_captions[0].char_caption, /blue hair|black jacket/);
 assert.match(nai.providerOptions.v4_prompt.caption.char_captions[1].char_caption, /Bob, blue hair[\s\S]*black jacket/);
 assert.deepEqual(nai.providerOptions.v4_prompt.caption.char_captions.map((item) => item.centers[0]), [{ x: 0.24, y: 0.52 }, { x: 0.77, y: 0.51 }]);
-assert.match(nai.negative, /^bad quality,[\s\S]*text,[\s\S]*distinct character traits/);
+assert.match(nai.negative, /^bad quality,[\s\S]*text,[\s\S]*mixed identities/);
 
 const degraded = compileStoryboardPrompt({ providerId: 'openai', modelId: 'gpt-image-2', shot });
 assert.equal(degraded.degradation.mode, 'named_character_blocks');

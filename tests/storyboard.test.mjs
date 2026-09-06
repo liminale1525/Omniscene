@@ -93,7 +93,7 @@ assert.match(source, /function storyboardChooseCaptureMode[\s\S]*智能提取[\s
 assert.match(source, /storyboardParameterPresets[\s\S]*保存分镜样式[\s\S]*parameterPresetSelection/, '分镜参数样式必须可按模型保存和切换');
 assert.match(source, /rememberStoryboardModelProfile\(state\.modelProfiles, providerId, \{ \.\.\.captured, model: previousModel \}\)[\s\S]*getStoryboardRememberedProfile\(state\.modelProfiles, providerId, binding\.remoteModelId, binding\.capabilityModelId\)/, '每个具体模型必须通过隔离读写入口记住最后一次参数修改');
 assert.doesNotMatch(source, /sd-storyboard-reuse-record|sd-storyboard-lightbox-reuse/, '阅片室不得保留复用或重新生成入口');
-assert.match(source, /getStoryboardCapabilities\(state\.source, profile\.capabilityModelId\)[\s\S]*capabilities\.negative[\s\S]*capabilities\.steps/, '绘制参数必须按供应商与具体模型能力档裁剪');
+assert.match(source, /getStoryboardCapabilities\(state\.source, profile\.capabilityModelId\)[\s\S]*capabilities\.supportsNativeNegative[\s\S]*capabilities\.steps/, '绘制参数必须按供应商与具体模型能力档裁剪');
 assert.match(source, /openaiBackground[\s\S]*openaiOutputFormat[\s\S]*seedreamGuidanceScale[\s\S]*seedreamSequential[\s\S]*novelSm[\s\S]*novelVarietyBoost/, '各模型的官方参数必须在前端可调且进入真实请求');
 assert.match(source, /storyboardParseWorkflow[\s\S]*storyboardGatewayRequest/, 'ComfyUI 必须把有效 API Workflow 交给千幕网关');
 assert.match(source, /storyboardCaptureComfyWorkflow[\s\S]*sanitizeStoryboardWorkflow[\s\S]*comfyWorkflowNotice/, 'ComfyUI Workflow 必须在进入持久化设置前结构化清理凭据字段');

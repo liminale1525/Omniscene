@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import * as storyboard from '../qianmu-storyboard.js';
+import { parseOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } from '../qianmu-openai-image-compat.js';
 
 const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
 const V3 = 'nai-diffusion-3', V45 = 'nai-diffusion-4-5-full', V5 = 'nai-diffusion-5-full';
@@ -20,7 +21,7 @@ function environment(capability = V3, model = alias, extra = {}) {
   state.connections.novel.draft = { id: 'draft-a', credentialId: 'key-ref', baseUrl: 'https://relay.example', model: V5 };
   const notices = [], saved = [];
   const context = vm.createContext({
-    ...storyboard, clone: structuredClone,
+    ...storyboard, clone: structuredClone, parseOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility,
     settings: { apiProfiles: [] }, storyboardState: () => state, getChatKey: () => 'chat-a', ctx: () => ({ chat: [] }),
     storyboardTargetFloor: () => -1, storyboardCredentialRevision: 0, getCharacterDescription: () => '', getPersonaDescription: () => '',
     storyboardSelectedArtistPreset: () => null, storyboardGalleryRecords: () => [],
@@ -112,10 +113,56 @@ test('actual workbench rendering chooses NAI sampler and Vibe controls from capa
     assert.ok(html.includes('sd-storyboard-params'));
     assert.equal(html.includes('data-storyboard-field="scheduler"'), capability !== V5);
     const vibe = /<button[^>]*data-storyboard-param-vibe="vibe-a"[^>]*>/.exec(html)?.[0];
-    assert.ok(vibe);
-    assert.equal(vibe.includes('disabled'), capability !== V3);
+    if (capability === V5) assert.equal(vibe, undefined);
+    else { assert.ok(vibe); assert.equal(vibe.includes('disabled'), capability !== V3); }
     assert.ok(html.includes(capability === V3 ? 'quality v3' : capability === V45 ? 'quality v45' : 'quality v5'));
   }
+});
+
+for (const family of ['banana', 'openai', 'seedream']) {
+  test(`${family} workbench displays description fields without applying or mutating a selected NAI artist`, () => {
+    const { state, context } = environment(V3, alias, { renderStoryboardOpenAICompatibility: () => '' });
+    const artist = { id: 'artist-a', name: 'Artist', value: 'artist: nai-only', positivePrompt: 'NAI-positive', negativePrompt: 'NAI-negative' };
+    state.artistPresets = [artist]; state.selectedArtistPresetId = artist.id; state.selectedVibeIds = ['vibe-a'];
+    context.storyboardSelectedArtistPreset = () => artist;
+    state.source = family;
+    const html = context.renderStoryboardCreate(state);
+    assert.ok(html.includes('画面要求')); assert.ok(html.includes('排除描述'));
+    assert.doesNotMatch(html, /sd-storyboard-artist-preset|sd-storyboard-param-vibes|NAI-positive|NAI-negative/);
+    const before = structuredClone(artist);
+    const fields = { '.sd-storyboard-prompt': {value:'custom description'}, '.sd-storyboard-negative': {value:'custom exclusion'} };
+    context.storyboardCaptureWorkbench({querySelector:selector=>fields[selector] || null,querySelectorAll:()=>[]}, family);
+    assert.deepEqual(artist,before);
+    assert.equal(state.promptDefaults[`${family}:${state.profiles[family].model}`].negative,'custom exclusion');
+    const payload = context.storyboardGenerationPayload(state,state.profiles[family],{prompt:'scene'});
+    assert.match(payload.prompt,/custom description/); assert.match(payload.negative,/custom exclusion/);
+    assert.equal(payload.artistString,''); assert.equal(payload.selectedVibeIds.length,0);
+    assert.equal(state.selectedArtistPresetId,artist.id); assert.equal(state.selectedVibeIds[0],'vibe-a');
+    state.source = 'novel';
+    const restored = context.renderStoryboardCreate(state);
+    assert.ok(restored.includes('NAI-positive')); assert.ok(restored.includes('NAI-negative'));
+  });
+}
+
+test('natural-language job snapshots do not advertise an artist or pool that was not applied', () => {
+  const { state, context } = environment();
+  state.source = 'openai'; state.prompt = 'scene';
+  state.artistPresets = [{id:'artist-a',name:'NAI artist',value:'artist: nai-only'}];
+  state.selectedArtistPresetId = 'artist-a'; state.promptDraft.artistString = 'artist: legacy-naI';
+  state.artistPools = [{id:'pool-a',enabled:true,members:[{artistId:'artist-a'}]}]; state.selectedArtistPoolId='pool-a';
+  const job = context.storyboardCreateJob(state,state.profiles.openai);
+  assert.equal(job.artistPresetId,''); assert.equal(job.artistPoolId,''); assert.equal(job.artistString,'');
+  assert.doesNotMatch(job.payload.prompt,/nai-only|legacy-naI/);
+});
+
+test('inline artist button follows the image family rather than current workbench selection', () => {
+  const { state, context } = environment();
+  context.snip = text => text; context.storyboardInlineVideoForRecord = () => null;
+  vm.runInContext(section('storyboardInlineRecordMarkup'),context);
+  state.source = 'openai';
+  assert.match(context.storyboardInlineRecordMarkup({id:'nai',source:'novel',url:'https://image.example/a.png'}),/data-storyboard-chat-action="artist"/);
+  state.source = 'novel';
+  assert.doesNotMatch(context.storyboardInlineRecordMarkup({id:'gpt',source:'openai',url:'https://image.example/b.png'}),/data-storyboard-chat-action="artist"/);
 });
 
 test('built-in parameter styles keep the real alias and user styles match both name and capability', () => {

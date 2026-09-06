@@ -35,7 +35,7 @@ const model = (id, label, generation, extra = {}) => Object.freeze({
 export const STORYBOARD_PROVIDER_REGISTRY = Object.freeze({
   novel: Object.freeze({ id: 'novel', label: 'NovelAI', protocol: 'novelai', defaultBaseUrl: 'https://image.novelai.net', customBaseUrl: true, customModelId: false, stSource: 'novel', secretKey: 'api_key_novel', defaultModel: 'nai-diffusion-5-full', capabilities: caps({ negative: true, seed: true, steps: true, cfg: true, sampler: true, scheduler: true, multiCharacter: true }) }),
   banana: Object.freeze({ id: 'banana', label: 'Banana', protocol: 'gemini-images', defaultBaseUrl: 'https://generativelanguage.googleapis.com', customBaseUrl: true, customModelId: false, stSource: 'google', secretKey: 'api_key_makersuite', defaultModel: 'gemini-3.1-flash-image', capabilities: caps({ negative: true, reference: true, multipleReferences: true, imageEdit: true }) }),
-  openai: Object.freeze({ id: 'openai', label: '自定义（兼容 OpenAI）', protocol: 'openai-images', defaultBaseUrl: 'https://api.openai.com/v1', customBaseUrl: true, customModelId: true, stSource: 'openai', secretKey: 'api_key_openai', defaultModel: 'gpt-image-2', capabilities: caps({ reference: true, multipleReferences: true, imageEdit: true }) }),
+  openai: Object.freeze({ id: 'openai', label: 'GPT Image', protocol: 'openai-images', defaultBaseUrl: 'https://api.openai.com/v1', customBaseUrl: true, customModelId: true, stSource: 'openai', secretKey: 'api_key_openai', defaultModel: 'gpt-image-2', capabilities: caps({ reference: true, multipleReferences: true, imageEdit: true }) }),
   seedream: Object.freeze({ id: 'seedream', label: 'Doubao Seedream', protocol: 'ark-images', defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3', customBaseUrl: true, customModelId: false, stSource: '', secretKey: '', defaultModel: 'doubao-seedream-5-0-260128', capabilities: caps({ seed: true, reference: true, multipleReferences: true, imageEdit: true }) }),
   comfy: Object.freeze({ id: 'comfy', label: 'ComfyUI', protocol: 'comfy-workflow', defaultBaseUrl: '', customBaseUrl: true, customModelId: false, stSource: 'comfy', secretKey: '', defaultModel: 'comfy-workflow', capabilities: caps({ negative: true, seed: true, steps: true, cfg: true, sampler: true, scheduler: true, reference: true, multipleReferences: true, imageEdit: true, mask: true, workflow: true }) }),
 });
@@ -161,7 +161,22 @@ export const STORYBOARD_EVIDENCE_TYPES = Object.freeze(['explicit', 'inferred', 
 
 export const getStoryboardProvider = (id) => Object.hasOwn(STORYBOARD_PROVIDER_REGISTRY, id) ? STORYBOARD_PROVIDER_REGISTRY[id] : null;
 export const getStoryboardModel = (providerId, modelId) => (Object.hasOwn(STORYBOARD_MODEL_REGISTRY, providerId) ? STORYBOARD_MODEL_REGISTRY[providerId] : []).find((item) => item.id === modelId) || null;
-export const getStoryboardCapabilities = (providerId, modelId = '') => getStoryboardModel(providerId, modelId)?.capabilities || getStoryboardProvider(providerId)?.capabilities || caps();
+const storyboardCapabilityCache = new WeakMap(); // Only static registry objects, never remote model IDs or credentials.
+export function getStoryboardCapabilities(providerId, modelId = '') {
+  const base = getStoryboardModel(providerId, modelId)?.capabilities || getStoryboardProvider(providerId)?.capabilities || caps();
+  if (storyboardCapabilityCache.has(base)) return storyboardCapabilityCache.get(base);
+  const naturalLanguage = ['banana', 'openai', 'seedream'].includes(providerId);
+  const effective = Object.freeze({ ...base,
+    supportsNativeNegative: Boolean(base.negative && !naturalLanguage),
+    supportsExclusionText: naturalLanguage,
+    supportsArtistSyntax: providerId === 'novel',
+    supportsVibe: Boolean(base.vibe),
+    referenceMode: base.workflow ? 'workflow' : base.preciseReference ? 'precise' : base.reference ? 'image' : 'none',
+    referenceExclusions: Object.freeze(base.preciseReference ? ['vibe'] : []),
+  });
+  storyboardCapabilityCache.set(base, effective);
+  return effective;
+}
 const resolveStoryboardModelId = (providerId, value = '') => {
   const provider = getStoryboardProvider(providerId);
   if (!provider) return '';
@@ -1330,19 +1345,21 @@ export function compileStoryboardPrompt(input = {}) {
   });
   const shotInput = input.productionPacket ? adaptProductionPacketToStoryboardShotSpec(input.productionPacket, input.shotOverrides) : input.shot;
   const validation = validateStoryboardShotSpec(shotInput, { providerId: input.providerId, modelId: modelBinding.capabilityModelId });
+  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId);
   const shot = validation.shot, common = [
-    str(input.artistString, 6000), str(input.artistPositive, 12000), str(input.modelPositive, 12000),
+    capability.supportsArtistSyntax ? str(input.artistString, 6000) : '',
+    capability.supportsArtistSyntax ? str(input.artistPositive, 12000) : '', str(input.modelPositive, 12000),
     promptPart(shot.promptAtoms.global), shot.scene,
     promptPart(shot.promptAtoms.camera), shot.shotScale, promptPart(shot.composition.framing),
     shot.composition.ratioId, shot.composition.negativeSpace, promptPart(shot.sharedRelations),
   ].filter(Boolean).join(', ');
   const characterBlocks = shot.characters.map(characterPrompt).filter(Boolean);
   const environment = promptPart(shot.promptAtoms.environment), quality = promptPart(shot.promptAtoms.quality);
-  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId);
   const useNativeCharacters = input.providerId === 'novel' && capability.multiCharacter && characterBlocks.length > 0;
   const prompt = [common, ...(useNativeCharacters ? [] : characterBlocks), environment, quality].filter(Boolean).join(', ');
-  const antiMix = shot.characters.length > 1 ? 'distinct character traits, correct character actions, no mixed identities, no merged bodies' : '';
-  const negative = [str(input.artistNegative, 12000), str(input.modelNegative, 12000), promptPart(shot.promptAtoms.negative), antiMix].filter(Boolean).join(', ');
+  const antiMix = shot.characters.length > 1 ? 'mixed identities, merged bodies, swapped character traits, swapped character actions' : '';
+  const negative = capability.supportsNativeNegative || capability.supportsExclusionText
+    ? [capability.supportsArtistSyntax ? str(input.artistNegative, 12000) : '', str(input.modelNegative, 12000), promptPart(shot.promptAtoms.negative), antiMix].filter(Boolean).join(', ') : '';
   const providerOptions = {};
   if (useNativeCharacters) {
     providerOptions.v4_prompt = {
@@ -1619,7 +1636,12 @@ export function buildStoryboardProviderPlan(input = {}) {
   const own = (...keys) => { for (const key of keys) if (Object.hasOwn(p, key)) return p[key]; return undefined; };
   const providerValue = (providerId, key, value) => { if (value === '' || value == null) return; if (provider.id === providerId) request[key] = value; else dropped.push(key); };
   const providerFlag = (providerId, key, value) => { if (value === undefined) return; if (provider.id === providerId) request[key] = flag(value); else if (flag(value)) dropped.push(key); };
-  accept(request, dropped, capability, 'negative', str(input.negative ?? p.negative, 12000)); accept(request, dropped, capability, 'seed', bounded(p.seed, -1, Number.MAX_SAFE_INTEGER, true)); accept(request, dropped, capability, 'steps', bounded(p.steps, 1, 300, true)); accept(request, dropped, capability, 'cfg', bounded(p.cfg ?? p.scale, 0, 100));
+  const negative = str(input.negative ?? p.negative, 12000);
+  if (negative) {
+    if (capability.supportsNativeNegative || capability.supportsExclusionText) request.negative = negative;
+    else dropped.push('negative');
+  }
+  accept(request, dropped, capability, 'seed', bounded(p.seed, -1, Number.MAX_SAFE_INTEGER, true)); accept(request, dropped, capability, 'steps', bounded(p.steps, 1, 300, true)); accept(request, dropped, capability, 'cfg', bounded(p.cfg ?? p.scale, 0, 100));
   const requestedSampler = str(p.sampler, 120), requestedScheduler = str(p.scheduler, 120);
   if (provider.id === 'novel') {
     const spec = getStoryboardNovelParameterSpec(binding.capabilityModelId);

@@ -26,7 +26,8 @@ test('all registered models retain their native protocol, name and capabilities'
       assert.equal(plan.remoteModelId, model.id);
       assert.equal(plan.capabilityModelId, model.id);
       assert.equal(plan.protocol, STORYBOARD_PROVIDER_REGISTRY[family].protocol);
-      assert.deepEqual(plan.capabilities, model.capabilities);
+      for (const [key, value] of Object.entries(model.capabilities)) assert.deepEqual(plan.capabilities[key], value);
+      assert.deepEqual(plan.capabilities, getStoryboardCapabilities(family, model.id));
       assert.equal(plan.customModel, false);
       assert.equal(plan.gatewayRequest.capabilityModelId, model.id);
     }

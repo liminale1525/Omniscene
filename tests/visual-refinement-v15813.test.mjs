@@ -7,7 +7,7 @@ const source = await readFile(new URL('index.js', root), 'utf8');
 const styles = await readFile(new URL('style.css', root), 'utf8');
 const manifest = JSON.parse(await readFile(new URL('manifest.json', root), 'utf8'));
 
-assert.equal(manifest.version, '1.59.34');
+assert.equal(manifest.version, '1.59.35');
 assert.match(styles, /v1\.58\.13 · 精调视觉标尺与独立便笺工作层/);
 assert.match(styles, /--qm-type-card-title: 13px;[\s\S]*--qm-type-body: 12px;[\s\S]*--qm-type-label: 11px;[\s\S]*--qm-control-height: 30px;/, 'visual hierarchy must use the refined compact scale');
 assert.match(styles, /\.sd-tabs button \{ font-size: 13\.5px !important; \}/, 'main tabs must gain one visual step');

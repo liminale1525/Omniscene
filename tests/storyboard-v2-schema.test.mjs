@@ -38,7 +38,7 @@ const novelGenerations = new Set(STORYBOARD_MODEL_REGISTRY.novel.map((item) => i
 assert.deepEqual([...novelGenerations], ['V3', 'V4', 'V4.5', 'V5'], 'NovelAI must expose only V3 and later generations');
 assert.ok(STORYBOARD_MODEL_REGISTRY.novel.filter((item) => item.id.includes('full') || item.generation === 'V3').every((item) => item.label.includes('💕')), 'unfiltered NovelAI models must be visibly marked');
 assert.equal(STORYBOARD_PROVIDER_REGISTRY.openai.customModelId, true, 'the custom OpenAI-compatible channel must accept third-party model IDs');
-assert.equal(STORYBOARD_PROVIDER_REGISTRY.openai.label, '自定义（兼容 OpenAI）');
+assert.equal(STORYBOARD_PROVIDER_REGISTRY.openai.label, 'GPT Image');
 assert.ok(Object.entries(STORYBOARD_PROVIDER_REGISTRY).filter(([id]) => id !== 'openai').every(([, provider]) => provider.customModelId === false), 'official channels keep curated model IDs');
 assert.equal(getStoryboardCapabilities('novel', 'nai-diffusion-4-5-full').vibe, true);
 assert.equal(getStoryboardCapabilities('novel', 'nai-diffusion-4-5-full').preciseReference, true);
@@ -236,12 +236,12 @@ assert.equal(customPlan.customModel, true);
 assert.equal(customPlan.model, 'mirror-image-model', 'a compatible mirror must keep its concrete model ID');
 assert.equal(customPlan.baseUrl, 'https://mirror.example/v1');
 assert.equal(customPlan.request.references.length, 1);
-assert.ok(customPlan.droppedParameters.includes('negative'));
+assert.equal(customPlan.droppedParameters.includes('negative'), false, 'natural-language exclusions remain available to the transport composer');
 assert.ok(customPlan.droppedParameters.includes('seed'));
 assert.ok(customPlan.droppedParameters.includes('mask'), 'capabilities must not advertise an unimplemented gateway feature');
 assert.equal(customPlan.request.providerOptions.apiKey, undefined, 'request options must not persist credentials');
 assert.equal(Object.getPrototypeOf(customPlan.request.providerOptions), Object.prototype);
-assert.equal(customPlan.gatewayRequest.negativePrompt, '');
+assert.equal(customPlan.gatewayRequest.negativePrompt, 'watermark');
 
 const v5Plan = buildStoryboardProviderPlan({
   providerId: 'novel', connection: { model: 'nai-diffusion-5-full' }, prompt: 'portrait', vibes: [{ id: 'vibe-1', strength: 0.8 }],

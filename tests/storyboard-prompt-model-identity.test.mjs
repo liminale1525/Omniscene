@@ -163,6 +163,11 @@ test('artist redraw takes the historical capability, not current workbench or st
   assert.throws(() => context.storyboardBasePromptsForArtistRedraw({}, { source: 'novel', payload: {} }), { code: 'missing_model_snapshot' });
 });
 
+test('changing artist on a natural-language historical image is rejected before composing or generating', () => {
+  const context=runtime();
+  assert.throws(()=>context.storyboardBasePromptsForArtistRedraw({}, {source:'openai',profile:{model:'gpt-image-2'},payload:{prompt:'scene'}}),{code:'artist_syntax_unsupported'});
+});
+
 test('native caption synchronization updates both bases and preserves all character-specific fields', () => {
   const snap = snapshot();
   const captions = structuredClone(snap.payload.parameters.providerOptions.v4_prompt.caption.char_captions);

@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.34';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.34';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.34';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.35';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.35';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.35';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.34';
+} from './qianmu-llm-output.js?v=1.59.35';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -165,147 +165,147 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.34';
+} from './qianmu-storyboard.js?v=1.59.35';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.34';
+const VERSION = '1.59.35';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.34'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.35'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.34'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.35'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.34').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.35').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.34'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.35'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.34'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.35'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.34'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.35'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.34'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.35'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.34'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.35'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.34'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.35'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.34'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.35'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.34'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.35'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.34'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.35'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.34'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.35'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.34'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.35'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.34'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.35'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.34'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.35'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.34'),
+    load: () => import('./qianmu-video-task.js?v=1.59.35'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.34'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.35'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.34'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.35'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.34'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.35'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.34'),
+    load: () => import('./qianmu-video-store.js?v=1.59.35'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.34'),
+    load: () => import('./qianmu-video-result.js?v=1.59.35'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.34'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.35'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.34'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.35'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.34'),
+    load: () => import('./qianmu-video-media.js?v=1.59.35'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.34'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.35'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.34'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.35'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.34'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.35'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.34'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.35'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.34'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.35'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.34'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.35'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.34'),
-        import('./qianmu-theaters.js?v=1.59.34'),
+        import('./builtin-theaters.js?v=1.59.35'),
+        import('./qianmu-theaters.js?v=1.59.35'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -12043,6 +12043,7 @@ function storyboardJoinPrompt(parts, sourceId) {
 
 function storyboardPromptLayerForArtist(state, artist, sourceId, modelId, capabilityModelId = '') {
   const defaults = storyboardProviderPromptDefaults(sourceId, modelId, state, capabilityModelId);
+  if (!getStoryboardCapabilities(sourceId, capabilityModelId || modelId).supportsArtistSyntax) artist = null;
   return {
     positive: String(artist?.positivePrompt || defaults.positive || '').trim(),
     negative: String(artist?.negativePrompt || defaults.negative || '').trim(),
@@ -12052,7 +12053,7 @@ function storyboardPromptLayerForArtist(state, artist, sourceId, modelId, capabi
 
 function storyboardRememberPromptLayer(state, artist, sourceId, modelId, field, value) {
   const normalized = String(value || '').trim().slice(0, 12000);
-  if (artist) {
+  if (artist && getStoryboardCapabilities(sourceId).supportsArtistSyntax) {
     artist[field === 'positive' ? 'positivePrompt' : 'negativePrompt'] = normalized;
     artist.updatedAt = Date.now();
     return;
@@ -12066,7 +12067,8 @@ function storyboardRememberPromptLayer(state, artist, sourceId, modelId, field, 
 
 function storyboardPromptsForArtist(state, artist, sourceId, modelId, { prompt = state.prompt, negative = state.negative, honorBaked = true, fallbackToStateArtist = true, capabilityModelId = '' } = {}) {
   const layer = storyboardPromptLayerForArtist(state, artist, sourceId, modelId, capabilityModelId);
-  const artistString = String(artist?.value ?? (fallbackToStateArtist ? state.promptDraft?.artistString : '') ?? '').trim();
+  const artistString = getStoryboardCapabilities(sourceId, capabilityModelId || modelId).supportsArtistSyntax
+    ? String(artist?.value ?? (fallbackToStateArtist ? state.promptDraft?.artistString : '') ?? '').trim() : '';
   return {
     prompt: honorBaked && state.promptDraft?.artistPositiveBaked
       ? String(prompt || '').trim()
@@ -12091,6 +12093,9 @@ function storyboardBasePromptsForArtistRedraw(record, snapshot) {
   const sourceId = identity.modelFamily;
   const modelId = identity.remoteModelId;
   const capabilityModelId = identity.capabilityModelId;
+  if (!getStoryboardCapabilities(sourceId, capabilityModelId).supportsArtistSyntax) {
+    const error = new Error('此模型不使用 NAI 画师串，请编辑画面要求后重绘'); error.code = 'artist_syntax_unsupported'; throw error;
+  }
   const oldArtist = state.artistPresets.find((item) => item.id === record.artistPresetId)
     || state.artistPresets.find((item) => item.value === record.artistString) || null;
   const defaults = storyboardProviderPromptDefaults(sourceId, modelId, state, capabilityModelId);
@@ -12373,7 +12378,7 @@ function renderStoryboardModelCard(state) {
 }
 
 function renderStoryboardParameterVibes(state, profile, capabilities) {
-  if (state.source !== 'novel') return '';
+  if (!capabilities.supportsVibe) return '';
   const selected = new Set(state.selectedVibeIds || []);
   const vibes = state.vibeLibrary.filter((item) => !item.providerIds?.length || item.providerIds.includes('novel'));
   const rows = vibes.slice(0, 24).map((item) => {
@@ -13431,9 +13436,9 @@ function renderStoryboardCreate(state) {
       <div class="sd-storyboard-card-body">
         <div class="sd-storyboard-prompt-stack">
           <div class="sd-storyboard-inline-control"><select class="text_pole sd-storyboard-prompt-preset" aria-label="取景预设"><option value="">选择取景预设</option>${promptPresets}</select><button type="button" class="sd-icon-btn sd-storyboard-open-prompt-library" title="取景预设" aria-label="取景预设"><i class="fa-solid fa-folder"></i></button></div>
-          <div class="sd-storyboard-inline-control"><button type="button" class="sd-icon-btn sd-storyboard-open-artist-library" title="画师库" aria-label="画师库"><i class="fa-solid fa-images"></i></button><select class="text_pole sd-storyboard-artist-preset" aria-label="画师串或方案"><option value="">选择画师串或方案</option>${artistPools}${artistPresets ? `<optgroup label="画师串">${artistPresets}</optgroup>` : ''}</select><button type="button" class="sd-icon-btn sd-storyboard-edit-selected-artist" title="编辑当前画师设置" aria-label="编辑当前画师设置" ${state.selectedArtistPresetId || state.selectedArtistPoolId ? '' : 'disabled'}><i class="fa-solid fa-pen"></i></button></div>
-          <label><span>正面提示词</span><textarea class="text_pole sd-storyboard-prompt sd-storyboard-prompt-textarea" spellcheck="false">${htmlEscape(promptLayer.positive)}</textarea></label>
-          ${capabilities.negative ? `<label><span>负面提示词</span><textarea class="text_pole sd-storyboard-negative sd-storyboard-prompt-textarea" spellcheck="false">${htmlEscape(promptLayer.negative)}</textarea></label>` : ''}
+          ${capabilities.supportsArtistSyntax ? `<div class="sd-storyboard-inline-control"><button type="button" class="sd-icon-btn sd-storyboard-open-artist-library" title="画师库" aria-label="画师库"><i class="fa-solid fa-images"></i></button><select class="text_pole sd-storyboard-artist-preset" aria-label="画师串或方案"><option value="">选择画师串或方案</option>${artistPools}${artistPresets ? `<optgroup label="画师串">${artistPresets}</optgroup>` : ''}</select><button type="button" class="sd-icon-btn sd-storyboard-edit-selected-artist" title="编辑当前画师设置" aria-label="编辑当前画师设置" ${state.selectedArtistPresetId || state.selectedArtistPoolId ? '' : 'disabled'}><i class="fa-solid fa-pen"></i></button></div>` : ''}
+          <label><span>${capabilities.supportsExclusionText ? '画面要求' : '正面提示词'}</span><textarea class="text_pole sd-storyboard-prompt sd-storyboard-prompt-textarea" spellcheck="false">${htmlEscape(promptLayer.positive)}</textarea></label>
+          ${capabilities.supportsNativeNegative || capabilities.supportsExclusionText ? `<label><span>${capabilities.supportsNativeNegative ? '负面提示词' : '排除描述'}</span><textarea class="text_pole sd-storyboard-negative sd-storyboard-prompt-textarea" spellcheck="false">${htmlEscape(promptLayer.negative)}</textarea></label>` : ''}
           ${tagChips ? `<div class="sd-storyboard-tag-quick">${tagChips}</div>` : ''}
         </div>
       </div>
@@ -15977,9 +15982,9 @@ function storyboardShotSpecForSelection(shot, selection) {
 function storyboardGenerationPayload(state, profile, { sourceId = state.source, prompt = state.prompt, negative = state.negative, shot = null, artistAssignment = null } = {}) {
   const modelBinding = resolveStoryboardModelBinding(sourceId, { model: profile.model, capabilityModelId: profile.capabilityModelId });
   const capabilities = getStoryboardCapabilities(sourceId, modelBinding.capabilityModelId);
-  const artist = artistAssignment?.artist || storyboardSelectedArtistPreset(state);
+  const artist = capabilities.supportsArtistSyntax ? artistAssignment?.artist || storyboardSelectedArtistPreset(state) : null;
   const defaults = storyboardProviderPromptDefaults(sourceId, modelBinding.remoteModelId, state, modelBinding.capabilityModelId);
-  const artistString = String(artist?.value || state.promptDraft?.artistString || '').trim();
+  const artistString = capabilities.supportsArtistSyntax ? String(artist?.value || state.promptDraft?.artistString || '').trim() : '';
   const shotSpec = normalizeStoryboardShotSpec(shot?.shotSpec || {
     ...shot,
     promptAtoms: { global: [prompt], negative: [negative] },
@@ -15999,7 +16004,7 @@ function storyboardGenerationPayload(state, profile, { sourceId = state.source, 
       modelNegative: artist ? '' : defaults.negative,
     });
   const effectivePrompt = compiled.prompt;
-  const effectiveNegative = capabilities.negative ? compiled.negative : '';
+  const effectiveNegative = capabilities.supportsNativeNegative || capabilities.supportsExclusionText ? compiled.negative : '';
   const providerOptions = {};
   if (sourceId === 'novel') {
     if (capabilities.cfgRescale && profile.novelCfgRescale !== '') providerOptions.cfg_rescale = Number(profile.novelCfgRescale);
@@ -16024,7 +16029,7 @@ function storyboardGenerationPayload(state, profile, { sourceId = state.source, 
       sequential: sourceId === 'seedream' && Boolean(profile.seedreamSequential),
       workflow: sourceId === 'comfy' ? profile.comfyWorkflow : {}, providerOptions,
     },
-    selectedVibeIds: capabilities.vibe ? clone(state.selectedVibeIds || []) : [],
+    selectedVibeIds: capabilities.supportsVibe ? clone(state.selectedVibeIds || []) : [],
   };
 }
 
@@ -16082,14 +16087,14 @@ function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceI
   providerProfile.ratio = compositionDecision.ratioId;
   if (compositionDecision.dimensions.width) providerProfile.width = String(compositionDecision.dimensions.width);
   if (compositionDecision.dimensions.height) providerProfile.height = String(compositionDecision.dimensions.height);
-  const artistAssignment = resolveStoryboardArtistAssignment({
+  const artistAssignment = getStoryboardCapabilities(sourceId, providerProfile.capabilityModelId).supportsArtistSyntax ? resolveStoryboardArtistAssignment({
     artistPresets: state.artistPresets, artistPools: state.artistPools,
     selectedArtistPresetId: state.selectedArtistPresetId,
     selectedArtistPoolId: sourceId === 'novel' ? state.selectedArtistPoolId : '',
     shot: { ...shot, shotRole: shotSpec.shotRole || shot?.role || shot?.shotType },
     seed: `${getChatKey() || 'gallery'}:${floor ?? 'gallery'}:${planShotId || shot?.id || prompt}:${attempt}:${requestIndex}`,
     recentArtistIds,
-  });
+  }) : { artist: null, artistId: '', poolId: '', source: 'default' };
   const payload = storyboardGenerationPayload(state, providerProfile, { sourceId, prompt, negative, artistAssignment, shot: { ...shot, shotSpec: { ...shotSpec, composition: { ...shotSpec.composition, ratioId: compositionDecision.ratioId } } } });
   const credentialId = connection?.credentialId || storyboardCredentialId(sourceId, connection?.id || 'draft');
   const preferredParagraph = state.paragraphMode === 'manual' && Number.isInteger(state.manualParagraphIndex)
@@ -16100,7 +16105,7 @@ function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceI
   const snapshot = {
     source: sourceId, prompt, negative,
     modelIdentity: resolveStoryboardJobModelIdentity({ source: sourceId, profile: providerProfile, connection: { id: connection?.id || '' } }),
-    artistString: String(payload.artistString || state.promptDraft?.artistString || ''), artistPresetId: artistAssignment.artistId, artistPoolId: artistAssignment.poolId, artistRouteSource: artistAssignment.source, contentRating: state.contentRating,
+    artistString: String(payload.artistString || ''), artistPresetId: artistAssignment.artistId, artistPoolId: artistAssignment.poolId, artistRouteSource: artistAssignment.source, contentRating: state.contentRating,
     artistRerollCount: Math.max(0, Number(shot?.artistRerollCount) || 0),
     promptMode: state.promptMode,
     promptLocked: Boolean(state.promptDraft?.userEditedCompiled),
@@ -17299,7 +17304,7 @@ async function storyboardCompilerResult(raw, context, capabilities, state, contr
       role: allowedRoles.has(item?.shot_role) ? item.shot_role : 'custom',
       purpose: String(item?.purpose || '').trim().slice(0, 500),
       safePrompt: String(item?.safe_prompt || item?.safePrompt || '').trim().slice(0, 24000),
-      negative: capabilities.negative ? String(item?.negative || item?.negative_prompt || '').trim().slice(0, 12000) : '',
+      negative: capabilities.supportsNativeNegative || capabilities.supportsExclusionText ? String(item?.negative || item?.negative_prompt || '').trim().slice(0, 12000) : '',
       paragraphIndex: Number.isInteger(context.forcedParagraphIndex)
         ? context.forcedParagraphIndex
         : Math.max(0, Math.min(maxIndex, Math.round(Number(item?.paragraph_index) || 0))),
@@ -18396,7 +18401,7 @@ function storyboardInlineRecordMarkup(record) {
     <button type="button" class="sd-storyboard-inline-preview" data-storyboard-chat-action="preview" title="查看画面"><img src="${htmlEscape(url)}" loading="lazy" alt="${htmlEscape(snip(record.prompt || '分镜', 48))}"></button>
     ${motion ? `<button type="button" class="sd-storyboard-inline-motion" data-storyboard-chat-action="play-motion" data-storyboard-video-asset="${htmlEscape(motion.assetId)}" title="播放动态镜头" aria-label="播放动态镜头"><i class="fa-solid fa-play"></i></button>` : ''}
     <button type="button" class="sd-storyboard-inline-more" data-storyboard-chat-action="toggle-actions" title="更多操作" aria-label="更多操作" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
-    <div class="sd-storyboard-inline-actions" aria-hidden="true"><button type="button" data-storyboard-chat-action="edit" title="编辑当前提示词" aria-label="编辑当前提示词"><i class="fa-solid fa-pen"></i></button><button type="button" data-storyboard-chat-action="artist" title="更换画师并重绘" aria-label="更换画师并重绘"><i class="fa-solid fa-palette"></i></button><button type="button" data-storyboard-chat-action="redraw" title="重新生成" aria-label="重新生成"><i class="fa-solid fa-rotate-right" data-qm-icon="image-regenerate"></i></button><button type="button" data-storyboard-chat-action="motion" title="让镜头动起来" aria-label="让镜头动起来"><i class="fa-solid fa-video"></i></button><button type="button" data-storyboard-chat-action="collapse" title="折叠正文插图" aria-label="折叠正文插图"><i class="fa-solid fa-compress"></i></button><button type="button" data-storyboard-chat-action="copy" title="复制提示词" aria-label="复制提示词"><i class="fa-solid fa-copy"></i></button><button type="button" data-storyboard-chat-action="download" title="下载" aria-label="下载"><i class="fa-solid fa-download"></i></button><button type="button" data-storyboard-chat-action="detach" title="移出正文" aria-label="移出正文"><i class="fa-solid fa-eye-slash"></i></button></div>
+    <div class="sd-storyboard-inline-actions" aria-hidden="true"><button type="button" data-storyboard-chat-action="edit" title="编辑当前提示词" aria-label="编辑当前提示词"><i class="fa-solid fa-pen"></i></button>${getStoryboardCapabilities(record.source, record.capabilityModelId || record.model).supportsArtistSyntax ? `<button type="button" data-storyboard-chat-action="artist" title="更换画师并重绘" aria-label="更换画师并重绘"><i class="fa-solid fa-palette"></i></button>` : ''}<button type="button" data-storyboard-chat-action="redraw" title="重新生成" aria-label="重新生成"><i class="fa-solid fa-rotate-right" data-qm-icon="image-regenerate"></i></button><button type="button" data-storyboard-chat-action="motion" title="让镜头动起来" aria-label="让镜头动起来"><i class="fa-solid fa-video"></i></button><button type="button" data-storyboard-chat-action="collapse" title="折叠正文插图" aria-label="折叠正文插图"><i class="fa-solid fa-compress"></i></button><button type="button" data-storyboard-chat-action="copy" title="复制提示词" aria-label="复制提示词"><i class="fa-solid fa-copy"></i></button><button type="button" data-storyboard-chat-action="download" title="下载" aria-label="下载"><i class="fa-solid fa-download"></i></button><button type="button" data-storyboard-chat-action="detach" title="移出正文" aria-label="移出正文"><i class="fa-solid fa-eye-slash"></i></button></div>
   </figure>`;
 }
 
