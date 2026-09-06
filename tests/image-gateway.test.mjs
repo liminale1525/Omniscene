@@ -219,7 +219,7 @@ await assert.rejects(() => generateImage({
 await assert.rejects(() => generateImage({
   provider: 'novel', apiKey: 'nai-key', model: 'nai-diffusion-3', prompt: 'portrait',
   referenceImages: [{ data: tinyPng.toString('base64'), mime: 'image/png' }],
-}, { resolveHost: publicDns, fetchImpl: async () => { throw new Error('must not call'); } }), /选择 V4/);
+}, { resolveHost: publicDns, fetchImpl: async () => { throw new Error('must not call'); } }), { code: 'novel_precise_reference_unsupported' });
 
 assert.throws(() => sanitizeImageRequest({
   provider: 'openai', apiKey: 'key', model: 'gpt-image-2', prompt: 'test',

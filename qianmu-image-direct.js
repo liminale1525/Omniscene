@@ -7,7 +7,7 @@ import {
   normalizeOpenAIImageCompatibility,
   openAICompatibilityAllows,
 } from './qianmu-openai-image-compat.js';
-import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, isImageModelMetadataField } from './qianmu-image-models.js';
+import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 
 const MAX_IMAGES = 8;
 const NAI_IMAGE_RE = /\.(?:png|jpe?g|webp)$/i;
@@ -312,6 +312,7 @@ function novelParameters(request) {
   const source = request.parameters && typeof request.parameters === 'object' ? request.parameters : {};
   const providerOptions = source.providerOptions && typeof source.providerOptions === 'object' ? source.providerOptions : {};
   const parameters = { ...providerOptions };
+  delete parameters.precise_reference;
   for (const key of Object.keys(parameters)) if (isImageModelMetadataField(key)) delete parameters[key];
   const assign = (key, value) => { if (value !== '' && value !== undefined && value !== null && !Number.isNaN(value)) parameters[key] = value; };
   assign('width', number(source.width, 64, 8192, 1024));
@@ -330,6 +331,13 @@ function novelParameters(request) {
     parameters.reference_strength_multiple = vibes.map((item) => number(item.strength, 0, 2, 0.6));
     parameters.reference_information_extracted_multiple = vibes.map((item) => number(item.information, 0, 1, 1));
   }
+  const references = Array.isArray(request.referenceImages) ? request.referenceImages : Array.isArray(request.references) ? request.references : [];
+  const prepared = references.slice(0, 16).map((item) => {
+    const data = String(item?.data || item?.base64 || '').trim().replace(/^data:[^;,]+;base64,/, '').replace(/\s+/g, '');
+    if (!data || data.length > 24 * 1024 * 1024 || data.length % 4 === 1 || !/^[a-z0-9+/]*={0,2}$/i.test(data)) throw new DirectImageError('参考图数据无效或过大', { code: 'invalid_reference' });
+    return { ...item, data, strength: number(item?.strength, 0, 2, 0.6), information: number(item?.information, 0, 1, 1), fidelity: number(item?.fidelity, 0, 1, 1) };
+  });
+  Object.assign(parameters, novelPreciseReferenceParameters(prepared));
   return parameters;
 }
 
@@ -611,12 +619,7 @@ export async function generateDirectImage(input = {}, { fetchImpl = globalThis.f
   if (provider === 'comfy') return generateComfyDirect(input, fetchImpl, waitImpl);
   const novelCaps = novelModelCapabilities(input.model, input.capabilityModelId);
   if (!novelCaps.ok) throw new DirectImageError(novelCaps.message, { code: novelCaps.code });
-  const hasReferenceOption = Object.keys(plainObject(input.parameters?.providerOptions)).some((key) => /^(?:reference|director_reference|precise_reference)/i.test(key));
-  const isV5 = input.capabilityModelId ? novelCaps.isV5 : /nai-diffusion-5/i.test(model);
-  if (isV5 && (input.vibes?.length || input.referenceImages?.length || input.references?.length || hasReferenceOption)) {
-    throw new DirectImageError('当前 NovelAI V5 不支持 Vibe 或 Precise Reference', { code: 'novel_v5_reference_unsupported' });
-  }
-  if (novelCaps.known && input.vibes?.length && !novelCaps.isV3 && !novelCaps.isV4) throw new DirectImageError('当前 NovelAI 模型不支持 Vibe', { code: 'novel_vibe_unsupported' });
-  if (novelCaps.known && (input.referenceImages?.length || input.references?.length) && !novelCaps.isV4) throw new DirectImageError('当前 NovelAI 模型不支持 Precise Reference', { code: 'novel_precise_reference_unsupported' });
+  const referenceIssue = novelReferenceIssue(novelCaps, input.referenceImages || input.references || [], input.vibes || [], plainObject(input.parameters?.providerOptions));
+  if (referenceIssue) throw new DirectImageError(referenceIssue.message, { code: referenceIssue.code });
   return generateNovelDirect(input, fetchImpl, unzipImpl, waitImpl);
 }

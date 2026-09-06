@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, isImageModelMetadataField } from './qianmu-image-models.js';
+import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 import { randomUUID } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -598,21 +598,13 @@ async function generateSeedream(request, base, fetchImpl) {
 }
 
 async function generateNovel(request, base, fetchImpl) {
-  const { isV5, isV4, isV3, known: knownNovelModel } = novelModelCapabilities(request.model, request.capabilityModelId);
-  const hasReferenceOption = Object.keys(request.parameters.providerOptions).some((key) => /^(?:reference|director_reference|precise_reference)/i.test(key));
-  if (isV5 && (request.vibes.length || request.references.length || hasReferenceOption)) {
-    throw new ImageGatewayError(400, 'novel_v5_reference_unsupported', '当前 NovelAI V5 暂不支持 Vibe 或 Precise Reference');
-  }
-  if (knownNovelModel && request.vibes.length && !isV3 && !isV4) {
-    throw new ImageGatewayError(400, 'novel_vibe_unsupported', '当前 NovelAI 模型不支持 Vibe，请选择 V3、V4 或 V4.5');
-  }
-  if (knownNovelModel && request.references.length && !isV4) {
-    throw new ImageGatewayError(400, 'novel_precise_reference_unsupported', '当前 NovelAI 模型不支持 Precise Reference，请选择 V4 或 V4.5');
-  }
+  const capabilities = novelModelCapabilities(request.model, request.capabilityModelId);
+  const { isV5 } = capabilities;
+  const referenceIssue = novelReferenceIssue(capabilities, request.references, request.vibes, request.parameters.providerOptions);
+  if (referenceIssue) throw new ImageGatewayError(400, referenceIssue.code, referenceIssue.message);
   const url = endpoint(base, 'ai/generate-image');
   const width = request.parameters.width || 1024;
   const height = request.parameters.height || 1024;
-  const preciseReference = request.references.length > 0 && request.parameters.providerOptions.precise_reference !== false;
   const providerOptions = { ...request.parameters.providerOptions };
   delete providerOptions.precise_reference;
   const parameters = {
@@ -630,16 +622,7 @@ async function generateNovel(request, base, fetchImpl) {
       reference_strength_multiple: request.vibes.map((item) => item.strength),
       reference_information_extracted_multiple: request.vibes.map((item) => item.information),
     } : {}),
-    ...(!isV5 && preciseReference && request.references.length ? {
-      director_reference_images: request.references.map((item) => item.data),
-      director_reference_descriptions: request.references.map((item) => ({
-        caption: { base_caption: item.referenceType, char_captions: [] },
-        legacy_uc: false,
-      })),
-      director_reference_information_extracted: request.references.map((item) => item.information),
-      director_reference_strength_values: request.references.map((item) => item.strength),
-      director_reference_secondary_strength_values: request.references.map((item) => 1 - item.fidelity),
-    } : {}),
+    ...novelPreciseReferenceParameters(request.references),
   };
   if (isV5) {
     delete parameters.reference_image_multiple;

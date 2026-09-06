@@ -37,8 +37,37 @@ export function novelModelCapabilities(model, capabilityModelId = '') {
   const effective = explicit ? capabilityModelId : remote;
   return { ok: true, capabilityModelId: effective, known: known(effective),
     isV5: /(?:^|[-_])v5(?:[-_]|$)|nai-diffusion-5(?:[-_]|$)/i.test(effective),
-    isV4: /nai-diffusion-4(?:-|$)/i.test(effective),
+    isV4: /nai-diffusion-4(?:-|$)/i.test(effective), isV45: /nai-diffusion-4-5(?:-|$)/i.test(effective),
     isV3: /nai-diffusion-(?:furry-)?3(?:-|$)/i.test(effective) };
+}
+
+export function novelReferenceIssue(capabilities, references = [], vibes = [], options = {}) {
+  const hasOptions = Object.keys(options).some((key) => /^(?:reference|director_reference|precise_reference)/i.test(key));
+  const hasPrecise = references.length > 0 || Boolean(options.director_reference_images?.length);
+  const hasVibe = vibes.length > 0 || Boolean(options.reference_image_multiple?.length);
+  const issue = (code, message) => ({ code, message });
+  if (capabilities.isV5 && (hasPrecise || hasVibe || hasOptions)) return issue('novel_v5_reference_unsupported', '当前 NovelAI V5 不支持 Vibe 或 Precise Reference');
+  if (capabilities.known && hasVibe && !capabilities.isV3 && !capabilities.isV4) return issue('novel_vibe_unsupported', '当前 NovelAI 模型不支持 Vibe，请选择 V3、V4 或 V4.5');
+  if (capabilities.known && hasPrecise && !capabilities.isV45) return issue('novel_precise_reference_unsupported', 'Precise Reference 仅支持 NovelAI V4.5');
+  if (hasPrecise && hasVibe) return issue('novel_reference_conflict', 'Precise Reference 与 Vibe 不能同时使用，请选择一种');
+  if (hasPrecise && options.precise_reference === false) return issue('novel_reference_disabled', '已提供参考图，但 Precise Reference 被关闭，请确认参考设置');
+  return null;
+}
+
+// Both transports use the same typed reference fields; callers validate image bytes independently.
+export function novelPreciseReferenceParameters(references = []) {
+  if (!references.length) return {};
+  const amount = (value, max, fallback) => value === '' || value == null || !Number.isFinite(Number(value)) ? fallback : Math.max(0, Math.min(max, Number(value)));
+  return {
+    director_reference_images: references.map((item) => item.data),
+    director_reference_descriptions: references.map((item) => {
+      const type = firstText(item.referenceType, item.type, item.mode).toLowerCase();
+      return { caption: { base_caption: ['character', 'style', 'character&style'].includes(type) ? type : 'character', char_captions: [] }, legacy_uc: false };
+    }),
+    director_reference_information_extracted: references.map((item) => amount(item.information, 1, 1)),
+    director_reference_strength_values: references.map((item) => amount(item.strength, 2, 0.6)),
+    director_reference_secondary_strength_values: references.map((item) => 1 - amount(item.fidelity, 1, 1)),
+  };
 }
 
 function imageModelHeuristic(provider, id, source) {
