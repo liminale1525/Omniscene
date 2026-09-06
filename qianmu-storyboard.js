@@ -301,6 +301,7 @@ const connection = (id) => ({
   draft: {
     baseUrl: getStoryboardProvider(id).defaultBaseUrl,
     model: getStoryboardProvider(id).defaultModel,
+    ...(id === 'comfy' ? { options: { comfyTransport: 'gateway' } } : {}),
     ...(id === 'openai' ? { compatibility: normalizeOpenAIImageCompatibility(), headers: {} } : {}),
   },
 });
@@ -432,6 +433,22 @@ export function normalizeStoryboardConnectionProfile(value, providerId) {
     ...(compatibility ? { compatibility } : {}), options: safeRecord(r.options),
     createdAt: pos(r.createdAt || r.updatedAt), updatedAt: pos(r.updatedAt),
   };
+}
+
+export function getStoryboardComfyTransport(connection) {
+  const raw = obj(connection) ? connection : {};
+  const nested = obj(raw.options) && Object.hasOwn(raw.options, 'comfyTransport');
+  const flat = Object.hasOwn(raw, 'comfyTransport');
+  if (!nested && !flat) return 'legacy-auto';
+  if (nested && flat && raw.options.comfyTransport !== raw.comfyTransport) return 'invalid';
+  const value = nested ? raw.options.comfyTransport : raw.comfyTransport;
+  return ['browser', 'gateway', 'legacy-auto'].includes(value) ? value : 'invalid';
+}
+
+export function requireStoryboardComfyTransport(connection) {
+  const mode = getStoryboardComfyTransport(connection);
+  if (mode === 'invalid') throw Object.assign(new Error('Comfy 请求方式无效，请在连接设置中重新选择'), { code: 'comfy_transport_invalid', submissionState: 'not_submitted' });
+  return mode;
 }
 
 export function migrateStoryboardState(value) {
@@ -572,7 +589,7 @@ function connections(value) {
     const presets = dedupeById((Array.isArray(c.presets) ? c.presets : []).filter(obj).map((p) => normalizeStoryboardConnectionProfile(p, providerId)).filter((p) => p.id)).slice(0, 60);
     const activePresetId = cleanId(c.activePresetId);
     const active = presets.find((p) => p.id === activePresetId) || null;
-    const draftSource = obj(c.draft) ? c.draft : (active || {});
+    const draftSource = obj(c.draft) ? c.draft : (active || (Object.hasOwn(raw, providerId) ? {} : connection(providerId).draft));
     out[providerId] = { providerId, activePresetId: active?.id || '', presets, draft: normalizeStoryboardConnectionProfile({ ...draftSource, id: '', name: '当前编辑' }, providerId) };
   }
   return out;

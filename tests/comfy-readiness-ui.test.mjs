@@ -18,7 +18,7 @@ function fixture(options = {}) {
   const runtime = { prepareComfyReadiness() {}, async checkComfyReadiness(request) { calls.push(request); return structuredClone(report); }, ...options.runtime };
   const context = vm.createContext({ ...storyboard, AbortController, setTimeout, clearTimeout, document: { createElement: element },
     storyboardState: () => state, clone: structuredClone, storyboardCaptureWorkbench() {}, storyboardProviderProfile: () => state.profiles.comfy,
-    storyboardConnectionState: () => ({ draft: { baseUrl: 'https://comfy.example', options: {} } }), getChatKey: () => 'chat-a',
+    storyboardConnectionState: () => ({ draft: { baseUrl: 'https://comfy.example', options: options.mode ? { comfyTransport: options.mode } : {} } }), getChatKey: () => 'chat-a',
     storyboardKeyInputRevision: 0, storyboardConnectionLoadRevision: 0, featureRuntime: { load: async () => runtime },
     storyboardResolveApiKey: async () => assert.fail('typed key should be retained'), storyboardRequestHeaders: () => ({ 'Content-Type': 'application/json' }),
     fetch: async () => assert.fail('unexpected request'), ...options.globals });
@@ -82,4 +82,20 @@ test('reported issue markup is rendered as text and duplicate clicks do not star
   resolve({ ...report, errors: 1, issues: [{ message: '<img src=x onerror=bad()>' }] }); await pending;
   assert.equal(fx.output.children.at(-1).children[0].textContent, '<img src=x onerror=bad()>');
   assert.equal(fx.button.disabled, false);
+});
+
+test('explicit ST readiness skips browser and explicit browser readiness cannot silently change the requester', async () => {
+  let posted = 0;
+  const gateway = fixture({ mode: 'gateway', runtime: { checkComfyReadiness: () => assert.fail('browser must not run') },
+    globals: { fetch: async () => { posted++; return new Response(JSON.stringify(report)); } } });
+  await gateway.run(); assert.equal(posted, 1); assert.match(gateway.output.children[0].textContent, /ST 主机/);
+  const browser = fixture({ mode: 'browser', runtime: { checkComfyReadiness: async () => { throw Object.assign(new Error('网络失败'), { code: 'comfy_readiness_transport' }); } } });
+  await browser.run(); assert.equal(browser.output.textContent, '网络失败');
+});
+
+test('programmatic connection changes invalidate a pending check even without a DOM input event', async () => {
+  let resolve; const draft = { baseUrl: 'https://original.example', options: { comfyTransport: 'browser' } };
+  const fx = fixture({ globals: { storyboardConnectionState: () => ({ draft }) }, runtime: { checkComfyReadiness: () => new Promise(done => { resolve = done; }) } });
+  const pending = fx.run(); await new Promise(done => setTimeout(done, 0)); draft.options.comfyTransport = 'gateway'; resolve(report); await pending;
+  assert.equal(fx.output.children.length, 0); assert.equal(fx.listeners.size, 0);
 });

@@ -86,7 +86,7 @@ assert.match(source, /sd-storyboard-cancel-preset-item[\s\S]*sd-storyboard-save-
 assert.match(source, /sd-storyboard-edit-selected-artist/);
 assert.match(source, /sd-storyboard-new-artist-collection/);
 assert.match(source, /data-media-tag-editor="artist-draft"/);
-assert.match(source, /const verified = data\.verified !== false;[\s\S]*toast\(message, verified \? 'success' : 'warning'\)/, 'NAI 探测接口缺失时应保留网关说明，不得误报为已验证连接');
+assert.match(source, /const verified = sourceId !== 'comfy' && data\.verified !== false;[\s\S]*toast\(message, verified \? 'success' : 'warning'\)/, 'NAI 缺失探测接口与 Comfy 地址可达均不得误报为生图已验证；实际入口另有协议回归');
 assert.match(source, /sd-storyboard-artist-edit-positive/);
 assert.match(source, /sd-storyboard-artist-edit-negative/);
 assert.match(source, /sd-storyboard-artist-preview-file/);

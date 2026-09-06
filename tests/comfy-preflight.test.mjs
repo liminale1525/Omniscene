@@ -60,6 +60,12 @@ test('manual extraction does not inherit an old plan automatic-generation flag',
   const e=environment({automatic:true}),g=graph();g.custom={class_type:'Custom',inputs:{}};e.state.profiles.comfy.comfyWorkflow=JSON.stringify(g);
   await e.context.storyboardCompilePrompt(null,{plan:e.plan});assert.ok(e.calls.includes('llm'));
 });
+
+test('invalid fixed Comfy requester stops before context/LLM without changing the connection', async () => {
+  const e = environment(); e.state.connections.comfy.draft.options = { comfyTransport: 'unsupported' };
+  await e.context.storyboardCompilePrompt(null, { plan: e.plan });
+  assert.ok(!e.calls.includes('llm')); assert.equal(e.state.connections.comfy.draft.options.comfyTransport, 'unsupported');
+});
 test('a catch-all model route does not load/validate the unused broken Comfy workbench',async()=>{
   const e=environment();e.state.profiles.comfy.comfyWorkflow='';e.state.routing.enabled=true;e.state.routing.rules=[{id:'all',enabled:true,shotTypes:[],target:target('novel')}];
   await e.context.storyboardCompilePrompt(null,{plan:e.plan});assert.ok(e.calls.includes('llm'));assert.ok(!e.calls.includes('comfyPreflight'));

@@ -40,6 +40,91 @@ function harness(state=stateFor(),extra={}) {
 }
 const deferred=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});return{promise,resolve};};
 
+function comfyState(mode = 'browser') {
+  const state = stateFor('comfy');
+  state.connections.comfy.draft = { baseUrl: 'https://comfy.example', credentialId: 'comfy-key', options: { comfyTransport: mode } };
+  state.profiles.comfy.comfyWorkflow = JSON.stringify({ image: { class_type: 'EmptyImage', inputs: { width: 512, height: 512, batch_size: 1 } },
+    text: { class_type: 'CLIPTextEncode', inputs: { text: '%qianmu_prompt%' } }, save: { class_type: 'SaveImage', inputs: { images: ['image', 0] } } });
+  return state;
+}
+
+test('Comfy named connection saves requester and delayed save cannot capture a changed route', async () => {
+  for (const change of [false, true]) {
+    const gate = deferred(), e = harness(comfyState('gateway'), {
+      storyboardCaptureWorkbench: () => ({ profile: e.state.profiles.comfy, workflowResult: { ok: true, removedFields: [] } }),
+      promptInput: () => gate.promise, storyboardRememberApiKey: async () => {},
+    });
+    const root = { isConnected: true, querySelector: () => ({ value: 'typed-key' }) };
+    const pending = e.context.storyboardSaveConnectionPreset(root);
+    if (change) e.state.connections.comfy.draft.options.comfyTransport = 'browser';
+    gate.resolve('Comfy endpoint'); await pending;
+    assert.equal(e.state.connections.comfy.presets.length, change ? 0 : 1);
+    if (!change) assert.equal(storyboard.requireStoryboardComfyTransport(e.state.connections.comfy.presets[0]), 'gateway');
+  }
+});
+
+test('Comfy actual create, group override, sanitized history, repeat and workbench restore retain the frozen requester', () => {
+  const e = harness(comfyState('browser'));
+  e.state.connections.comfy.presets = [{ id: 'other', baseUrl: 'https://comfy.example', credentialId: 'comfy-key', options: { comfyTransport: 'gateway' } }];
+  const plainJob = e.context.storyboardCreateJob(e.state, e.state.profiles.comfy);
+  const grouped = e.context.storyboardCreateJob(e.state, e.state.profiles.comfy, { connectionPresetId: 'other' });
+  assert.equal(plainJob.connection.comfyTransport, 'browser'); assert.equal(grouped.connection.comfyTransport, 'gateway');
+  const snapshot = storyboard.sanitizeStoryboardSnapshot(grouped);
+  e.state.connections.comfy.draft.options.comfyTransport = 'browser'; e.state.connections.comfy.presets[0].options.comfyTransport = 'browser';
+  const repeated = e.context.storyboardJobFromLog({ snapshot, attempt: 1 }); assert.equal(repeated.connection.comfyTransport, 'gateway');
+  e.context.storyboardRestoreSnapshotConnection(e.state, snapshot, 'comfy');
+  assert.equal(e.state.connections.comfy.activePresetId, '', 'same named preset with another request host is not identical');
+  assert.equal(storyboard.requireStoryboardComfyTransport(e.state.connections.comfy.draft), 'gateway');
+  const legacy = structuredClone(snapshot); delete legacy.connection.comfyTransport;
+  e.context.storyboardRestoreSnapshotConnection(e.state, legacy, 'comfy');
+  assert.equal(storyboard.requireStoryboardComfyTransport(e.state.connections.comfy.draft), 'legacy-auto');
+});
+
+test('Comfy actual connection check honors explicit requester and does not confuse reachability with generation success', async () => {
+  for (const mode of ['browser', 'gateway', 'legacy-auto']) {
+    const sent = [], e = harness(comfyState(mode), {
+      storyboardSaveConnection: async () => {}, storyboardResolveApiKey: async () => 'saved-key',
+      directImageRuntime: async () => { sent.push('load-browser'); return { checkDirectImageConnection: async () => { sent.push('browser'); throw Object.assign(new Error('network'), { code: 'direct_transport' }); }, isDirectImageTransportError: () => true }; },
+      fetch: async url => { sent.push(url); return Response.json({ ok: true, verified: true }); },
+    });
+    const key = { value: 'saved-key' }, root = { isConnected: true, querySelector: () => key, querySelectorAll: () => [key] };
+    await e.context.storyboardCheckConnection(root);
+    if (mode === 'browser') { assert.deepEqual(sent, ['load-browser', 'browser']); assert.match(e.notices.at(-1), /检查失败/); }
+    else {
+      assert.equal(sent.filter(item => item === '/api/plugins/qianmu-tts/image/check').length, 1);
+      assert.match(e.notices.at(-1), /ST 主机 · 地址可达，请以生图验证/);
+      assert.equal(e.context.storyboardConnectionStatus.get('comfy').verified, false);
+      if (mode === 'gateway') assert.ok(!sent.includes('load-browser'));
+    }
+    assert.equal(key.value, 'saved-key');
+  }
+});
+
+test('NAI reachable-only probe retains its concise warning after introducing explicit Comfy requesters', async () => {
+  const state = stateFor('novel'); state.connections.novel.draft = { baseUrl: 'https://nai.example' };
+  const e = harness(state, { storyboardSaveConnection: async () => {}, storyboardResolveApiKey: async () => 'key',
+    directImageRuntime: async () => ({ checkDirectImageConnection: async () => ({ ok: true, verified: false, transport: 'direct', message: '地址可达，请以生图验证' }) }) });
+  const key = { value: 'key' }; await e.context.storyboardCheckConnection({ isConnected: true, querySelector: () => key, querySelectorAll: () => [key] });
+  assert.equal(e.notices.at(-1), '地址可达，请以生图验证'); assert.equal(e.context.storyboardConnectionStatus.get('novel').verified, false);
+});
+
+test('Comfy actual model discovery uses its own preset requester and never fails over from explicit browser mode', async () => {
+  for (const mode of ['browser', 'gateway', 'legacy-auto']) {
+    let options; const sent = [], e = harness(comfyState(mode), { storyboardCredentialRevision: 0, AbortController, setTimeout, clearTimeout,
+      storyboardCaptureWorkbench() {}, storyboardResolveApiKey: async () => 'key',
+      directImageRuntime: async () => { sent.push('load-browser'); return { listDirectImageModels: async () => { sent.push('browser'); throw new Error('network'); }, isDirectImageTransportError: () => true }; },
+      featureRuntime: { load: async () => ({ attachModelPicker: (_host, value) => { options = value; return { open() {}, isCurrent: value.isCurrent }; } }) },
+      fetch: async url => { sent.push(url); return Response.json({ ok: true, models: [] }); },
+    });
+    const handlers = {}, host = { isConnected: true, dataset: { storyboardModelPicker: 'comfy' }, closest: () => null, querySelector: () => null, addEventListener: (name, handler) => { handlers[name] = handler; } };
+    const root = { isConnected: true, querySelectorAll: () => [] };
+    vm.runInContext(fn('bindStoryboardModelPicker'), e.context); e.context.bindStoryboardModelPicker(root, host, e.state); handlers.focusin({ target: { matches: () => true } });
+    await new Promise(resolve => setImmediate(resolve));
+    if (mode === 'browser') { await assert.rejects(options.fetchModels()); assert.deepEqual(sent, ['load-browser', 'browser']); }
+    else { await options.fetchModels(); assert.equal(sent.filter(item => item === '/api/plugins/qianmu-tts/image/models').length, 1); if (mode === 'gateway') assert.ok(!sent.includes('load-browser')); }
+  }
+});
+
 test('state roundtrip preserves per-connection protocols, capabilities and headers without binding presets to a model',()=>{
   const state=stateFor(); const group=state.connections.banana;
   group.presets=[compatible({name:'Relay'}),{id:'native',name:'Native',baseUrl:'https://native.example',model:'gemini-3.1-flash-image'}];

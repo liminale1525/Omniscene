@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.55';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.55';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.55';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.56';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.56';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.56';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.55';
+} from './qianmu-llm-output.js?v=1.59.56';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -151,6 +151,8 @@ import {
   resolveStoryboardModelBinding,
   resolveStoryboardProfileBinding,
   resolveStoryboardConnectionBinding,
+  getStoryboardComfyTransport,
+  requireStoryboardComfyTransport,
   projectStoryboardProtocolParameters,
   getStoryboardGenerationPolicy,
   normalizeStoryboardGenerationPolicy,
@@ -170,175 +172,175 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.55';
+} from './qianmu-storyboard.js?v=1.59.56';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.55';
+const VERSION = '1.59.56';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.55'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.56'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.55'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.56'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.55'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.56'),
   },
   imageChannel: {
     label: 'NAI 跨页顺序生成',
-    load: () => import('./qianmu-image-channel.js?v=1.59.55'),
+    load: () => import('./qianmu-image-channel.js?v=1.59.56'),
   },
   imageServiceClient: {
     label: '增强生图任务',
-    load: () => import('./qianmu-image-service-client.js?v=1.59.55'),
+    load: () => import('./qianmu-image-service-client.js?v=1.59.56'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.55').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.56').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.55'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.56'),
   },
   comfyWorkbench: {
     label: 'Comfy 镜头台',
-    load: () => import('./qianmu-comfy-workbench.js?v=1.59.55'),
+    load: () => import('./qianmu-comfy-workbench.js?v=1.59.56'),
   },
   comfyLibrary: {
     label: 'Comfy 工作流库',
-    load: () => import('./qianmu-comfy-library-view.js?v=1.59.55'),
+    load: () => import('./qianmu-comfy-library-view.js?v=1.59.56'),
   },
   comfyPreflight: {
     label: 'Comfy 配置检查',
-    load: () => import('./qianmu-comfy-preflight.js?v=1.59.55'),
+    load: () => import('./qianmu-comfy-preflight.js?v=1.59.56'),
   },
   comfyReadiness: {
     label: 'Comfy 节点检查',
-    load: () => import('./qianmu-comfy-readiness.js?v=1.59.55'),
+    load: () => import('./qianmu-comfy-readiness.js?v=1.59.56'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.55'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.56'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.55'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.56'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.55'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.56'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.55'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.56'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.55'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.56'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.55'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.56'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.55'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.56'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.55'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.56'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.55'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.56'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.55'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.56'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.55'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.56'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.55'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.56'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.55'),
+    load: () => import('./qianmu-video-task.js?v=1.59.56'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.55'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.56'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.55'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.56'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.55'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.56'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.55'),
+    load: () => import('./qianmu-video-store.js?v=1.59.56'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.55'),
+    load: () => import('./qianmu-video-result.js?v=1.59.56'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.55'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.56'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.55'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.56'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.55'),
+    load: () => import('./qianmu-video-media.js?v=1.59.56'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.55'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.56'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.55'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.56'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.55'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.56'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.55'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.56'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.55'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.56'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.55'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.56'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.55'),
-        import('./qianmu-theaters.js?v=1.59.55'),
+        import('./builtin-theaters.js?v=1.59.56'),
+        import('./qianmu-theaters.js?v=1.59.56'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -12328,7 +12330,7 @@ function bindStoryboardModelPicker(root, host, state) {
         model: rule?.target.modelId || state.profiles[providerId]?.model, capability: rule?.target.capabilityModelId || state.profiles[providerId]?.capabilityModelId,
         source: rule?.target.providerId || state.source,
         // Include live unsaved fields too: a quick click must not beat the workbench's debounced save.
-        fields: rule ? [] : [...root.querySelectorAll('.sd-storyboard-protocol, .sd-storyboard-base-url, .sd-storyboard-api-key-memory, .sd-storyboard-openai-compat input, .sd-storyboard-openai-compat textarea, .sd-storyboard-openai-compat select')].map((field) => [field.value, field.checked]) };
+        fields: rule ? [] : [...root.querySelectorAll('.sd-comfy-transport, .sd-storyboard-private-network, .sd-storyboard-protocol, .sd-storyboard-base-url, .sd-storyboard-api-key-memory, .sd-storyboard-openai-compat input, .sd-storyboard-openai-compat textarea, .sd-storyboard-openai-compat select')].map((field) => [field.value, field.checked]) };
     };
     // Ephemeral comparison only; never use connection credentials as a cache key or persist this snapshot.
     const initial = read(), snapshot = JSON.stringify(initial), chatKey = getChatKey();
@@ -12354,10 +12356,13 @@ function bindStoryboardModelPicker(root, host, state) {
           ...resolveStoryboardConnectionBinding(providerId, connection),
           apiKey, allowPrivateNetwork: Boolean(connection.options?.allowPrivateNetwork), compatibility: connection.compatibility, customHeaders: connection.headers };
         if (request.imageProtocolVersion) request.baseUrl = connection.baseUrl || '';
-        const direct = await directImageRuntime();
-        if (!isCurrent()) throw new Error('模型或连接已变化，请重新打开模型选择');
-        try { return await direct.listDirectImageModels(request); }
-        catch (error) { if (!direct.isDirectImageTransportError(error) || !isCurrent()) throw error; }
+        const comfyTransport = providerId === 'comfy' ? requireStoryboardComfyTransport(connection) : 'legacy-auto';
+        if (comfyTransport !== 'gateway') {
+          const direct = await directImageRuntime();
+          if (!isCurrent()) throw new Error('模型或连接已变化，请重新打开模型选择');
+          try { return await direct.listDirectImageModels(request); }
+          catch (error) { if (comfyTransport === 'browser' || !direct.isDirectImageTransportError(error) || !isCurrent()) throw error; }
+        }
         await storyboardConfirmGatewayProtocolBinding(request);
         if (!isCurrent()) throw new Error('模型或连接已变化，请重新打开模型选择');
         const controller = new AbortController();
@@ -12482,11 +12487,28 @@ function renderStoryboardModelCard(state) {
       <div class="sd-storyboard-key-field"><label for="sd-storyboard-key-input">${state.source === 'comfy' ? '访问令牌（可选）' : 'API Key'}</label><div class="sd-storyboard-key-control"><input id="sd-storyboard-key-input" class="text_pole sd-storyboard-api-key-memory" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" value="${htmlEscape(storyboardDraftApiKeys.get(state.source) || '')}" placeholder="输入 API Key"><button type="button" class="sd-icon-btn sd-storyboard-key-visibility" title="显示 API Key" aria-label="显示 API Key" aria-pressed="false" aria-controls="sd-storyboard-key-input"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div></div>
       ${renderStoryboardConnectionCompatibility(state)}
       ${state.source === 'novel' ? `<label><span>执行方式</span><select class="text_pole sd-storyboard-service-mode" aria-label="执行方式"><option value="auto" ${connection.draft?.options?.imageTransport !== 'service' ? 'selected' : ''}>浏览器优先</option><option value="service" ${connection.draft?.options?.imageTransport === 'service' ? 'selected' : ''}>增强服务协调</option></select></label>` : ''}
-      ${state.source === 'comfy' ? `<label class="sd-switch-row"><span>允许本地网络</span><input type="checkbox" class="sd-storyboard-private-network" ${(connection.active?.options?.allowPrivateNetwork ?? connection.group?.draft?.options?.allowPrivateNetwork) ? 'checked' : ''}></label>` : ''}
+      ${state.source === 'comfy' ? renderStoryboardComfyTransport(connection.draft) : ''}
       ${check ? `<div class="sd-storyboard-connection-result ${check.ok ? (check.verified === false ? 'partial' : 'ok') : 'failed'}"><i class="fa-solid ${check.ok && check.verified !== false ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${htmlEscape(check.message)}</span></div>` : ''}
       <div class="sd-storyboard-model-actions"><button type="button" class="sd-btn sd-storyboard-check-connection">测试连接</button><button type="button" class="sd-btn sd-primary sd-storyboard-save-connection">保存连接</button></div>
     </div>
   </details>`;
+}
+
+function renderStoryboardComfyTransport(connection) {
+  const mode = getStoryboardComfyTransport(connection);
+  return `<label><span>请求发出方</span><select class="text_pole sd-comfy-transport" aria-label="Comfy 请求发出方">
+    <option value="gateway" ${mode === 'gateway' ? 'selected' : ''}>ST 主机 · 增强服务转发</option>
+    <option value="browser" ${mode === 'browser' ? 'selected' : ''}>当前设备 · 浏览器直连</option>
+    ${mode === 'legacy-auto' ? '<option value="legacy-auto" selected>旧连接 · 浏览器优先自动尝试</option>' : ''}
+    ${mode === 'invalid' ? '<option value="invalid" selected disabled>请求方式待确认</option>' : ''}
+  </select></label>
+  <label class="sd-switch-row sd-comfy-private-network"><span>允许 ST 访问本地网络</span><input type="checkbox" class="sd-storyboard-private-network" ${connection?.options?.allowPrivateNetwork ? 'checked' : ''} ${mode === 'browser' ? 'disabled' : ''}></label>
+  <details class="sd-comfy-deployment-guide"><summary>连接方式说明</summary><div>
+    <p>本地 ST＋本地 Comfy：同机时可选 ST 转发，本机地址指 ST 电脑；手机打开 ST 时也不指手机。</p>
+    <p>本地 ST＋云 Comfy：填写云平台提供的 Comfy API 根地址和令牌；网页控制台地址不等于 API。浏览器直连还需服务允许浏览器访问。</p>
+    <p>VPS ST＋云 Comfy：建议由 ST 主机转发，VPS 必须能够访问云端。容器内的本机地址不代表宿主机。</p>
+    <p>测试、节点清单和生成沿用同一请求方式。${mode === 'legacy-auto' ? '旧连接仍会在浏览器传输失败时尝试 ST，建议明确选择发出方。' : '明确选择后失败不会改由另一台机器请求。'}ST 转发不提供内网穿透；只有私网地址时需平台安全入口或管理员配置互联，千幕不会自动开端口、关闭鉴权或安装隧道。</p>
+  </div></details>`;
 }
 
 function renderStoryboardParameterVibes(state, profile, capabilities) {
@@ -16392,6 +16414,7 @@ function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceI
       ...resolveStoryboardConnectionBinding(sourceId, connection),
       model: String(providerProfile.model || ''),
       imageTransport: sourceId === 'novel' && connection?.options?.imageTransport === 'service' ? 'service' : 'auto',
+      ...(sourceId === 'comfy' ? { comfyTransport: requireStoryboardComfyTransport(connection) } : {}),
       allowPrivateNetwork: Boolean(connection?.options?.allowPrivateNetwork ?? connectionState.group?.draft?.options?.allowPrivateNetwork),
       ...(resolveStoryboardConnectionBinding(sourceId, connection).protocol === 'openai-images' ? {
         compatibility: clone(connection?.compatibility || {}),
@@ -16580,7 +16603,10 @@ function storyboardRestoreSnapshotConnection(state, snap, sourceId) {
   if (!snap?.connection || !state.connections[sourceId]) return;
   const saved = snap.connection;
   const draft = normalizeStoryboardConnectionProfile({ ...saved,
-    options: { allowPrivateNetwork: Boolean(saved.allowPrivateNetwork) },
+    options: { allowPrivateNetwork: Boolean(saved.allowPrivateNetwork),
+      ...(sourceId === 'comfy' ? { comfyTransport: getStoryboardComfyTransport(saved) } : {}),
+      ...(sourceId === 'novel' && saved.imageTransport === 'service' ? { imageTransport: 'service' } : {}),
+    },
   }, sourceId);
   try {
     const binding = resolveStoryboardConnectionBinding(sourceId, draft);
@@ -16590,6 +16616,7 @@ function storyboardRestoreSnapshotConnection(state, snap, sourceId) {
   const connectionIdentity = item => JSON.stringify([
     item.baseUrl, item.credentialId, item.protocol || STORYBOARD_PROVIDER_REGISTRY[sourceId].protocol,
     normalizeOpenAIImageCompatibility(item.compatibility), item.headers || {}, Boolean(item.options?.allowPrivateNetwork),
+    sourceId === 'comfy' ? getStoryboardComfyTransport(item) : '',
   ]);
   const preset = group.presets.find(item => item.id === saved.id && item.baseUrl === draft.baseUrl && item.credentialId === draft.credentialId
     && connectionIdentity(item) === connectionIdentity(draft));
@@ -16836,6 +16863,8 @@ function storyboardCaptureWorkbench(root, sourceId = storyboardState().source, {
     connection.draft.options ||= {};
     const serviceMode = root.querySelector('.sd-storyboard-service-mode');
     if (serviceMode && sourceId === 'novel') connection.draft.options.imageTransport = serviceMode.value === 'service' ? 'service' : 'auto';
+    const comfyTransport = root.querySelector('.sd-comfy-transport');
+    if (sourceId === 'comfy' && comfyTransport) connection.draft.options.comfyTransport = comfyTransport.value;
     connection.draft.options.allowPrivateNetwork = Boolean(root.querySelector('.sd-storyboard-private-network')?.checked);
     if (root.querySelector('.sd-storyboard-openai-compat')) {
       const parsedHeaders = parseOpenAICompatibleHeaders(root.querySelector('.sd-storyboard-openai-headers')?.value || '');
@@ -17092,7 +17121,7 @@ async function storyboardCheckConnection(root) {
   const sourceId = state.source;
   const revision = ++storyboardConnectionCheckRevision, keyRevision = storyboardKeyInputRevision;
   const loadRevision = storyboardConnectionLoadRevision, chatKey = getChatKey();
-  const readFields = () => JSON.stringify([...root.querySelectorAll('.sd-storyboard-protocol, .sd-storyboard-base-url, .sd-storyboard-api-key-memory, .sd-storyboard-openai-compat input, .sd-storyboard-openai-compat textarea, .sd-storyboard-openai-compat select')].map(field => [field.value, field.checked]));
+  const readFields = () => JSON.stringify([...root.querySelectorAll('.sd-comfy-transport, .sd-storyboard-private-network, .sd-storyboard-protocol, .sd-storyboard-base-url, .sd-storyboard-api-key-memory, .sd-storyboard-openai-compat input, .sd-storyboard-openai-compat textarea, .sd-storyboard-openai-compat select')].map(field => [field.value, field.checked]));
   const fields = readFields();
   const isCurrent = () => root.isConnected && revision === storyboardConnectionCheckRevision && keyRevision === storyboardKeyInputRevision
     && loadRevision === storyboardConnectionLoadRevision && chatKey === getChatKey() && state === storyboardState() && state.source === sourceId && fields === readFields();
@@ -17116,12 +17145,15 @@ async function storyboardCheckConnection(root) {
         customHeaders: clone(connection.headers || {}),
       } : {}),
     };
-    const directImage = await directImageRuntime();
-    if (!isCurrent()) return;
     let data = null;
-    try { data = await directImage.checkDirectImageConnection(request); }
-    catch (error) {
-      if (!directImage.isDirectImageTransportError(error) && error?.code !== 'direct_unsupported') throw error;
+    const comfyTransport = sourceId === 'comfy' ? requireStoryboardComfyTransport(connection) : 'legacy-auto';
+    if (comfyTransport !== 'gateway') {
+      const directImage = await directImageRuntime();
+      if (!isCurrent()) return;
+      try { data = await directImage.checkDirectImageConnection(request); }
+      catch (error) {
+        if (comfyTransport === 'browser' || (!directImage.isDirectImageTransportError(error) && error?.code !== 'direct_unsupported')) throw error;
+      }
     }
     if (!isCurrent()) return;
     if (!data) {
@@ -17132,12 +17164,13 @@ async function storyboardCheckConnection(root) {
         method: 'POST', headers, body: JSON.stringify(request),
       });
       data = await response.json().catch(() => ({}));
-      if (response.status === 404) throw new Error(`${STORYBOARD_PROVIDER_REGISTRY[sourceId]?.label || sourceId} 浏览器直连被当前网络拦截，且未检测到可选的千幕网关`);
+      if (response.status === 404) throw new Error(comfyTransport === 'gateway' ? '未检测到千幕增强服务，请安装或同步更新后重启 ST' : `${STORYBOARD_PROVIDER_REGISTRY[sourceId]?.label || sourceId} 浏览器直连被当前网络拦截，且未检测到可选的千幕网关`);
       if (!response.ok || !data.ok) throw new Error(data.message || `连接失败（${response.status}）`);
+      data.transport = 'gateway';
     }
     if (!isCurrent()) return;
-    const verified = data.verified !== false;
-    const message = String(verified ? data.message || `连接通过 · ${profile.model || STORYBOARD_PROVIDER_REGISTRY[sourceId].label}`
+    const verified = sourceId !== 'comfy' && data.verified !== false;
+    const message = sourceId === 'comfy' ? `${data.transport === 'gateway' ? 'ST 主机' : '当前浏览器'} · 地址可达，请以生图验证` : String(verified ? data.message || `连接通过 · ${profile.model || STORYBOARD_PROVIDER_REGISTRY[sourceId].label}`
       : data.transport === 'configured' ? '未执行连接探测，请以生图验证' : '地址可达，请以生图验证');
     storyboardConnectionStatus.set(sourceId, { ok: true, verified, message });
     toast(message, verified ? 'success' : 'warning');
@@ -17159,11 +17192,21 @@ async function storyboardCheckComfyReadiness(root) {
   const profile = clone(storyboardProviderProfile(state)), connection = clone(storyboardConnectionState(state).draft);
   const chatKey = getChatKey(), keyRevision = storyboardKeyInputRevision, loadRevision = storyboardConnectionLoadRevision;
   const fields = () => JSON.stringify([...root.querySelectorAll('input, select, textarea')].map(field => [field.value, field.checked]));
-  const snapshot = fields(), savedProfile = JSON.stringify(state.profiles.comfy);
+  const snapshot = fields();
+  // Daily controls have no workflow textarea. Compare immutable recipe strings directly;
+  // do not serialize a multi-MB API graph for every node definition response.
+  const savedProfile = Object.fromEntries(['comfyWorkflow','comfyWorkflowNotice','comfyOutputNodeId','model','capabilityModelId',
+    'width','height','count','steps','cfg','seed','sampler','scheduler'].map(key => [key, state.profiles.comfy[key]]));
+  const connectionFields = () => {
+    const draft = storyboardConnectionState(state).draft;
+    return [draft.baseUrl, draft.credentialId, getStoryboardComfyTransport(draft), Boolean(draft.options?.allowPrivateNetwork)];
+  };
+  const savedConnection = connectionFields();
   const isCurrent = () => root.isConnected && root.querySelector('.sd-comfy-check-workflow') === button
     && state === storyboardState() && state.source === 'comfy' && chatKey === getChatKey()
     && keyRevision === storyboardKeyInputRevision && loadRevision === storyboardConnectionLoadRevision
-    && fields() === snapshot && JSON.stringify(state.profiles.comfy) === savedProfile;
+    && fields() === snapshot && Object.keys(savedProfile).every(key => Object.is(state.profiles.comfy[key], savedProfile[key]))
+    && connectionFields().every((value, index) => Object.is(value, savedConnection[index]));
   const controller = new AbortController();
   const cancel = () => controller.abort();
   root.addEventListener('input', cancel, true); root.addEventListener('change', cancel, true);
@@ -17184,19 +17227,24 @@ async function storyboardCheckComfyReadiness(root) {
     request.apiKey = String(root.querySelector('.sd-storyboard-api-key-memory')?.value || '').trim() || await storyboardResolveApiKey('comfy');
     if (!isCurrent()) return;
     let result, requester = '当前浏览器';
-    try {
-      result = await runtime.checkComfyReadiness(request, { signal: controller.signal, fetchImpl: (url, options) => {
-        if (!isCurrent()) { controller.abort(); throw new Error('检查页面已变化'); }
-        return fetch(url, options);
-      } });
-    } catch (error) {
-      if (error?.code !== 'comfy_readiness_transport' || !isCurrent() || controller.signal.aborted) throw error;
+    const comfyTransport = requireStoryboardComfyTransport(connection);
+    if (comfyTransport !== 'gateway') {
+      try {
+        result = await runtime.checkComfyReadiness(request, { signal: controller.signal, fetchImpl: (url, options) => {
+          if (!isCurrent()) { controller.abort(); throw new Error('检查页面已变化'); }
+          return fetch(url, options);
+        } });
+      } catch (error) {
+        if (comfyTransport === 'browser' || error?.code !== 'comfy_readiness_transport' || !isCurrent() || controller.signal.aborted) throw error;
+      }
+    }
+    if (!result) {
       requester = 'ST 主机';
       const timeout = setTimeout(cancel, 30000);
       try {
         const response = await fetch('/api/plugins/qianmu-tts/image/comfy/readiness', { method: 'POST', headers: storyboardRequestHeaders(),
           credentials: 'same-origin', redirect: 'error', signal: controller.signal, body: JSON.stringify(request) });
-        if (response.status === 404) throw new Error('浏览器无法读取节点；请同步更新增强服务并重启 ST 后使用节点检查');
+        if (response.status === 404) throw new Error('ST 节点检查不可用；请同步更新增强服务并重启 ST 后使用节点检查');
         result = await response.json();
         if (!response.ok || !result?.ok || result.schemaVersion !== 1 || result.actualGenerationVerified !== false) throw new Error(result?.message || '增强服务未返回有效的节点检查结果');
       } finally { clearTimeout(timeout); }
@@ -17343,7 +17391,9 @@ async function storyboardSaveConnectionPreset(root) {
     name, providerId: sourceId, baseUrl, model: String(profile.model || ''),
     ...resolveStoryboardConnectionBinding(sourceId, group.draft),
     customModel: Boolean(STORYBOARD_PROVIDER_REGISTRY[sourceId]?.customModelId && !getStoryboardModel(sourceId, profile.model)),
-    credentialId, options: { allowPrivateNetwork: Boolean(group.draft.options?.allowPrivateNetwork), imageTransport: sourceId === 'novel' && group.draft.options?.imageTransport === 'service' ? 'service' : 'auto' },
+    credentialId, options: { allowPrivateNetwork: Boolean(group.draft.options?.allowPrivateNetwork), imageTransport: sourceId === 'novel' && group.draft.options?.imageTransport === 'service' ? 'service' : 'auto',
+      ...(sourceId === 'comfy' ? { comfyTransport: requireStoryboardComfyTransport(group.draft) } : {}),
+    },
     ...(sourceId === 'openai' || group.draft.compatibility ? {
       compatibility: normalizeOpenAIImageCompatibility(group.draft.compatibility),
       headers: clone(group.draft.headers || {}),
@@ -17778,6 +17828,8 @@ async function storyboardPreflightComfyForCompiler(state, profile, plan, inputGu
   const route = storyboardCertainCompilerRoute(state, profile);
   if (!route || route.providerId !== 'comfy') return;
   try {
+    const connections = state.connections.comfy;
+    requireStoryboardComfyTransport(route.connectionPresetId ? connections.presets.find(item => item.id === route.connectionPresetId) : connections.draft);
     const selected = storyboardResolveRoutingProfile(state, route, state.source === 'comfy' ? profile : null);
     const raw = sanitizeStoryboardWorkflow(selected.comfyWorkflow);
     if (!raw.ok || raw.removedFields.length || selected.comfyWorkflowNotice) throw new Error(selected.comfyWorkflowNotice || storyboardWorkflowIssue(raw));
@@ -18972,11 +19024,12 @@ async function storyboardRunJob(job, log) {
     const apiKey = await storyboardResolveApiKey(job.source, job.connection?.credentialId);
     if (job.source !== 'comfy' && !apiKey) throw new Error('当前连接没有可用的 API Key');
     const generateTransport = async () => {
+      const comfyTransport = job.source === 'comfy' ? requireStoryboardComfyTransport(job.connection) : 'legacy-auto';
       // Do not expand reference images while another tab owns this NAI channel.
       const assets = await storyboardPrepareGatewayAssets(job);
       const gatewayRequest = storyboardGatewayRequest(job, apiKey, assets);
       storyboardPipelineStage(log, 'provider_request', 'running', { request: gatewayRequest });
-      if (job.connection?.imageTransport === 'service') {
+      if (job.source === 'novel' && job.connection?.imageTransport === 'service') {
         const service = await storyboardImageServiceRuntime();
         const result = await service.submit(job, gatewayRequest, { beforeSubmit,
           valid: () => !job.discardRequested && storyboardState().enabled,
@@ -18999,14 +19052,16 @@ async function storyboardRunJob(job, log) {
         if (result.warning) toast(result.warning, 'warning');
         return { serviceDelivered: true };
       }
-      const directImage = await directImageRuntime();
       let data = null;
       let transport = 'browser_direct';
-      try { data = await directImage.generateDirectImage(gatewayRequest, { probeTransport: true, beforeSubmit }); }
-      catch (error) {
-        if (!(directImage.isDirectImageTransportError(error) && error?.submissionState === 'not_submitted') && error?.code !== 'direct_unsupported') {
-          storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, error?.message || String(error));
-          throw error;
+      if (comfyTransport !== 'gateway') {
+        const directImage = await directImageRuntime();
+        try { data = await directImage.generateDirectImage(gatewayRequest, { probeTransport: true, beforeSubmit }); }
+        catch (error) {
+          if (comfyTransport === 'browser' || (!(directImage.isDirectImageTransportError(error) && error?.submissionState === 'not_submitted') && error?.code !== 'direct_unsupported')) {
+            storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, error?.message || String(error));
+            throw error;
+          }
         }
       }
       if (!data) {
@@ -19023,7 +19078,7 @@ async function storyboardRunJob(job, log) {
         data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
           const message = response.status === 404
-            ? `${STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || job.source} 浏览器直连被当前网络拦截，且未检测到可选的千幕网关`
+            ? comfyTransport === 'gateway' ? '未检测到千幕增强服务，请安装或同步更新后重启 ST' : `${STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || job.source} 浏览器直连被当前网络拦截，且未检测到可选的千幕网关`
             : data.message || `生图服务请求失败（${response.status}）`;
           storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, message);
           const error = new Error(message);
@@ -20441,6 +20496,9 @@ function bindStoryboardTabEvents(root) {
     storyboardCaptureWorkbench(root); void storyboardLoadConnectionPreset(String(event.target.value || ''));
   });
   root.querySelector('.sd-storyboard-protocol')?.addEventListener('change', (event) => storyboardChangeConnectionProtocol(root, event.target.value));
+  root.querySelector('.sd-comfy-transport')?.addEventListener('change', () => {
+    storyboardCaptureWorkbench(root, 'comfy'); storyboardConnectionStatus.delete('comfy'); saveSettings(); renderModal();
+  });
   root.querySelector('.sd-storyboard-service-mode')?.addEventListener('change', async (event) => {
     storyboardCaptureWorkbench(root); saveSettings();
     if (event.target.value !== 'service') return;

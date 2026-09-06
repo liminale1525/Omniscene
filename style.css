@@ -10111,6 +10111,12 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-readiness-result.failed { color: var(--sd-danger, #b96060); }
 #story-director-modal .sd-comfy-readiness-result small { display: block; margin-top: 6px; font-size: 11px; }
 #story-director-modal .sd-comfy-readiness-result ul { max-height: 200px; overflow: auto; padding-left: 18px; margin: 8px 0 0; }
+#story-director-modal .sd-comfy-deployment-guide { min-width: 0; text-align: left; color: var(--sd-muted); font-size: 12px; }
+#story-director-modal .sd-comfy-deployment-guide summary { cursor: pointer; font-size: 12px; }
+#story-director-modal .sd-comfy-deployment-guide p { margin: 8px 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+#story-director-modal .sd-storyboard-root .sd-comfy-private-network { display: flex !important; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+#story-director-modal .sd-storyboard-root .sd-comfy-private-network > span { margin: 0; }
+#story-director-modal .sd-storyboard-root .sd-comfy-private-network > input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: 0; }
 
 /* Workflow library/editor: bounded, isolated and consistent on narrow and wide screens. */
 #story-director-modal .sd-comfy-library { min-width: 0; text-align: start; }
