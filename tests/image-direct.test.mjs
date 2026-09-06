@@ -173,7 +173,7 @@ const comfy = await generateDirectImage({
       return new Response(JSON.stringify({ prompt_id: 'comfy-1' }), { status: 200, headers: { 'content-type': 'application/json' } });
     }
     if (url.endsWith('/history/comfy-1')) return new Response(JSON.stringify({ 'comfy-1': { status: { completed: true }, outputs: { 2: { images: [{ filename: 'out.png', type: 'output' }] } } } }), { status: 200, headers: { 'content-type': 'application/json' } });
-    if (url.includes('/view?')) return new Response(new Uint8Array([137, 80, 78, 71]), { status: 200, headers: { 'content-type': 'image/png' } });
+    if (url.includes('/view?')) return new Response(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==', 'base64'), { status: 200, headers: { 'content-type': 'image/png' } });
     throw new Error(`Unexpected Comfy request: ${url}`);
   },
 });

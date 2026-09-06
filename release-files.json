@@ -15,6 +15,7 @@
     "package.json",
     "qianmu-blobstore.js",
     "qianmu-comfy-workflow.js",
+    "qianmu-comfy-results.js",
     "qianmu-data-migrations.js",
     "qianmu-director-candidate.js",
     "qianmu-director-decision.js",

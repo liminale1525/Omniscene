@@ -10,7 +10,7 @@ import { createStoryboardFormFixture, storyboardFunctionSource } from './helpers
 
 const workflow = inputs => ({ '1': { class_type: 'TestNode', inputs, _meta: { title: '%qianmu_negative%' } } });
 const basic = () => workflow({ text: '%qianmu_prompt%' });
-const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6ZQAAAABJRU5ErkJggg==';
+const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==';
 const reference = () => ({ data: png, mime: 'image/png', name: 'reference.png' });
 const request = (graph, extra = {}) => ({ provider: 'comfy', baseUrl: 'https://comfy.example', model: 'comfy-workflow', prompt: 'garden', parameters: { workflow: graph, pollIntervalMs: 250, timeoutMs: 15000 }, ...extra });
 

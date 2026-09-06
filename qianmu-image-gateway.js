@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
+import { collectComfyStillResults, comfyTaskId, comfyStillMime } from './qianmu-comfy-results.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
 import { IMAGE_PROTOCOL_BINDING_VERSION, IMAGE_COMPATIBLE_PROTOCOLS } from './qianmu-image-models.js';
 import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
@@ -700,37 +701,39 @@ async function generateComfy(request, base, fetchImpl, template) {
     method: 'POST', headers: { 'Content-Type': 'application/json', ...(request.apiKey ? authHeaders(request) : {}) }, body: JSON.stringify({ prompt: workflow, client_id: comfyClientId }),
   }, requestWithinDeadline(request, deadline), fetchImpl);
   const submitted = parseUpstreamJson(await readLimited(promptResponse, 256 * 1024));
-  const promptId = asString(submitted.prompt_id || submitted.promptId, 240);
+  const promptId = comfyTaskId(submitted.prompt_id || submitted.promptId);
   if (!promptId) throw new ImageGatewayError(502, 'comfy_missing_prompt_id', 'ComfyUI 未返回任务编号');
-  let history;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, request.parameters.pollIntervalMs));
-    const pollRequest = requestWithinDeadline(request, deadline);
-    const response = await fetchUpstream(endpoint(base, `history/${encodeURIComponent(promptId)}`), { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, pollRequest, fetchImpl);
-    const json = parseUpstreamJson(await readLimited(response, 4 * 1024 * 1024));
-    history = json[promptId] || (json.prompt_id ? json : null);
-    if (history?.status?.status_str === 'error') throw new ImageGatewayError(502, 'comfy_execution_failed', 'ComfyUI 工作流执行失败');
-    if (history?.outputs && (history?.status?.completed === true || Object.keys(plainObject(history.outputs)).length > 0)) break;
+  try {
+    let descriptors;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, request.parameters.pollIntervalMs));
+      const pollRequest = requestWithinDeadline(request, deadline);
+      const response = await fetchUpstream(endpoint(base, `history/${encodeURIComponent(promptId)}`), { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, pollRequest, fetchImpl);
+      const json = parseUpstreamJson(await readLimited(response, 4 * 1024 * 1024));
+      descriptors = collectComfyStillResults(json, promptId, { workflow });
+      if (descriptors) break;
+    }
+    if (!descriptors) throw new ImageGatewayError(504, 'comfy_timeout', 'ComfyUI 工作流等待超时；任务可能仍在服务端运行，请核查原任务');
+    const images = [];
+    let imageBytes = 0;
+    for (const descriptor of descriptors) {
+      const filename = descriptor.filename;
+      const url = endpoint(base, 'view');
+      url.searchParams.set('filename', filename);
+      if (descriptor.subfolder) url.searchParams.set('subfolder', asString(descriptor.subfolder, 500));
+      if (descriptor.type) url.searchParams.set('type', asString(descriptor.type, 80));
+      const response = await fetchUpstream(url, { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, requestWithinDeadline(request, deadline), fetchImpl);
+      const buffer = await readLimited(response, MAX_UPSTREAM_BYTES - imageBytes);
+      const mime = comfyStillMime(buffer);
+      imageBytes += buffer.length;
+      images.push({ id: filename, data: buffer.toString('base64'), mime });
+    }
+    return { images: normalizeImageData(images), text: '', upstreamId: promptId };
+  } catch (cause) {
+    const error = cause instanceof ImageGatewayError ? cause : new ImageGatewayError(502, cause?.code || 'comfy_result_failed', redactText(cause?.message || 'ComfyUI 收片失败'));
+    error.upstreamId = promptId;
+    throw error;
   }
-  if (!history?.outputs) throw new ImageGatewayError(504, 'comfy_timeout', 'ComfyUI 工作流等待超时；任务可能仍在服务端运行');
-  const descriptors = Object.values(history.outputs).flatMap((output) => [...(output?.images || []), ...(output?.gifs || [])]).slice(0, 8);
-  const images = [];
-  let imageBytes = 0;
-  for (const descriptor of descriptors) {
-    const filename = asString(descriptor.filename, 500);
-    if (!filename) continue;
-    const url = endpoint(base, 'view');
-    url.searchParams.set('filename', filename);
-    if (descriptor.subfolder) url.searchParams.set('subfolder', asString(descriptor.subfolder, 500));
-    if (descriptor.type) url.searchParams.set('type', asString(descriptor.type, 80));
-    const response = await fetchUpstream(url, { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, requestWithinDeadline(request, deadline), fetchImpl);
-    const buffer = await readLimited(response, MAX_UPSTREAM_BYTES - imageBytes);
-    const mime = imageMime(buffer, String(response.headers.get('content-type') || '').split(';')[0]);
-    if (!mime) throw new ImageGatewayError(502, 'upstream_invalid_image', 'ComfyUI 返回了无法识别的图片数据');
-    imageBytes += buffer.length;
-    images.push({ id: filename, data: buffer.toString('base64'), mime });
-  }
-  return { images: normalizeImageData(images), text: '', upstreamId: promptId };
 }
 
 export async function generateImage(input, options = {}) {
@@ -949,6 +952,7 @@ export function imageGatewayErrorPayload(error) {
       message: redactText(source.message),
       retryable: Boolean(source.retryable),
       upstreamStatus: source.upstreamStatus || undefined,
+      ...(comfyTaskId(error?.upstreamId) ? { upstreamId: error.upstreamId } : {}),
       ...(['not_submitted', 'rejected', 'unknown', 'accepted'].includes(error?.submissionState) ? { submissionState: error.submissionState } : {}),
     },
   };

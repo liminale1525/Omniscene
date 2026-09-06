@@ -9,6 +9,7 @@ import {
 } from './qianmu-openai-image-compat.js';
 import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
+import { collectComfyStillResults, comfyTaskId, comfyStillMime, readComfyImageBytes } from './qianmu-comfy-results.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
 
 const MAX_IMAGES = 8;
@@ -584,34 +585,39 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
     body: JSON.stringify({ prompt: workflow, client_id: directRequestId() }), signal: input.signal,
   }, fetchImpl);
   const submitted = await responseJson(promptResponse, 'ComfyUI 工作流提交失败');
-  const promptId = text(submitted.prompt_id || submitted.promptId, 240);
+  const promptId = comfyTaskId(submitted.prompt_id || submitted.promptId);
   if (!promptId) throw new DirectImageError('ComfyUI 未返回任务编号', { code: 'comfy_missing_prompt_id' });
-  const deadline = Date.now() + number(parameters.timeoutMs, 15000, 300000, 120000);
-  const interval = number(parameters.pollIntervalMs, 250, 3000, 700);
-  let history = null;
-  while (Date.now() < deadline) {
-    await waitImpl(interval);
-    const response = await directFetch(providerEndpoint(input.baseUrl, `history/${encodeURIComponent(promptId)}`, 'comfy'), { method: 'GET', headers, signal: input.signal }, fetchImpl);
-    const data = await responseJson(response, 'ComfyUI 状态读取失败');
-    history = data[promptId] || (data.prompt_id ? data : null);
-    if (history?.status?.status_str === 'error') throw new DirectImageError('ComfyUI 工作流执行失败', { code: 'comfy_execution_failed' });
-    if (history?.outputs && (history?.status?.completed === true || Object.keys(plainObject(history.outputs)).length)) break;
+  try {
+    const deadline = Date.now() + number(parameters.timeoutMs, 15000, 300000, 120000);
+    const interval = number(parameters.pollIntervalMs, 250, 3000, 700);
+    let descriptors = null;
+    while (Date.now() < deadline) {
+      await waitImpl(interval);
+      const response = await directFetch(providerEndpoint(input.baseUrl, `history/${encodeURIComponent(promptId)}`, 'comfy'), { method: 'GET', headers, signal: input.signal }, fetchImpl);
+      const data = await responseJson(response, 'ComfyUI 状态读取失败');
+      descriptors = collectComfyStillResults(data, promptId, { workflow });
+      if (descriptors) break;
+    }
+    if (!descriptors) throw new DirectImageError('ComfyUI 工作流等待超时；任务可能仍在运行，请核查原任务', { code: 'comfy_timeout' });
+    const images = [];
+    let imageBytes = 0;
+    for (const descriptor of descriptors) {
+      const url = new URL(providerEndpoint(input.baseUrl, 'view', 'comfy'));
+      url.searchParams.set('filename', descriptor.filename);
+      if (descriptor.subfolder) url.searchParams.set('subfolder', descriptor.subfolder);
+      if (descriptor.type) url.searchParams.set('type', descriptor.type);
+      const response = await directFetch(url.toString(), { method: 'GET', headers, signal: input.signal }, fetchImpl);
+      if (!response.ok) await responseError(response, 'ComfyUI 图片读取失败');
+      const bytes = await readComfyImageBytes(response, 48 * 1024 * 1024 - imageBytes);
+      const mime = comfyStillMime(bytes); imageBytes += bytes.byteLength;
+      images.push({ id: text(descriptor.filename, 240), mime, data: bytesToBase64(bytes), url: '' });
+    }
+    return directResult(images, promptResponse, started, { upstreamId: promptId });
+  } catch (cause) {
+    const error = cause instanceof DirectImageError || cause?.name === 'AbortError' ? cause : new DirectImageError(cause?.message || 'ComfyUI 收片失败', { code: cause?.code || 'comfy_result_failed' });
+    error.upstreamId = promptId;
+    throw error;
   }
-  if (!history?.outputs) throw new DirectImageError('ComfyUI 工作流等待超时；任务可能仍在运行', { code: 'comfy_timeout', retryable: true });
-  const descriptors = Object.values(history.outputs).flatMap((output) => [...(output?.images || []), ...(output?.gifs || [])]).slice(0, MAX_IMAGES);
-  const images = [];
-  for (const descriptor of descriptors) {
-    if (!descriptor?.filename) continue;
-    const url = new URL(providerEndpoint(input.baseUrl, 'view', 'comfy'));
-    url.searchParams.set('filename', descriptor.filename);
-    if (descriptor.subfolder) url.searchParams.set('subfolder', descriptor.subfolder);
-    if (descriptor.type) url.searchParams.set('type', descriptor.type);
-    const response = await directFetch(url.toString(), { method: 'GET', headers, signal: input.signal }, fetchImpl);
-    if (!response.ok) await responseError(response, 'ComfyUI 图片读取失败');
-    const mime = text(response.headers?.get?.('content-type')?.split(';')[0] || 'image/png', 80);
-    images.push({ id: text(descriptor.filename, 240), mime, data: bytesToBase64(await response.arrayBuffer()), url: '' });
-  }
-  return directResult(images, promptResponse, started, { upstreamId: promptId });
 }
 
 async function probeDirectGenerationTransport(input, fetchImpl, timeoutMs) {
@@ -684,7 +690,8 @@ export async function generateDirectImage(input = {}, { fetchImpl = globalThis.f
   } catch (error) {
     if (error?.submissionState === 'not_submitted') throw error;
     if (submissionState !== 'not_submitted' && (isDirectImageTransportError(error) || error?.name === 'AbortError')) {
-      throw new DirectImageError('生图结果未确认，请先核对渠道记录，勿重复生成', { code: 'image_submission_unknown', submissionState: 'unknown' });
+      throw Object.assign(new DirectImageError('生图结果未确认，请先核对渠道记录，勿重复生成', { code: 'image_submission_unknown', submissionState: 'unknown' }),
+        comfyTaskId(error?.upstreamId) ? { upstreamId: error.upstreamId } : {});
     }
     if (submissionState !== 'not_submitted' && error && typeof error === 'object') error.submissionState ||= submissionState;
     throw error;

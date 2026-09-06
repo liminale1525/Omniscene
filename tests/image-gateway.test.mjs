@@ -83,7 +83,7 @@ await assert.rejects(() => validateGatewayBaseUrl('https://relay.example/v1', { 
 assert.equal((await validateGatewayBaseUrl('http://127.0.0.1:8188', { allowPrivateNetwork: true })).origin, 'http://127.0.0.1:8188');
 
 let captured;
-const tinyPng = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.from('image')]);
+const tinyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==', 'base64');
 const openai = await generateImage({
   provider: 'openai', apiKey: 'openai-key', baseUrl: 'https://relay.example/v1', model: 'gpt-image-2', prompt: 'portrait',
   parameters: { size: '1024x1536', quality: 'high', outputFormat: 'webp' },
@@ -257,7 +257,7 @@ const comfy = await generateImage({
     }
     if (path.endsWith('/history/prompt-1')) {
       comfyStep++;
-      return jsonResponse(comfyStep > 1 ? { 'prompt-1': { outputs: { '9': { images: [{ filename: 'done.png', subfolder: '', type: 'output' }] } } } } : {});
+      return jsonResponse(comfyStep > 1 ? { 'prompt-1': { status: { completed: true }, outputs: { '9': { images: [{ filename: 'done.png', subfolder: '', type: 'output' }] } } } } : {});
     }
     if (path.endsWith('/view')) return new Response(tinyPng, { status: 200, headers: { 'content-type': 'image/png' } });
     throw new Error(`Unexpected Comfy URL ${url}`);
