@@ -736,7 +736,13 @@ export async function generateImage(input, options = {}) {
   const upstreamFetch = options.fetchImpl || fetch;
   const fetchImpl = async (url, init = {}) => {
     const writes = !['GET', 'HEAD', 'OPTIONS'].includes(String(init.method || 'GET').toUpperCase());
-    if (writes) submissionState = 'unknown';
+    if (writes) {
+      // An installed service coordinator must durably authorize every write,
+      // including provider-internal retries, before any upstream request starts.
+      try { await options.beforeSubmit?.(); }
+      catch (error) { throw new ImageGatewayError(409, 'image_submission_not_authorized', redactText(error?.message || '生图请求未获授权')); }
+      submissionState = 'unknown';
+    }
     const response = await upstreamFetch(url, init);
     if (writes) {
       if (response.ok) { acceptedWrites++; submissionState = 'accepted'; }
