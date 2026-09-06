@@ -44,7 +44,7 @@ function environment(capability = V3, model = alias, extra = {}) {
     'storyboardCompilerProfileOptions', 'renderStoryboardModelCard', 'storyboardPromptDefaultsKey',
     'storyboardProviderPromptDefaults', 'storyboardPromptLayerForArtist', 'storyboardRememberPromptLayer',
     'storyboardPromptsForArtist', 'storyboardJoinPrompt', 'storyboardParameterPresets',
-    'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCreate', 'renderStoryboardConnectionCompatibility', 'renderStoryboardOpenAICompatibility', 'renderStoryboardImageOutputFields',
+    'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCreate', 'renderStoryboardConnectionCompatibility', 'renderStoryboardOpenAICompatibility', 'renderStoryboardImageOutputFields', 'renderStoryboardGenerationCard',
     'storyboardProfileSnapshot', 'storyboardCaptureWorkbench', 'storyboardGenerationPayload', 'storyboardRestoreSnapshotConnection',
     'storyboardCreatePreparationGuard', 'storyboardResolveRoutingProfile', 'storyboardRoutingTargetOptions', 'storyboardCreateJob', 'storyboardGatewayRequest', 'storyboardLoadLogToWorkbench', 'storyboardSafeShotSpecFromPrompt', 'storyboardAdaptShotForModel'];
   for (const call of section('renderStoryboardCreate').matchAll(/\b(renderStoryboard\w+)\(/g)) {
@@ -284,6 +284,50 @@ function generationEnvironment() {
   state.routing.rules = [{ id: 'r', enabled: true, name: '人物分工', target: { providerId: 'novel', modelId: alias, capabilityModelId: V45, connectionPresetId: 'api', parameterPresetId: 'style' } }];
   return { ...env, queued };
 }
+
+for (const grouped of [false, true]) {
+  test(`actual ${grouped ? 'grouped' : 'independent'} automatic generation shares max budget and never multiplies saved Count`, async () => {
+    const {state, context, queued} = generationEnvironment();
+    state.routing.enabled = grouped;
+    state.generationPolicy = {version:1, minImages:1, maxImages:2, concurrency:2};
+    state.profiles.openai.count = '4';
+    state.promptDraft.shots = ['garden', 'river', 'city', 'forest'].map((scene, index) => ({
+      id:scene, prompt:`quiet ${scene}`, shotType:'environment', shotSpec:{sourceParagraphIds:[`p${index}`], scene, location:scene, evidence:{quote:scene}, visualDuty:`establish ${scene}`, narrativePurpose:`establish ${scene}`},
+    }));
+    assert.equal(await context.storyboardGenerate(null, {automatic:true}),true);
+    assert.equal(queued.length,2);
+    for(const job of queued){assert.equal(job.payload.parameters.count,1);assert.equal(job.requestTotal,1);assert.equal(job.automatic,true);}
+    assert.equal(state.profiles.openai.count,'4');
+  });
+}
+
+test('automatic single shot also ignores saved variant count, but explicit manual single preserves variants', async () => {
+  for(const automatic of [false,true]){
+    const {context, queued}=generationEnvironment();
+    assert.equal(await context.storyboardGenerate(null,{automatic}),true);
+    assert.equal(queued.length,automatic?1:2);
+  }
+});
+
+test('explicit manual multi-shot selection still has one output per shot and confirms only that demand',async()=>{
+  const {state,context,queued}=generationEnvironment();let confirmation='';
+  context.confirmDialog=async(_title,text)=>{confirmation=text;return true;};
+  state.routing.enabled=false;state.profiles.openai.count='4';
+  state.promptDraft.shots=['garden','river'].map(scene=>({id:scene,prompt:scene,shotType:'environment',shotSpec:{sourceParagraphIds:['p1'],scene,location:scene,narrativePurpose:`show ${scene}`}}));
+  assert.equal(await context.storyboardGenerate(null),true);
+  assert.equal(queued.length,2);assert.ok(queued.every(job=>job.payload.parameters.count===1));
+  assert.match(confirmation,/预计生成 2 张图片/);
+});
+
+test('duplicate or ungrounded candidates never fill a minimum target with extra generation',async()=>{
+  const {state,context,queued,notices}=generationEnvironment();
+  state.routing.enabled=false;state.generationPolicy={minImages:3,maxImages:3,concurrency:2};
+  const original=structuredClone(state.promptDraft.shots[0]);state.promptDraft.shots=[original,{...original,id:'duplicate'}];
+  assert.equal(await context.storyboardGenerate(null,{automatic:true}),true);
+  assert.equal(queued.length,1);assert.ok(notices.some(message=>message.includes('可用画面 1/3')));
+  state.promptDraft.shots=[{id:'invalid',prompt:'invention',shotSpec:{}}];
+  queued.length=0;assert.equal(await context.storyboardGenerate(null,{automatic:true}),false);assert.equal(queued.length,0);
+});
 
 test('actual generation routes across families and preserves applied style and per-request NAI count', async () => {
   const { context, queued } = generationEnvironment();

@@ -63,6 +63,7 @@ for (const [name, mutate] of [
   ['preset item', (e) => { e.state.promptPresets[0].items[0].instruction = 'new instruction'; }],
   ['worldbook selection', (e) => { e.state.promptCompiler.worldBookNames = ['new worldbook']; }],
   ['composition', (e) => { e.state.compositionPolicy.fixedRatioId = '16:9'; }],
+  ['generation budget', (e) => { e.state.generationPolicy.maxImages = 1; }],
   ['manual prompt', (e) => { e.state.prompt = 'hand edited'; e.state.promptDraft.userEditedCompiled = true; }],
   ['source floor text', (e) => { e.chat[0].mes = 'edited floor'; }],
   ['source floor replacement', (e) => { e.chat[0] = { ...e.chat[0] }; }],

@@ -7671,6 +7671,12 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-storyboard-assets-page { display: flex; flex-direction: column; }
 
 /* ST2-01: one local form baseline. Shared modal/reader/notes controls keep their own sizing. */
+#story-director-modal .sd-storyboard-generation-summary {
+  color: var(--sd-muted); font-size: var(--qm-type-caption); align-self: center; text-align: left;
+}
+#story-director-modal .sd-storyboard-variants > summary {
+  padding: 6px 0; color: var(--sd-muted); font-size: var(--qm-type-caption); text-align: left; cursor: pointer;
+}
 #story-director-modal .sd-storyboard-root { --qm-control-height: 40px; --qm-control-radius: 9px; text-align: left; }
 #story-director-modal .sd-storyboard-root label { text-align: left; min-width: 0; }
 /* Scope field captions, not decorative switch tracks or centered action-chip text. */

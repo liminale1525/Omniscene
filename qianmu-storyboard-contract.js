@@ -842,6 +842,7 @@ export function buildStoryboardPlanContractRequest(context = {}, config = {}) {
     task: manualSupplement ? 'manual_supplement' : 'automatic_screening',
     target_floor: Number.isInteger(context.floor) ? context.floor : null,
     constraints: {
+      min_shots_target: manualSupplement ? 1 : Math.max(1, Math.min(maxShots, Number(config.minShots) || 1)),
       max_shots: manualSupplement ? 1 : maxShots,
       required_source_paragraph_ids: requiredParagraphIds,
       required_insert_after: requiredInsertAfter,

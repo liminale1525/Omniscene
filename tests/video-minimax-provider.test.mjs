@@ -145,7 +145,7 @@ test('the provider adapter ships as an idle feature chunk', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
   assert.doesNotMatch(source, /^import[^\n]*qianmu-video-minimax\.js/m);
-assert.match(source, /minimaxH3:\s*\{[\s\S]*import\('\.\/qianmu-video-minimax\.js\?v=1\.59\.40'\)/);
+assert.match(source, /minimaxH3:\s*\{[\s\S]*import\('\.\/qianmu-video-minimax\.js\?v=1\.59\.41'\)/);
   assert.ok(release.files.includes('qianmu-video-minimax.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('minimaxH3'\)/);

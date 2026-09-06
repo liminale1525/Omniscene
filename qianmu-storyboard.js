@@ -304,7 +304,17 @@ const connection = (id) => ({
     ...(id === 'openai' ? { compatibility: normalizeOpenAIImageCompatibility(), headers: {} } : {}),
   },
 });
-const routingDefaults = () => ({ enabled: false, mode: 'single', templateId: 'smart', frameStrategy: 'main_secondary', single: { providerId: 'novel', modelId: 'nai-diffusion-5-full', connectionPresetId: '', parameterPresetId: '' }, rules: [], maxShotsPerFloor: 3, confirmMultipleRequests: true, providerConcurrency: 1 });
+const routingDefaults = () => ({ enabled: false, mode: 'single', templateId: 'smart', frameStrategy: 'main_secondary', single: { providerId: 'novel', modelId: 'nai-diffusion-5-full', connectionPresetId: '', parameterPresetId: '' }, rules: [], confirmMultipleRequests: true });
+export function normalizeStoryboardGenerationPolicy(value, legacyRouting, legacyComposition) {
+  const r = obj(value) ? value : {};
+  const legacy = obj(legacyRouting) ? legacyRouting : null;
+  const maxImages = int(r.maxImages, 1, 4, legacy ? (legacy.enabled && legacyComposition?.groupStrategy !== 'single' ? int(legacy.maxShotsPerFloor, 1, 4, 3) : 1) : 3);
+  return { version: 1, minImages: int(r.minImages, 1, maxImages, 1), maxImages,
+    concurrency: int(r.concurrency, 1, 4, legacy ? int(legacy.providerConcurrency, 1, 4, 1) : 2) };
+}
+export function getStoryboardGenerationPolicy(state = {}) {
+  return normalizeStoryboardGenerationPolicy(state.generationPolicy, state.routing, state.compositionPolicy);
+}
 const automationDefaults = () => ({ autoCapture: true, autoGenerate: true });
 const directorBridgeDefaults = () => ({ worldSideShotsEnabled: false });
 const compositionDefaults = () => ({
@@ -329,7 +339,7 @@ export function createStoryboardDefaults() {
     target: 'latest', floor: '', inlineByDefault: true, promptMode: 'manual', prompt: '', negative: '', promptDefaults: {}, contentRating: 'sfw', paragraphMode: 'auto', manualParagraphIndex: null, pendingParagraphSelection: null, promptDraft: promptDraft(),
     promptCompiler: { enabled: true, apiProfileId: '', connectionPresetId: '', instructionPresetId: '', instruction: '', includeCurrentFloor: true, includeRecentFloors: 2, includeCharacterCards: true, includeUserPersona: true, includeActivatedWorldInfo: true, worldMode: 'selected', worldBookNames: [], worldBookView: '', worldBookInitializedNames: [], worldEntryIds: [], tagRules: compilerTagRuleDefaults(), excludedTags: 'think, thinking' },
     profiles: Object.fromEntries(ids.map((id) => [id, legacyProfile()])), modelProfiles: Object.fromEntries(ids.map((id) => [id, {}])), parameterPresets: [], parameterPresetSelection: Object.fromEntries(ids.map((id) => [id, ''])),
-    connections: Object.fromEntries(ids.map((id) => [id, connection(id)])),
+    connections: Object.fromEntries(ids.map((id) => [id, connection(id)])), generationPolicy: normalizeStoryboardGenerationPolicy(),
     promptPresets: [], editingPromptPresetId: '', editingPromptItemId: '', promptItemDraft: null,
     artistPresets: [], artistCollections: [], artistCollectionId: '', selectedArtistPresetId: '', artistSearch: '', editingArtistPresetId: '',
     artistPools: [], selectedArtistPoolId: '',
@@ -425,6 +435,7 @@ export function normalizeStoryboardConnectionProfile(value, providerId) {
 
 export function migrateStoryboardState(value) {
   const s = obj(value) ? clone(value) : {};
+  s.generationPolicy = normalizeStoryboardGenerationPolicy(s.generationPolicy, obj(value) && Object.keys(value).length ? (value.routing || {}) : undefined, value?.compositionPolicy);
   const fromVersion = Number(s.schemaVersion) || 0;
   const defaults = createStoryboardDefaults();
   if (fromVersion < 2) {
@@ -1482,7 +1493,7 @@ export function prepareStoryboardShotGroup(value = {}) {
     const signature = [shot.sceneFingerprint.id, shot.shotRole, shot.shotScale, shot.subject.toLowerCase(), shot.narrativePurpose.toLowerCase(), shot.composition.cameraSide, shot.composition.angle, shot.composition.focus, shot.composition.framing.join('|')].join('|');
     if (!manual && seen.has(signature)) { skipped.push({ shot, reason: 'duplicate_coverage' }); continue; }
     if (!manual && kept.length >= limit) { skipped.push({ shot, reason: 'coverage_budget' }); continue; }
-    if (!manual && policy.groupStrategy === 'single' && kept.length) { skipped.push({ shot, reason: 'single_frame_strategy' }); continue; }
+    // A shared frame fixes composition, never the number of narrative shots.
     const difference = kept.length ? storyboardShotDifference(kept[kept.length - 1], shot) : null;
     if (!manual && difference && !difference.acceptable) {
       skipped.push({ shot, reason: 'difference_budget', issues: difference.issues, requiresReplan: true });
@@ -1531,7 +1542,7 @@ function normalizeRouting(value) {
   const enabled = r.enabled === undefined ? r.mode === 'ensemble' : Boolean(r.enabled);
   const templateId = STORYBOARD_SHOT_GROUP_TEMPLATES[r.templateId] ? r.templateId : 'smart';
   const frameStrategy = STORYBOARD_GROUP_FRAME_STRATEGIES.includes(r.frameStrategy) ? r.frameStrategy : 'main_secondary';
-  return { enabled, mode: enabled ? 'ensemble' : 'single', templateId, frameStrategy, single: target(r.single), rules, maxShotsPerFloor: int(r.maxShotsPerFloor, 1, 4, 3), confirmMultipleRequests: r.confirmMultipleRequests !== false, providerConcurrency: int(r.providerConcurrency, 1, 4, 1) };
+  return { enabled, mode: enabled ? 'ensemble' : 'single', templateId, frameStrategy, single: target(r.single), rules, confirmMultipleRequests: r.confirmMultipleRequests !== false };
 }
 
 export function normalizeStoryboardAutomation(value) {

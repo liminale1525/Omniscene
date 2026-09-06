@@ -23,7 +23,8 @@ assert.equal(defaults.enabled, false, 'the master switch remains off until the u
 assert.deepEqual(defaults.automation, { autoCapture: true, autoGenerate: true }, 'once enabled, new installations use the unobtrusive automatic flow');
 assert.equal(defaults.promptCompiler.enabled, true);
 assert.equal(defaults.routing.templateId, 'smart');
-assert.equal(defaults.routing.maxShotsPerFloor, 3);
+assert.equal(defaults.generationPolicy.maxImages, 3);
+assert.equal(defaults.routing.maxShotsPerFloor, undefined, 'image budget is no longer owned by shot groups');
 assert.equal(defaults.collapsedCards.prompt, true, 'advanced controls start collapsed');
 
 const preservedManualMode = normalizeStoryboardState({
