@@ -732,36 +732,53 @@ async function generateComfy(request, base, fetchImpl, template) {
 }
 
 export async function generateImage(input, options = {}) {
-  const request = sanitizeImageRequest(input);
-  let comfyTemplate;
-  if (request.provider === 'comfy') {
-    try {
-      const references = input.referenceImages || input.references || [];
-      if (!Array.isArray(references) || references.length !== request.references.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
-      comfyTemplate = prepareComfyWorkflow(request.parameters.workflow, { ...request, referenceCount: request.references.length });
-    } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
-  }
-  const validatedBase = await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
-  const transportProvider = imageTransportProvider(request.provider, { protocol: request.protocol });
-  const base = normalizeProviderBase(validatedBase, transportProvider);
-  const fetchImpl = options.fetchImpl || fetch;
-  const startedAt = Date.now();
-  let result;
-  if (transportProvider === 'openai') result = await generateOpenAI(request, base, fetchImpl);
-  else if (request.provider === 'banana') result = await generateGemini(request, base, fetchImpl);
-  else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
-  else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
-  else result = await generateComfy(request, base, fetchImpl, comfyTemplate);
-  if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');
-  return {
-    ok: true,
-    provider: request.provider,
-    model: request.model,
-    images: result.images,
-    text: asString(result.text, 8000),
-    upstreamId: asString(result.upstreamId, 240),
-    durationMs: Math.max(0, Date.now() - startedAt),
+  let submissionState = 'not_submitted', acceptedWrites = 0;
+  const upstreamFetch = options.fetchImpl || fetch;
+  const fetchImpl = async (url, init = {}) => {
+    const writes = !['GET', 'HEAD', 'OPTIONS'].includes(String(init.method || 'GET').toUpperCase());
+    if (writes) submissionState = 'unknown';
+    const response = await upstreamFetch(url, init);
+    if (writes) {
+      if (response.ok) { acceptedWrites++; submissionState = 'accepted'; }
+      else submissionState = [400, 401, 402, 403, 404, 413, 422, 429].includes(response.status)
+        ? (acceptedWrites ? 'accepted' : 'rejected') : 'unknown';
+    }
+    return response;
   };
+  try {
+    const request = sanitizeImageRequest(input);
+    let comfyTemplate;
+    if (request.provider === 'comfy') {
+      try {
+        const references = input.referenceImages || input.references || [];
+        if (!Array.isArray(references) || references.length !== request.references.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
+        comfyTemplate = prepareComfyWorkflow(request.parameters.workflow, { ...request, referenceCount: request.references.length });
+      } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
+    }
+    const validatedBase = await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
+    const transportProvider = imageTransportProvider(request.provider, { protocol: request.protocol });
+    const base = normalizeProviderBase(validatedBase, transportProvider);
+    const startedAt = Date.now();
+    let result;
+    if (transportProvider === 'openai') result = await generateOpenAI(request, base, fetchImpl);
+    else if (request.provider === 'banana') result = await generateGemini(request, base, fetchImpl);
+    else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
+    else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
+    else result = await generateComfy(request, base, fetchImpl, comfyTemplate);
+    if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');
+    return {
+      ok: true,
+      provider: request.provider,
+      model: request.model,
+      images: result.images,
+      text: asString(result.text, 8000),
+      upstreamId: asString(result.upstreamId, 240),
+      durationMs: Math.max(0, Date.now() - startedAt),
+    };
+  } catch (error) {
+    if (error && typeof error === 'object') error.submissionState = submissionState;
+    throw error;
+  }
 }
 
 export async function checkImageConnection(input, options = {}) {
@@ -874,6 +891,7 @@ export function imageGatewayErrorPayload(error) {
       message: redactText(source.message),
       retryable: Boolean(source.retryable),
       upstreamStatus: source.upstreamStatus || undefined,
+      ...(['not_submitted', 'rejected', 'unknown', 'accepted'].includes(error?.submissionState) ? { submissionState: error.submissionState } : {}),
     },
   };
 }

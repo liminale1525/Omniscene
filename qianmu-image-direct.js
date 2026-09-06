@@ -90,13 +90,14 @@ function directParameters(input) {
 }
 
 export class DirectImageError extends Error {
-  constructor(message, { status = 0, code = 'direct_error', retryable = false, retryAfterMs = 0 } = {}) {
+  constructor(message, { status = 0, code = 'direct_error', retryable = false, retryAfterMs = 0, submissionState = '' } = {}) {
     super(message);
     this.name = 'DirectImageError';
     this.status = status;
     this.code = code;
     this.retryable = retryable;
     this.retryAfterMs = Math.max(0, Number(retryAfterMs) || 0);
+    if (submissionState) this.submissionState = submissionState;
   }
 }
 
@@ -145,7 +146,7 @@ async function directFetch(url, options, fetchImpl) {
   try {
     return await fetchImpl(url, options);
   } catch (error) {
-    if (error?.name === 'AbortError') throw error;
+    if (error?.name === 'AbortError' || error instanceof DirectImageError || error?.code === 'storyboard_submission_cancelled') throw error;
     throw new DirectImageError(`浏览器直连失败：${error?.message || error}`, { code: 'direct_transport', retryable: true });
   }
 }
@@ -613,7 +614,30 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
   return directResult(images, promptResponse, started, { upstreamId: promptId });
 }
 
-export async function generateDirectImage(input = {}, { fetchImpl = globalThis.fetch, unzipImpl, waitImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
+async function probeDirectGenerationTransport(input, fetchImpl, timeoutMs) {
+  const controller = new AbortController();
+  const cancel = () => controller.abort(input.signal?.reason);
+  input.signal?.addEventListener('abort', cancel, { once: true });
+  if (input.signal?.aborted) cancel();
+  const timer = setTimeout(() => controller.abort(), Math.max(100, Math.min(6000, timeoutMs || 6000)));
+  try {
+    await checkDirectImageConnection({ ...input, signal: controller.signal }, { fetchImpl: async (url, options) => {
+      // Only reachability matters here: an unavailable model/subscription listing does not
+      // prove that generation is unauthorized. Do not read an arbitrary probe response body.
+      const response = await fetchImpl(url, options);
+      try { await response.body?.cancel(); } catch (_) {}
+      return { ok: true, status: response.status, json: async () => ({}) };
+    } });
+  } catch (error) {
+    if (input.signal?.aborted) throw Object.assign(new Error('生图已取消，尚未提交'), { name: 'AbortError', submissionState: 'not_submitted' });
+    if (!isDirectImageTransportError(error) && error?.name !== 'AbortError') throw error;
+    throw new DirectImageError('浏览器连接探测未通过，尚未提交生图', { code: 'direct_transport', submissionState: 'not_submitted' });
+  } finally {
+    clearTimeout(timer); input.signal?.removeEventListener('abort', cancel);
+  }
+}
+
+export async function generateDirectImage(input = {}, { fetchImpl = globalThis.fetch, unzipImpl, probeTransport = false, probeTimeoutMs = 6000, beforeSubmit, waitImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('当前渠道尚未接入浏览器直连生图', { code: 'direct_unsupported' });
   const transportProvider = imageTransportProvider(provider, validateDirectProtocol(provider, input));
@@ -623,13 +647,46 @@ export async function generateDirectImage(input = {}, { fetchImpl = globalThis.f
   if (provider !== 'comfy' && !apiKey) throw new DirectImageError('请先填写 API Key', { code: 'missing_api_key' });
   if (!prompt) throw new DirectImageError('提示词不能为空', { code: 'empty_prompt' });
   if (provider !== 'comfy' && !model) throw new DirectImageError('请选择生图模型', { code: 'missing_model' });
-  if (transportProvider === 'openai') return generateOpenAIDirect(input, fetchImpl);
-  if (provider === 'banana') return generateBananaDirect(input, fetchImpl);
-  if (provider === 'seedream') return generateSeedreamDirect(input, fetchImpl);
-  if (provider === 'comfy') return generateComfyDirect(input, fetchImpl, waitImpl);
-  const novelCaps = novelModelCapabilities(input.model, input.capabilityModelId);
-  if (!novelCaps.ok) throw new DirectImageError(novelCaps.message, { code: novelCaps.code });
-  const referenceIssue = novelReferenceIssue(novelCaps, input.referenceImages || input.references || [], input.vibes || [], plainObject(input.parameters?.providerOptions));
-  if (referenceIssue) throw new DirectImageError(referenceIssue.message, { code: referenceIssue.code });
-  return generateNovelDirect(input, fetchImpl, unzipImpl, waitImpl);
+  if (provider === 'novel') {
+    const novelCaps = novelModelCapabilities(input.model, input.capabilityModelId);
+    if (!novelCaps.ok) throw new DirectImageError(novelCaps.message, { code: novelCaps.code });
+    const referenceIssue = novelReferenceIssue(novelCaps, input.referenceImages || input.references || [], input.vibes || [], plainObject(input.parameters?.providerOptions));
+    if (referenceIssue) throw new DirectImageError(referenceIssue.message, { code: referenceIssue.code });
+  }
+  let probed = false, submissionState = 'not_submitted', acceptedWrites = 0;
+  const guardedFetch = async (url, options = {}) => {
+    const writes = !['GET', 'HEAD', 'OPTIONS'].includes(String(options.method || 'GET').toUpperCase());
+    if (writes) {
+      if (probeTransport && !probed) { await probeDirectGenerationTransport(input, fetchImpl, probeTimeoutMs); probed = true; }
+      try { await beforeSubmit?.(); }
+      catch (error) {
+        if (error?.code === 'storyboard_submission_cancelled') error.submissionState = submissionState;
+        throw error;
+      }
+      if (input.signal?.aborted) throw Object.assign(new Error('生图已取消'), { name: 'AbortError', submissionState });
+      // A rejected fetch does not establish whether the upstream accepted this write.
+      submissionState = 'unknown';
+    }
+    const response = await fetchImpl(url, options);
+    if (writes) {
+      if (response.ok) { acceptedWrites++; submissionState = 'accepted'; }
+      else submissionState = [400, 401, 402, 403, 404, 413, 422, 429].includes(response.status)
+        ? (acceptedWrites ? 'accepted' : 'rejected') : 'unknown';
+    }
+    return response;
+  };
+  try {
+    if (transportProvider === 'openai') return await generateOpenAIDirect(input, guardedFetch);
+    if (provider === 'banana') return await generateBananaDirect(input, guardedFetch);
+    if (provider === 'seedream') return await generateSeedreamDirect(input, guardedFetch);
+    if (provider === 'comfy') return await generateComfyDirect(input, guardedFetch, waitImpl);
+    return await generateNovelDirect(input, guardedFetch, unzipImpl, waitImpl);
+  } catch (error) {
+    if (error?.submissionState === 'not_submitted') throw error;
+    if (submissionState !== 'not_submitted' && (isDirectImageTransportError(error) || error?.name === 'AbortError')) {
+      throw new DirectImageError('生图结果未确认，请先核对渠道记录，勿重复生成', { code: 'image_submission_unknown', submissionState: 'unknown' });
+    }
+    if (submissionState !== 'not_submitted' && error && typeof error === 'object') error.submissionState ||= submissionState;
+    throw error;
+  }
 }

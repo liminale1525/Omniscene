@@ -202,14 +202,14 @@ function runHarness(options = {}) {
     storyboardGatewayRequest: load('storyboardGatewayRequest'), getStoryboardModel,
     storyboardConfirmGatewayModelBinding: confirmBinding,
     directImageRuntime: async () => ({
-      generateDirectImage: async () => { stats.direct++; if (options.directSuccess) return { ok: true, images: [] }; throw new Error('simulated network failure'); },
+      generateDirectImage: async () => { stats.direct++; if (options.directSuccess) return { ok: true, images: [] }; throw Object.assign(new Error('simulated read-only probe failure'), { submissionState: options.submissionUnknown ? 'unknown' : 'not_submitted' }); },
       isDirectImageTransportError: () => !options.directRejected,
     }),
     storyboardRequestHeaders: () => ({ 'Content-Type': 'application/json' }),
     fetch: async (_url, init) => { stats.fetches++; stats.gatewayRequests.push(JSON.parse(init.body)); throw new Error('simulated gateway network failure'); },
     storyboardPipelineForLog: () => null,
     storyboardFinishLog: (_log, status, detail) => stats.failures.push({ status, detail }),
-    toast: (message) => stats.warnings.push(message), console: { error: () => {} },
+    toast: (message) => stats.warnings.push(message), console: { error: () => {} }, saveSettings: () => {},
   });
   return { stats, run, confirmBinding };
 }
@@ -265,7 +265,7 @@ test('NAI alias fallback performs one read-only handshake and submits its exact 
 });
 
 test('direct success and upstream rejection do not probe the optional gateway or generate twice', async () => {
-  for (const options of [{ directSuccess: true }, { directRejected: true }]) {
+  for (const options of [{ directSuccess: true }, { directRejected: true }, { submissionUnknown: true }]) {
     const { stats, run } = runHarness(options);
     await run(makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } }), {});
     assert.equal(stats.probes, 0);

@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.41';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.41';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.41';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.42';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.42';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.42';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.41';
+} from './qianmu-llm-output.js?v=1.59.42';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -170,147 +170,147 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.41';
+} from './qianmu-storyboard.js?v=1.59.42';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.41';
+const VERSION = '1.59.42';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.41'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.42'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.41'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.42'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.41').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.42').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.41'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.42'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.41'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.42'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.41'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.42'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.41'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.42'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.41'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.42'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.41'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.42'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.41'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.42'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.41'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.42'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.41'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.42'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.41'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.42'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.41'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.42'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.41'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.42'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.41'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.42'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.41'),
+    load: () => import('./qianmu-video-task.js?v=1.59.42'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.41'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.42'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.41'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.42'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.41'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.42'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.41'),
+    load: () => import('./qianmu-video-store.js?v=1.59.42'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.41'),
+    load: () => import('./qianmu-video-result.js?v=1.59.42'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.41'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.42'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.41'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.42'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.41'),
+    load: () => import('./qianmu-video-media.js?v=1.59.42'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.41'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.42'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.41'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.42'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.41'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.42'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.41'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.42'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.41'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.42'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.41'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.42'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.41'),
-        import('./qianmu-theaters.js?v=1.59.41'),
+        import('./builtin-theaters.js?v=1.59.42'),
+        import('./qianmu-theaters.js?v=1.59.42'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -16289,6 +16289,7 @@ function storyboardFinishLog(log, status, details = {}) {
   log.finishedAt = Date.now();
   log.durationMs = Math.max(0, log.finishedAt - Number(log.startedAt || log.queuedAt || log.finishedAt));
   if (details.error) log.error = String(details.error).slice(0, 1600);
+  if (['not_submitted', 'rejected', 'unknown', 'accepted'].includes(details.submissionState)) log.submissionState = details.submissionState;
   if (details.recordId) log.recordId = String(details.recordId);
   if (Array.isArray(details.recordIds)) log.recordIds = details.recordIds.map(String).slice(0, 8);
   if (Object.hasOwn(details, 'floor')) log.floor = Number.isInteger(details.floor) ? details.floor : null;
@@ -18116,9 +18117,14 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
   } finally { inputGuard.dispose(); }
 }
 
-function storyboardRetryLog(log) {
+async function storyboardRetryLog(log) {
+  const state = storyboardState(), chatKey = getChatKey(), snapshot = JSON.stringify(log?.snapshot);
   const job = storyboardJobFromLog(log);
   if (!job) return toast('旧记录缺少完整模型或连接快照，请载入镜头台确认。', 'warning');
+  if (['failed', 'cancelled'].includes(log.status) && ['unknown', 'accepted'].includes(log.submissionState)) {
+    if (!await confirmDialog('确认重新生图', '原请求可能已受理或扣费。请先核对渠道记录；继续会发起一次新的生图请求。')) return false;
+    if (storyboardState() !== state || getChatKey() !== chatKey || JSON.stringify(log.snapshot) !== snapshot || !state.logs.some(item => item.id === log.id)) return false;
+  }
   const previous = storyboardGalleryRecords().find((item) => item.id === log.recordId || log.recordIds?.includes(item.id));
   if (previous) {
     job.variantRootId = storyboardGalleryGroupId(previous);
@@ -18327,6 +18333,17 @@ function storyboardCreateRecord(job, log, url, index, anchorState, response) {
 
 async function storyboardRunJob(job, log) {
   const plan = storyboardPlanForJob(job);
+  const beforeSubmit = () => {
+    const state = storyboardState(), anchor = storyboardValidatedAnchor(job);
+    if (job.discardRequested || !state.enabled || (job.automatic && (state.automation?.autoCapture === false || state.automation?.autoGenerate === false))) {
+      throw Object.assign(new Error('已停止后续生图提交'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
+    }
+    if (job.target !== 'gallery' && job.messageRef?.messageKey && !anchor.valid && anchor.linkState !== 'foreign') {
+      throw Object.assign(new Error('原正文已变化，未继续提交'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
+    }
+    job.submissionState = 'unknown';
+    if (log) { log.submissionState = 'unknown'; saveSettings(); }
+  };
   try {
     if (!storyboardState().enabled) {
       storyboardFinishLog(log, 'cancelled', { error: '分镜总开关已关闭' });
@@ -18354,9 +18371,9 @@ async function storyboardRunJob(job, log) {
     const directImage = await directImageRuntime();
     let data = null;
     let transport = 'browser_direct';
-    try { data = await directImage.generateDirectImage(gatewayRequest); }
+    try { data = await directImage.generateDirectImage(gatewayRequest, { probeTransport: true, beforeSubmit }); }
     catch (error) {
-      if (!directImage.isDirectImageTransportError(error) && error?.code !== 'direct_unsupported') {
+      if (!(directImage.isDirectImageTransportError(error) && error?.submissionState === 'not_submitted') && error?.code !== 'direct_unsupported') {
         storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, error?.message || String(error));
         throw error;
       }
@@ -18370,6 +18387,7 @@ async function storyboardRunJob(job, log) {
         return;
       }
       if (bindingVersion) gatewayRequest.modelBindingVersion = bindingVersion;
+      beforeSubmit();
       const response = await fetch('/api/plugins/qianmu-tts/image/generate', {
         method: 'POST', headers: storyboardRequestHeaders(), body: JSON.stringify(gatewayRequest),
       });
@@ -18381,9 +18399,13 @@ async function storyboardRunJob(job, log) {
         storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, message);
         const error = new Error(message);
         error.retryable = Boolean(data.retryable);
+        // Older gateways cannot prove whether an earlier variant was accepted.
+        error.submissionState = ['not_submitted', 'rejected', 'unknown', 'accepted'].includes(data.submissionState) ? data.submissionState : 'unknown';
         throw error;
       }
     }
+    job.submissionState = 'accepted';
+    if (log) log.submissionState = 'accepted';
     storyboardPipelineStage(log, 'provider_request', 'success', {}, {
       transport,
       response: data,
@@ -18433,17 +18455,20 @@ async function storyboardRunJob(job, log) {
     else if (!job.automatic) toast(records[0].inline ? `${records.length} 张分镜已穿插至第 ${anchorState.floor} 层。` : `${records.length} 张分镜已存入阅片室。`, 'success');
   } catch (error) {
     console.error(`[${MODULE_NAME}] storyboard generation failed`, error);
-    if (job.discardRequested) {
-      storyboardFinishLog(log, 'cancelled', { error: '用户放弃收片' });
-      storyboardSetPlanStatus(plan, 'cancelled', { error: '用户放弃收片', job });
+    const submissionState = error?.submissionState || job.submissionState || 'not_submitted';
+    if (job.discardRequested || error?.code === 'storyboard_submission_cancelled') {
+      const message = job.discardRequested ? '用户放弃收片' : error.message;
+      storyboardFinishLog(log, 'cancelled', { error: message, submissionState });
+      storyboardSetPlanStatus(plan, 'cancelled', { error: message, job });
     }
     else {
       const pipeline = storyboardPipelineForLog(log);
       const runningStage = [...(pipeline?.stages || [])].reverse().find((item) => item.status === 'running');
       if (runningStage) storyboardPipelineStage(log, runningStage.type, 'failed', {}, {}, error?.message || error);
-      storyboardFinishLog(log, 'failed', { error: error?.message || error });
-      storyboardSetPlanStatus(plan, 'failed', { error: error?.message || error, job });
-      toast(`分镜生成失败：${error?.message || error}`, 'error');
+      const message = `${error?.message || error}${submissionState === 'unknown' && !String(error?.message).includes('结果未确认') ? '；结果未确认，请核对渠道记录，勿重复生成' : ''}`;
+      storyboardFinishLog(log, 'failed', { error: message, submissionState });
+      storyboardSetPlanStatus(plan, 'failed', { error: message, job });
+      toast(`分镜生成失败：${message}`, 'error');
     }
   }
 }
@@ -32881,7 +32906,8 @@ async function storyboardHandleAutomaticCapture() {
   const message = floor >= 0 ? ctx().chat?.[floor] : null;
   if (!message || message.is_user || message.is_system) return false;
   const existing = storyboardPlanForMessage(state, floor, message);
-  if (existing && !['idle', 'failed', 'cancelled'].includes(existing.status)) return false;
+  // A repeated host event is not authorization to retry a failed/uncertain paid request.
+  if (existing && (existing.status !== 'idle' || existing.origin !== 'automatic' || existing.promptLocked || existing.manualReviewRequired)) return false;
   if (storyboardCompilerBusy) {
     setTimeout(() => void storyboardHandleAutomaticCapture(), 900);
     return false;
