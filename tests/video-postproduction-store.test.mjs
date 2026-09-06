@@ -74,7 +74,7 @@ test('the additive store is separately auditable, chat-cleanable and lazy', asyn
   const persistence = storage.slice(storage.indexOf('function normalizeStoredVideoPostproduction'), storage.indexOf('export const VIDEO_MEDIA_MAX_BYTES'));
   assert.match(persistence, /schema: 'qianmu\.video-postproduction\.v1'/);
   assert.doesNotMatch(persistence, /apiKey|authorization|remoteUrl|base64|Blob/);
-assert.match(source, /videoPostproductionStore:\s*\{[\s\S]*import\('\.\/qianmu-video-postproduction-store\.js\?v=1\.59\.59'\)/);
+assert.match(source, /videoPostproductionStore:\s*\{[\s\S]*import\('\.\/qianmu-video-postproduction-store\.js\?v=1\.59\.60'\)/);
   assert.match(source, /video_postproduction: \['不可恢复 · 影片字幕与声轨决策', true\]/);
   assert.match(source, /STORAGE_CHAT_CLEARABLE[^\n]*video_postproduction/);
   assert.ok(release.files.includes('qianmu-video-postproduction-store.js'));

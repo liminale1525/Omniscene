@@ -269,7 +269,7 @@ test('the prompt contract stays lazy and is included in the release whitelist', 
     readFile(new URL('../index.js', import.meta.url), 'utf8'),
     readFile(new URL('../release-files.json', import.meta.url), 'utf8'),
   ]);
-assert.match(indexSource, /videoPrompt:\s*\{[\s\S]*import\('\.\/qianmu-video-prompt\.js\?v=1\.59\.59'\)/);
+assert.match(indexSource, /videoPrompt:\s*\{[\s\S]*import\('\.\/qianmu-video-prompt\.js\?v=1\.59\.60'\)/);
   assert.equal(JSON.parse(releaseSource).files.includes('qianmu-video-prompt.js'), true);
   assert.doesNotMatch(indexSource.slice(0, indexSource.indexOf('const featureRuntime')), /qianmu-video-prompt/);
 });

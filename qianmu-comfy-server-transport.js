@@ -52,7 +52,9 @@ function allowedOperation(base, url, method, operation) {
   if (operation === 'check') return method === 'GET' && route === 'system_stats' && !url.search;
   if (operation === 'models') return method === 'GET' && route === 'object_info' && !url.search;
   if (operation === 'readiness') return method === 'GET' && route.startsWith('object_info/') && oneSegment(route.slice(12)) && !url.search;
-  if (operation !== 'generate') return false;
+  if (operation === 'recover' && method === 'GET' && route === 'queue' && !url.search) return true;
+  if (!['generate', 'recover'].includes(operation)) return false;
+  if (operation === 'recover' && method !== 'GET') return false;
   if (method === 'POST') return ['prompt', 'upload/image'].includes(route) && !url.search;
   if (method !== 'GET') return false;
   if (route.startsWith('history/')) return oneSegment(route.slice(8)) && !url.search;

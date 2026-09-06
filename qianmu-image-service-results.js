@@ -61,12 +61,14 @@ async function sync(directory) {
   if (process.platform === 'win32') return;
   const handle = await fs.open(directory, 'r'); try { await handle.sync(); } finally { await handle.close(); }
 }
-export function createImageServiceResults({ dataRoot, store, maxSlots = 128, maxBytes = 512 * 1024 * 1024 } = {}) {
+export function createImageServiceResults({ dataRoot, store, maxSlots = 128, maxBytes = 512 * 1024 * 1024, scope = 'novel' } = {}) {
   if (!store?.exclusive || typeof dataRoot !== 'string' || !path.isAbsolute(dataRoot) || dataRoot.includes('\0') || path.resolve(dataRoot) === path.parse(path.resolve(dataRoot)).root) throw fail('storage', '缺少可信的生图结果存储');
+  if (!['novel', 'comfy'].includes(scope)) throw fail('scope', '生图结果范围无效');
+  const resultDirectory = scope === 'comfy' ? 'comfy-results-v1' : 'image-results-v1';
   const slotLimit = Math.max(1, Math.min(128, Math.trunc(Number(maxSlots) || 128)));
   const byteLimit = Math.max(MAX_IMAGE_BYTES, Math.min(512 * 1024 * 1024, Math.trunc(Number(maxBytes) || 512 * 1024 * 1024)));
   async function locate(create = false) {
-    const root = await fs.realpath(dataRoot), parent = path.join(root, '.qianmu-service'), results = path.join(parent, 'image-results-v1');
+    const root = await fs.realpath(dataRoot), parent = path.join(root, '.qianmu-service'), results = path.join(parent, resultDirectory);
     for (const target of [parent, results]) {
       if (create) { try { await fs.mkdir(target, { mode: 0o700 }); } catch (cause) { if (cause?.code !== 'EEXIST') throw cause; } }
       try { await checkedDirectory(target); } catch (cause) { if (!create && missing(cause)) return null; throw cause; }

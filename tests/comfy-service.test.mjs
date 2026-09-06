@@ -53,7 +53,7 @@ test('same instance serializes different accounts and Keys and saves only bounde
   const pending = await service.query(req(), lookup()); assert.equal(pending.task.upstreamId, 'id-1'); assert.equal(pending.task.status, 'submitting');
   assert.equal((await service.query(req('bob'), lookup('first', undefined, 'bob'))).task, null);
   finish.resolve(); await Promise.all([first, second]); assert.deepEqual(calls, ['test-key', '']);
-  const disk = path.join(f.dir, '.qianmu-service'); assert.deepEqual(await fs.readdir(disk), ['comfy-queue-v1']);
+  const disk = path.join(f.dir, '.qianmu-service'); assert.deepEqual((await fs.readdir(disk)).sort(), ['comfy-queue-v1', 'comfy-results-v1']);
   const records = await fs.readdir(path.join(disk, 'comfy-queue-v1'));
   const contents = await fs.readFile(path.join(disk, 'comfy-queue-v1', records[0]), 'utf8');
   assert.ok(contents.includes('id-1')); assert.ok(!contents.includes('test-key') && !contents.includes('private-test-prompt') && !contents.includes('workflow'));
@@ -143,7 +143,7 @@ test('store scopes are a closed host choice and never move existing NAI records'
   const novel = createImageServiceStore({ dataRoot: f.dir }); t.after(() => novel.close());
   const key = imageServiceChannelKey('nai-key'); await novel.transaction(key, state => ({ state: normalizeImageServiceChannel(state, key), result: null }));
   await f.service().submit(req(), input());
-  assert.deepEqual((await fs.readdir(path.join(f.dir, '.qianmu-service'))).sort(), ['comfy-queue-v1', 'image-queue-v1']);
+  assert.deepEqual((await fs.readdir(path.join(f.dir, '.qianmu-service'))).sort(), ['comfy-queue-v1', 'comfy-results-v1', 'image-queue-v1']);
 });
 
 test('lazy browser binding uses the original attempt and the actual ST account, never a fresh retry id', async () => {

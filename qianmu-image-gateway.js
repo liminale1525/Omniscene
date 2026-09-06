@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { collectComfyStillResults, comfyTaskId, comfyStillMime } from './qianmu-comfy-results.js';
+import { normalizeComfyReceipt } from './qianmu-comfy-receipt.js';
 import { auditComfyWorkflow, requireComfyExecution, normalizeComfyExecution, COMFY_EXECUTION_VERSION } from './qianmu-comfy-audit.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
 import { IMAGE_PROTOCOL_BINDING_VERSION, IMAGE_COMPATIBLE_PROTOCOLS } from './qianmu-image-models.js';
@@ -69,7 +70,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
     comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
     comfyServerTransport: { version: 2, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: true },
-    comfyQueue: { version: 1, scope: 'st-api-root', durableAcceptance: true, originalTaskLookup: true, resultRetrieval: false },
+    comfyQueue: { version: 1, scope: 'st-api-root', durableAcceptance: true, originalTaskLookup: true, resultRetrieval: true, outputReceiptVersion: 1, cachedResults: true },
   };
 }
 
@@ -698,6 +699,62 @@ function requestWithinDeadline(request, deadline) {
   return { ...request, parameters: { ...request.parameters, timeoutMs: Math.max(1, Math.min(request.parameters.timeoutMs, remaining)) } };
 }
 
+async function readComfyImages(descriptors, request, base, fetchImpl, deadline) {
+  const images = []; let imageBytes = 0;
+  for (const descriptor of descriptors) {
+    const url = endpoint(base, 'view');
+    url.searchParams.set('filename', descriptor.filename);
+    if (descriptor.subfolder) url.searchParams.set('subfolder', descriptor.subfolder);
+    url.searchParams.set('type', 'output');
+    const response = await fetchUpstream(url, { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, requestWithinDeadline(request, deadline), fetchImpl);
+    const buffer = await readLimited(response, MAX_UPSTREAM_BYTES - imageBytes), mime = comfyStillMime(buffer);
+    imageBytes += buffer.length;
+    images.push({ id: descriptor.filename, data: buffer.toString('base64'), mime });
+  }
+  return normalizeImageData(images);
+}
+
+// A single user-triggered recovery operation, not a second generator. Ownership
+// and the receipt come from the ST coordinator, never a client-selected task id.
+export async function recoverComfyImage(connection, upstreamId, rawReceipt, options = {}) {
+  const promptId = comfyTaskId(upstreamId), receipt = normalizeComfyReceipt(rawReceipt);
+  if (!promptId || typeof options.prepareComfyTransport !== 'function') throw new ImageGatewayError(400, 'comfy_recovery_contract', '缺少原任务及可信收片通道');
+  if (connection?.apiKey != null && (typeof connection.apiKey !== 'string' || connection.apiKey.length > 2048)) throw new ImageGatewayError(400, 'comfy_recovery_key', 'Comfy 访问令牌无效');
+  const request = { baseUrl: connection.baseUrl, allowPrivateNetwork: connection.allowPrivateNetwork === true,
+    apiKey: String(connection.apiKey || '').trim(), parameters: { timeoutMs: clampNumber(options.timeoutMs, 1000, 60000, 30000) } };
+  const startedAt = Date.now(), deadline = startedAt + request.parameters.timeoutMs;
+  try {
+    const transport = await options.prepareComfyTransport(request, 'recover');
+    const { base, fetchImpl } = transport;
+    const readJson = async route => {
+      const response = await fetchUpstream(endpoint(base, route), { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, requestWithinDeadline(request, deadline), fetchImpl);
+      return parseUpstreamJson(await readLimited(response, 4 * 1024 * 1024));
+    };
+    const workflow = Object.fromEntries(receipt.previewNodeIds.map(id => [id, { class_type: 'PreviewImage' }]));
+    const history = async () => collectComfyStillResults(await readJson(`history/${encodeURIComponent(promptId)}`), promptId, { workflow, execution: receipt.execution });
+    let descriptors = await history();
+    if (!descriptors) {
+      const queue = await readJson('queue');
+      if (!Array.isArray(queue.queue_running) || !Array.isArray(queue.queue_pending)
+        || queue.queue_running.length + queue.queue_pending.length > 4096) throw new ImageGatewayError(502, 'comfy_recovery_queue', 'Comfy 原任务排队状态无法确认');
+      const contains = list => list.some(row => Array.isArray(row) && row[1] === promptId);
+      const status = contains(queue.queue_running) ? 'running' : contains(queue.queue_pending) ? 'queued' : '';
+      if (status) { await transport.verify(); return { ok: true, status, upstreamId: promptId, message: status === 'running' ? '原任务仍在生成，请稍后领取' : '原任务仍在排队，请稍后领取' }; }
+      // The original may have finished between history and queue reads. Recheck
+      // once; absence is not proof of cancellation, refund or safe replay.
+      descriptors = await history();
+      if (!descriptors) { await transport.verify(); return { ok: true, status: 'unavailable', upstreamId: promptId, message: '暂未找到原任务；历史可能已清理，请到 Comfy 核查，勿重复生成' }; }
+    }
+    const images = await readComfyImages(descriptors, request, base, fetchImpl, deadline);
+    await transport.verify();
+    return { ok: true, status: 'ready', provider: 'comfy', model: receipt.model, images, text: '', upstreamId: promptId,
+      durationMs: 0, recoveryDurationMs: Date.now() - startedAt };
+  } catch (cause) {
+    const error = cause instanceof ImageGatewayError ? cause : new ImageGatewayError(502, cause?.code || 'comfy_recovery_failed', redactText(cause?.message || 'Comfy 原图暂未取回'));
+    error.upstreamId = promptId; error.submissionState = 'accepted'; throw error;
+  }
+}
+
 async function generateComfy(request, base, fetchImpl, template, execution, onComfyAccepted) {
   const deadline = Date.now() + request.parameters.timeoutMs;
   const comfyClientId = randomUUID();
@@ -708,6 +765,8 @@ async function generateComfy(request, base, fetchImpl, template, execution, onCo
   let workflow;
   try { workflow = template.bind(referenceNames); }
   catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
+  const receipt = onComfyAccepted ? normalizeComfyReceipt({ version: 1, model: request.model, execution,
+    previewNodeIds: Object.entries(workflow).filter(([, node]) => node.class_type === 'PreviewImage').map(([id]) => id) }) : undefined;
   const promptResponse = await fetchUpstream(endpoint(base, 'prompt'), {
     method: 'POST', headers: { 'Content-Type': 'application/json', ...(request.apiKey ? authHeaders(request) : {}) }, body: JSON.stringify({ prompt: workflow, client_id: comfyClientId }),
   }, requestWithinDeadline(request, deadline), fetchImpl);
@@ -717,7 +776,7 @@ async function generateComfy(request, base, fetchImpl, template, execution, onCo
   try {
     // Persist the original id before any polling. A failed receipt write does
     // not revoke acceptance and must never trigger another POST /prompt.
-    await onComfyAccepted?.(promptId);
+    await onComfyAccepted?.(promptId, receipt);
     let descriptors;
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, request.parameters.pollIntervalMs));
@@ -728,21 +787,8 @@ async function generateComfy(request, base, fetchImpl, template, execution, onCo
       if (descriptors) break;
     }
     if (!descriptors) throw new ImageGatewayError(504, 'comfy_timeout', 'ComfyUI 工作流等待超时；任务可能仍在服务端运行，请核查原任务');
-    const images = [];
-    let imageBytes = 0;
-    for (const descriptor of descriptors) {
-      const filename = descriptor.filename;
-      const url = endpoint(base, 'view');
-      url.searchParams.set('filename', filename);
-      if (descriptor.subfolder) url.searchParams.set('subfolder', asString(descriptor.subfolder, 500));
-      if (descriptor.type) url.searchParams.set('type', asString(descriptor.type, 80));
-      const response = await fetchUpstream(url, { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, requestWithinDeadline(request, deadline), fetchImpl);
-      const buffer = await readLimited(response, MAX_UPSTREAM_BYTES - imageBytes);
-      const mime = comfyStillMime(buffer);
-      imageBytes += buffer.length;
-      images.push({ id: filename, data: buffer.toString('base64'), mime });
-    }
-    return { images: normalizeImageData(images), text: '', upstreamId: promptId };
+    const images = await readComfyImages(descriptors, request, base, fetchImpl, deadline);
+    return { images, text: '', upstreamId: promptId };
   } catch (cause) {
     const error = cause instanceof ImageGatewayError ? cause : new ImageGatewayError(502, cause?.code || 'comfy_result_failed', redactText(cause?.message || 'ComfyUI 收片失败'));
     error.upstreamId = promptId;

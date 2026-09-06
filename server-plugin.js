@@ -187,7 +187,7 @@ export async function init(router, options = {}) {
     if (!comfyTasks) {
       comfyTasks = createComfyService({ dataRoot: hostDataRoot(), ...(options.comfyTaskOptions || {}),
         authorizeTarget: (request, input) => targetsFor(request).acquire(request, input),
-        prepareTransport: (request, input, operation) => createComfyServerTransport(request, input, { ...comfyTransportOptions(), operation }),
+        prepareTransport: (request, input, operation, { signal } = {}) => createComfyServerTransport(request, input, { ...comfyTransportOptions(), operation, signal }),
       });
       imageTaskServices.add(comfyTasks);
     }
@@ -197,6 +197,18 @@ export async function init(router, options = {}) {
     prepareImageResponse(res);
     try { return res.json(await comfyTasksFor(req).query(req, req.body)); }
     catch (error) { const result = imageGatewayErrorPayload(error); return res.status(result.status).json(result.body); }
+  });
+  for (const action of ['result', 'acknowledge']) router.post(`/image/comfy/tasks/${action}`, async (req, res) => {
+    prepareImageResponse(res);
+    const controller = new AbortController(), onClose = () => { if (!res.writableEnded) controller.abort(); };
+    res.once?.('close', onClose);
+    try {
+      const result = await comfyTasksFor(req)[action](req, req.body, { signal: controller.signal });
+      if (!res.destroyed && !res.writableEnded) return res.json(result);
+    } catch (error) {
+      const result = imageGatewayErrorPayload(error);
+      if (!res.destroyed && !res.writableEnded) return res.status(result.status).json(result.body);
+    } finally { res.off?.('close', onClose); }
   });
   router.get('/image/comfy/targets', async (req, res) => {
     prepareImageResponse(res);

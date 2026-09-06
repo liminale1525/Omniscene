@@ -1,12 +1,13 @@
 // Server-only queue contract. A durable, atomic transaction port is mandatory:
 // never substitute an in-memory ledger when persistence is unavailable.
 import { createHash, randomUUID } from 'node:crypto';
+import { normalizeComfyReceipt } from './qianmu-comfy-receipt.js';
 
 export const IMAGE_SERVICE_QUEUE_VERSION = 1;
 const SCHEMA = 'qianmu.image-service-channel.v1';
-const STATES = new Set(['reserved', 'submitting', 'uncertain', 'acknowledged', 'succeeded', 'rejected', 'released']);
+const STATES = new Set(['reserved', 'submitting', 'uncertain', 'acknowledged', 'succeeded', 'failed', 'rejected', 'released']);
 const PENDING = new Set(['reserved', 'submitting']);
-const TERMINAL = new Set(['acknowledged', 'succeeded', 'rejected', 'released']);
+const TERMINAL = new Set(['acknowledged', 'succeeded', 'failed', 'rejected', 'released']);
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fail = (code, message, extra = {}) => Object.assign(new Error(message), {
   name: 'ImageServiceQueueError', code: `image_service_${code}`, status: 409,
@@ -73,6 +74,10 @@ export function normalizeImageServiceChannel(value, channelKey, maxEntries = 409
       if (typeof raw.upstreamId !== 'string' || !/^[a-zA-Z0-9_-]{1,240}$/.test(raw.upstreamId)
         || ['reserved', 'released', 'rejected'].includes(raw.status)) throw fail('state', '原任务编号或受理状态无效，请先核查');
       row.upstreamId = raw.upstreamId;
+    }
+    if (Object.hasOwn(raw, 'comfyReceipt')) {
+      if (!row.upstreamId) throw fail('state', '收片约定缺少原任务编号');
+      row.comfyReceipt = normalizeComfyReceipt(raw.comfyReceipt);
     }
     const identity = JSON.stringify([row.namespace, row.attemptId]);
     if (seen.has(identity) || row.updatedAt < row.createdAt) throw fail('state', '生图服务请求身份或时间重复');
@@ -150,14 +155,17 @@ export function createImageServiceQueue({ store, ownerId = randomUUID(), now = D
           });
           check(valid, signal); submitted = true;
         },
-        async recordUpstreamId(upstreamId) {
+        async recordUpstreamId(upstreamId, comfyReceipt) {
           if (!submitted || typeof upstreamId !== 'string' || !/^[a-zA-Z0-9_-]{1,240}$/.test(upstreamId)) throw fail('state', '远端任务编号未获确认');
+          const receipt = comfyReceipt === undefined ? undefined : normalizeComfyReceipt(comfyReceipt);
           // Record accepted evidence even if the caller disconnects or changes
           // account. Ownership was frozen before submission; this grants no IO.
           await transact(key, (state, at) => {
             const row = owned(state, identity, fence);
             if (row.status !== 'submitting' || (row.upstreamId && row.upstreamId !== upstreamId)) throw fail('changed', '原任务受理记录已变化');
+            if (receipt && row.comfyReceipt && JSON.stringify(receipt) !== JSON.stringify(row.comfyReceipt)) throw fail('changed', '原任务收片约定已变化');
             row.upstreamId = upstreamId; row.updatedAt = at;
+            if (receipt) row.comfyReceipt = receipt;
           });
         },
       }));

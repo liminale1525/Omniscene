@@ -148,6 +148,27 @@ test('redirects are not followed and a failure after acceptance retains the orig
   assert.equal(res.body.submissionState, 'accepted'); assert.equal(calls.length, 2); assert.ok(!JSON.stringify(res.body).includes('test-only-secret'));
 });
 
+test('installed result and acknowledgement routes recover the original by GET only, then release only its cached files', async () => {
+  const calls = []; let available = false;
+  const handlers = await routes({ resolveHost: publicDns, requestImpl: mockNodeRequest(calls, call => {
+    const route = call.url.pathname;
+    if (route.endsWith('/prompt')) return { body: { prompt_id: 'original-id' } };
+    if (route.includes('/history/')) return available ? { body: { 'original-id': { status: { completed: true }, outputs: { save: { images: [{ filename: 'done.png', type: 'output' }] } } } } } : { status: 502 };
+    if (route.endsWith('/view')) return { body: png, headers: { 'content-type': 'image/png' } };
+    assert.fail(route);
+  }) });
+  const submitted = response(); await handlers.get('POST /image/generate')({ ...account(), body: input() }, submitted);
+  assert.equal(submitted.body.submissionState, 'accepted'); available = true;
+  const body = { ...input().comfyQueue, baseUrl: input().baseUrl, apiKey: input().apiKey };
+  const recovered = response(); await handlers.get('POST /image/comfy/tasks/result')({ ...account(), body }, recovered);
+  assert.equal(recovered.statusCode, 200); assert.equal(recovered.body.status, 'ready'); assert.equal(recovered.body.images.length, 1);
+  assert.equal(calls.filter(call => call.options.method === 'POST').length, 1);
+  const done = response(); await handlers.get('POST /image/comfy/tasks/acknowledge')({ ...account(), body: { ...body, archived: true, receipt: recovered.body.comfyTask.receipt } }, done);
+  assert.equal(done.body.ok, true); assert.ok(done.body.bytes > 0);
+  const queried = response(); await handlers.get('POST /image/comfy/tasks/query')({ ...account(), body }, queried);
+  assert.equal(queried.body.task.status, 'succeeded'); assert.equal(queried.body.task.resultStored, false);
+});
+
 test('revoking private admin stops subsequent reads and response delivery', async () => {
   const req = account(true), calls = [];
   const handlers = await routes({ resolveHost: async () => [{ address: '127.0.0.1' }], requestImpl: mockNodeRequest(calls, () => {

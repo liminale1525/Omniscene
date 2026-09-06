@@ -4,6 +4,7 @@
   "outputDirectory": "dist",
   "files": [
     "qianmu-comfy-service.js",
+    "qianmu-comfy-receipt.js",
     "qianmu-comfy-submission.js",
     "INSTALL-DOUBAO-APIKEY.md",
     "LICENSE",
