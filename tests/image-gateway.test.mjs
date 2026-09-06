@@ -377,9 +377,10 @@ await checkImageConnection({ provider: 'seedream', apiKey: 'ark-key', model: 'do
   },
 });
 
-await checkImageConnection({ provider: 'comfy', baseUrl: 'http://127.0.0.1:8188', allowPrivateNetwork: true }, {
-  fetchImpl: async (url) => {
+await checkImageConnection({ provider: 'comfy', apiKey: 'comfy-token', baseUrl: 'http://127.0.0.1:8188', allowPrivateNetwork: true }, {
+  fetchImpl: async (url, init) => {
     assert.equal(String(url), 'http://127.0.0.1:8188/system_stats');
+    assert.equal(init.headers.Authorization, 'Bearer comfy-token');
     return jsonResponse({ system: { os: 'test' } });
   },
 });

@@ -21,6 +21,8 @@
     "qianmu-comfy-library.js",
     "qianmu-comfy-library-view.js",
     "qianmu-comfy-preflight.js",
+    "qianmu-comfy-readiness.js",
+    "qianmu-comfy-readiness-server.js",
     "qianmu-data-migrations.js",
     "qianmu-director-candidate.js",
     "qianmu-director-decision.js",

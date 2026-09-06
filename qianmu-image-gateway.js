@@ -872,7 +872,7 @@ export async function checkImageConnection(input, options = {}) {
   }
   let url;
   let headers = {};
-  if (provider === 'comfy') url = endpoint(base, 'system_stats');
+  if (provider === 'comfy') { url = endpoint(base, 'system_stats'); if (apiKey) headers = authHeaders({ apiKey }); }
   else if (provider === 'novel') {
     url = base.hostname.toLowerCase() === 'image.novelai.net'
       ? new URL('https://api.novelai.net/user/subscription')

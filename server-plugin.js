@@ -4,6 +4,7 @@ import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import { createImageService, imageServiceTaskErrorPayload, IMAGE_SERVICE_TASK_VERSION } from './qianmu-image-service.js';
 import { imageServiceAccount } from './qianmu-image-service-access.js';
+import { checkServerComfyReadiness } from './qianmu-comfy-readiness-server.js';
 import {
   checkImageConnection,
   generateImage,
@@ -209,6 +210,22 @@ export async function init(router, options = {}) {
       return undefined;
     });
   }
+
+  router.post('/image/comfy/readiness', async (req, res) => {
+    prepareImageResponse(res);
+    const controller = new AbortController();
+    const onClose = () => { if (!res.writableEnded) controller.abort(); };
+    res.once?.('close', onClose);
+    try {
+      const result = await checkServerComfyReadiness(req, req.body, { signal: controller.signal });
+      if (!res.destroyed && !res.writableEnded) return res.json(result);
+    } catch (error) {
+      const status = Number.isInteger(error?.status) && error.status >= 400 && error.status <= 599 ? error.status : 400;
+      const message = /^(?:comfy_|image_service_|private_|invalid_|unsafe_|base_url)/.test(error?.code || '') ? error.message : '节点检查失败，未提交生成';
+      if (!res.destroyed && !res.writableEnded) return res.status(status).json({ ok: false, code: error?.code || 'comfy_readiness_failed', message, submissionState: 'not_submitted' });
+    } finally { res.off?.('close', onClose); }
+    return undefined;
+  });
 
   router.post('/image/check', async (req, res) => {
     prepareImageResponse(res);

@@ -14,9 +14,11 @@ export function renderComfyWorkbench({profile, capabilities, collapsed={}, promp
   return `<div class="sd-storyboard-create sd-comfy-workbench">
     ${shared.modes||''}${shared.automation||''}${shared.production||''}${shared.connection||''}
     <details class="sd-card sd-comfy-workflow-card" data-storyboard-card="comfy-workflow" ${!workflow||workflowNotice||collapsed['comfy-workflow']===false?'open':''}>
-      <summary><span><b>工作流</b><small>${workflowNodes?`${workflowNodes} 个节点`:'API Workflow'}</small></span><button type="button" class="sd-icon-btn sd-comfy-open-library" title="工作流库" aria-label="工作流库"><i class="fa-solid fa-folder-open"></i></button></summary>
+      <summary><span><b>工作流</b><small>${workflowNodes?`${workflowNodes} 个节点`:'API Workflow'}</small></span><button type="button" class="sd-icon-btn sd-comfy-open-library" title="工作流库" aria-label="工作流库"><i data-qm-icon="qm-regular-folder"></i></button></summary>
       <div class="sd-storyboard-card-body">
         <button type="button" class="sd-btn sd-comfy-open-library">${librarySelection?.name?`基于 ${escape(librarySelection.name)} · v${Number(librarySelection.version)||1}`:workflow?'当前自定义工作流':'选择或导入工作流'}</button>
+        <button type="button" class="sd-btn sd-comfy-check-workflow" ${workflow?'':'disabled'}>检查节点与模型</button>
+        <div class="sd-comfy-readiness-result" role="status" hidden></div>
         <div class="sd-storyboard-workflow-warning sd-storyboard-connection-result failed" ${workflowNotice?'':'hidden'} role="status"><span>${escape(workflowNotice)}</span></div>
       </div>
     </details>

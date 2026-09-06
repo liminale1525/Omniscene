@@ -10106,6 +10106,11 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-workbench .sd-storyboard-workflow { min-height: 144px; max-height: 45vh; resize: vertical; font-family: monospace; }
 #story-director-modal .sd-comfy-workbench-loading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
 #story-director-modal .sd-comfy-workflow-card .sd-storyboard-workflow-warning[hidden] { display: none !important; }
+#story-director-modal .sd-comfy-readiness-result { min-width: 0; color: var(--sd-muted); font-size: 12px; text-align: left; overflow-wrap: anywhere; }
+#story-director-modal .sd-comfy-readiness-result[hidden] { display: none !important; }
+#story-director-modal .sd-comfy-readiness-result.failed { color: var(--sd-danger, #b96060); }
+#story-director-modal .sd-comfy-readiness-result small { display: block; margin-top: 6px; font-size: 11px; }
+#story-director-modal .sd-comfy-readiness-result ul { max-height: 200px; overflow: auto; padding-left: 18px; margin: 8px 0 0; }
 
 /* Workflow library/editor: bounded, isolated and consistent on narrow and wide screens. */
 #story-director-modal .sd-comfy-library { min-width: 0; text-align: start; }
