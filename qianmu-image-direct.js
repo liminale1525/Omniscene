@@ -7,10 +7,15 @@ import {
   normalizeOpenAIImageCompatibility,
   openAICompatibilityAllows,
 } from './qianmu-openai-image-compat.js';
-import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
+import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField, resolveImageProtocolBinding } from './qianmu-image-models.js';
 
 const MAX_IMAGES = 8;
 const NAI_IMAGE_RE = /\.(?:png|jpe?g|webp)$/i;
+
+function validateDirectProtocol(provider, input) {
+  try { resolveImageProtocolBinding(provider, input); }
+  catch (error) { throw new DirectImageError(error.message, { code: error.code }); }
+}
 
 function text(value, max = 24000) {
   return String(value ?? '').trim().slice(0, max);
@@ -178,6 +183,7 @@ async function readDirectModelJson(response, limit = 4 * 1024 * 1024) {
 export async function listDirectImageModels(input = {}, { fetchImpl = globalThis.fetch, timeoutMs = 20_000 } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('不支持的模型列表渠道', { code: 'direct_unsupported' });
+  validateDirectProtocol(provider, input);
   const base = new URL(providerEndpoint(input.baseUrl, '', provider));
   if (!['https:', 'http:'].includes(base.protocol) || base.username || base.password) throw new DirectImageError('API 地址需使用 HTTP(S)，且不能嵌入账号密码', { code: 'invalid_base_url' });
   if (input.signal?.aborted) throw new DOMException('已取消模型列表读取', 'AbortError');
@@ -233,6 +239,7 @@ export async function listDirectImageModels(input = {}, { fetchImpl = globalThis
 export async function checkDirectImageConnection(input = {}, { fetchImpl = globalThis.fetch } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('当前渠道尚未接入浏览器直连检查', { code: 'direct_unsupported' });
+  validateDirectProtocol(provider, input);
   const apiKey = text(input.apiKey, 2048);
   if (provider !== 'comfy' && !apiKey) throw new DirectImageError('请先填写 API Key', { code: 'missing_api_key' });
   let url, headers = {};
@@ -609,6 +616,7 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
 export async function generateDirectImage(input = {}, { fetchImpl = globalThis.fetch, unzipImpl, waitImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('当前渠道尚未接入浏览器直连生图', { code: 'direct_unsupported' });
+  validateDirectProtocol(provider, input);
   const apiKey = text(input.apiKey, 2048), prompt = text(input.prompt, 48000), model = text(input.model, 240);
   if (provider !== 'comfy' && !apiKey) throw new DirectImageError('请先填写 API Key', { code: 'missing_api_key' });
   if (!prompt) throw new DirectImageError('提示词不能为空', { code: 'empty_prompt' });

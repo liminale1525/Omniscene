@@ -1,4 +1,5 @@
 import { normalizeOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } from './qianmu-openai-image-compat.js';
+import { resolveImageProtocolBinding } from './qianmu-image-models.js';
 
 // 千幕·分镜数据契约。这里只描述数据与请求计划，不持有密钥，也不发起网络请求。
 export const STORYBOARD_SCHEMA_VERSION = 24;
@@ -189,8 +190,7 @@ export function resolveStoryboardModelBinding(providerId, input = {}) {
   const provider = getStoryboardProvider(providerId);
   const fail = (code, message) => { const error = new Error(message); error.code = code; throw error; };
   if (!provider) fail('invalid_model_family', '请选择有效的生图系列');
-  if (input.modelFamily && input.modelFamily !== provider.id) fail('model_family_mismatch', '模型能力档与当前生图系列不匹配');
-  if (input.protocol && input.protocol !== provider.protocol) fail('model_protocol_mismatch', '当前阶段尚未支持此系列与连接协议的组合');
+  const transport = resolveImageProtocolBinding(provider.id, input);
   const id = (value) => {
     if (typeof value !== 'string') fail('invalid_model_id', '模型名称必须是文本');
     const result = value.trim();
@@ -209,7 +209,7 @@ export function resolveStoryboardModelBinding(providerId, input = {}) {
   if (explicitRemote && !known && !explicitCapability && !provider.customModelId) fail('missing_capability_model', '第三方模型别名需要指定同系列能力档');
   const remoteModelId = explicitRemote || explicitCapability ? requested : resolveStoryboardModelId(providerId, requested);
   const capabilityModelId = explicitCapability || getStoryboardModel(providerId, remoteModelId)?.id || provider.defaultModel;
-  return { modelFamily: provider.id, capabilityModelId, remoteModelId, protocol: provider.protocol,
+  return { ...transport, capabilityModelId, remoteModelId,
     connectionPresetId: cleanId(input.connectionPresetId), customModel: !getStoryboardModel(providerId, remoteModelId) };
 }
 
@@ -1628,6 +1628,7 @@ function legacyPipelineLogs(value) {
 
 export function buildStoryboardProviderPlan(input = {}) {
   const provider = getStoryboardProvider(input.providerId); if (!provider) throw new Error('请选择有效的生图模型');
+  resolveImageProtocolBinding(provider.id, input.connection || {});
   const conn = normalizeStoryboardConnectionProfile(input.connection || {}, provider.id);
   const binding = resolveStoryboardModelBinding(provider.id, { ...input, model: input.model || input.capabilityModelId || conn.model || provider.defaultModel, connectionPresetId: conn.id });
   const modelId = binding.remoteModelId, capability = getStoryboardCapabilities(provider.id, binding.capabilityModelId), prompt = str(input.prompt, 24000);
@@ -1711,7 +1712,7 @@ export function buildStoryboardProviderPlan(input = {}) {
     workflow: request.workflow, providerOptions: request.providerOptions,
   };
   for (const key of Object.keys(gatewayParameters)) if (gatewayParameters[key] === undefined || gatewayParameters[key] === '') delete gatewayParameters[key];
-  const gatewayRequest = { provider: provider.id, baseUrl: conn.baseUrl, model: modelId, capabilityModelId: binding.capabilityModelId, prompt, negativePrompt: request.negative || '', references: request.references, vibes: request.vibes, parameters: gatewayParameters };
+  const gatewayRequest = { provider: provider.id, modelFamily: binding.modelFamily, protocol: binding.protocol, baseUrl: conn.baseUrl, model: modelId, capabilityModelId: binding.capabilityModelId, prompt, negativePrompt: request.negative || '', references: request.references, vibes: request.vibes, parameters: gatewayParameters };
   return { version: 1, providerId: provider.id, ...binding, baseUrl: conn.baseUrl, credentialId: conn.credentialId, model: modelId, capabilities: capability, request, gatewayRequest, droppedParameters: [...new Set(dropped)] };
 }
 

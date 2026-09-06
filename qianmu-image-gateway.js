@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
+import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField, resolveImageProtocolBinding } from './qianmu-image-models.js';
 import { randomUUID } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -75,6 +75,14 @@ function clampNumber(value, min, max, fallback = undefined, integer = false) {
 
 function plainObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function validateGatewayProtocol(provider, input) {
+  try { resolveImageProtocolBinding(provider, input); }
+  catch (error) {
+    if (error.code === 'invalid_model_family') throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
+    throw new ImageGatewayError(400, error.code, error.message);
+  }
 }
 
 function serializedJson(value, maxBytes, code, message) {
@@ -158,6 +166,7 @@ function normalizeReferences(value, budget) {
 
 export function sanitizeImageRequest(input) {
   const source = plainObject(input);
+  validateGatewayProtocol(asString(source.provider, 40).toLowerCase(), source);
   if (Object.hasOwn(source, 'modelBindingVersion')) {
     if (source.modelBindingVersion !== IMAGE_MODEL_BINDING_VERSION) throw new ImageGatewayError(409, 'model_binding_version_mismatch', '生图模型绑定协议不兼容，请同步更新千幕前端与增强服务并重启 ST');
     if (source.provider !== 'novel' || typeof source.capabilityModelId !== 'string' || !source.capabilityModelId.trim()) {
@@ -772,6 +781,7 @@ export async function generateImage(input, options = {}) {
 export async function checkImageConnection(input, options = {}) {
   const source = plainObject(input);
   const provider = asString(source.provider, 40).toLowerCase();
+  validateGatewayProtocol(provider, source);
   const definition = IMAGE_GATEWAY_PROVIDERS[provider];
   if (!definition) throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
   const apiKey = asString(source.apiKey, 2048);
@@ -823,6 +833,7 @@ export async function checkImageConnection(input, options = {}) {
 export async function listImageModels(input, options = {}) {
   const source = plainObject(input);
   const provider = asString(source.provider, 40).toLowerCase();
+  validateGatewayProtocol(provider, source);
   const definition = IMAGE_GATEWAY_PROVIDERS[provider];
   if (!definition) throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
   const apiKey = asString(source.apiKey, 2048);

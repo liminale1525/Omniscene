@@ -3,6 +3,30 @@ export const IMAGE_MODEL_LIST_LIMIT = 4000;
 export const IMAGE_MODEL_PAGE_LIMIT = 10;
 export const IMAGE_MODEL_ID_LIMIT = 240;
 export const IMAGE_MODEL_BINDING_VERSION = 1;
+export const IMAGE_NATIVE_PROTOCOLS = Object.freeze({
+  novel: 'novelai', banana: 'gemini-images', openai: 'openai-images', seedream: 'ark-images', comfy: 'comfy-workflow',
+});
+
+// Explicit transport declarations fail closed. Never infer a protocol from a URL or remote model name.
+// Cross-family adapters will extend this contract only after their parameter mapping is supported.
+export function resolveImageProtocolBinding(provider, input = {}) {
+  const fail = (code, message) => { const error = new Error(message); error.code = code; throw error; };
+  if (typeof provider !== 'string' || !Object.hasOwn(IMAGE_NATIVE_PROTOCOLS, provider)) fail('invalid_model_family', '请选择有效的生图系列');
+  if (input.modelFamily !== undefined && input.modelFamily !== '' && input.modelFamily !== provider) fail('model_family_mismatch', '模型系列与连接不匹配，未发起请求');
+  const native = IMAGE_NATIVE_PROTOCOLS[provider];
+  let protocol = input.protocol;
+  if (protocol === undefined || protocol === '') protocol = native;
+  else {
+    if (typeof protocol !== 'string' || !protocol.trim() || protocol.length > 40 || /[\u0000-\u001f\u007f]/.test(protocol)) fail('model_protocol_mismatch', '连接协议无效，未发起请求');
+    protocol = protocol.trim();
+    // Names used by the existing gateway's native capability declaration.
+    if (protocol === 'gemini') protocol = 'gemini-images';
+    if (protocol === 'comfyui') protocol = 'comfy-workflow';
+    if (protocol !== native) fail('model_protocol_mismatch', '此系列尚不支持所选连接协议，未发起请求');
+  }
+  return Object.freeze({ modelFamily: provider, protocol });
+}
+
 export const NOVEL_STATIC_MODELS = Object.freeze([
   ['safe-diffusion', 'Anime Curated V1'],
   ['nai-diffusion', 'Anime Full V1'],
