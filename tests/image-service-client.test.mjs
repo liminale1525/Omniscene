@@ -268,3 +268,15 @@ test('old server without catalog gives an actionable update message and never su
   const s=setup({fetch:()=>new Response('Not found',{status:404})});
   await assert.rejects(s.client.catalog(),/服务目录未就绪，请更新后端并重启 ST/);assert.deepEqual(s.calls.map(item=>item.action),['catalog']);
 });
+
+test('receipt reader separates original-only version from ordinary generation receipts without mutating input',async()=>{
+  const source=await readFile(new URL('../qianmu-image-service-client.js',import.meta.url),'utf8');
+  const context=vm.createContext({TextEncoder,sanitizeStoryboardSnapshot,sanitizeStoryboardDiagnosticData:value=>value});
+  vm.runInContext(source.slice(source.indexOf('const BASE ='),source.indexOf('export function createImageServiceClientStore')),context);
+  const ordinary={version:1,namespace:'st-user:alice',attemptId:'old-receipt',channelKey:'a'.repeat(64),status:'submitted',snapshot:job()};
+  assert.equal(context.checkedRow(ordinary,ordinary.namespace).version,1);
+  const original={...ordinary,originalOnly:true,snapshot:{}};
+  const promoted=context.checkedRow(original,original.namespace);assert.equal(promoted.version,2);assert.equal(promoted.originalOnly,true);assert.equal(original.version,1);
+  assert.equal(context.checkedRow({...original,version:2},original.namespace).version,2);
+  for(const version of [0,2,3])assert.throws(()=>context.checkedRow({...ordinary,version},ordinary.namespace),{code:'image_service_client_record'});
+});

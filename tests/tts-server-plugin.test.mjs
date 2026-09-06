@@ -52,7 +52,10 @@ assert.match(installGuide, /st\.example\.com\/api\/plugins\/qianmu-tts\/health/)
 assert.match(shellInstaller, /enableServerPlugins: true/);
 assert.match(shellInstaller, /mkdir -p "\$PLUGIN_PARENT"/);
 assert.match(shellInstaller, /config\/config\.yaml/);
-assert.match(shellInstaller, /docker compose restart sillytavern/);
+assert.doesNotMatch(shellInstaller, /^\s*(?:if\s+)?docker compose (?:restart|stop|down)\b/m);
+assert.match(shellInstaller, /docker compose start sillytavern/);
+assert.match(shellInstaller, /QIANMU_SERVER_STOPPED/);
+assert.match(powershellInstaller, /QIANMU_SERVER_STOPPED/);
 assert.match(shellInstaller, /\/home\/node\/app\/plugins/);
 assert.match(powershellInstaller, /enableServerPlugins: true/);
 assert.match(powershellInstaller, /New-Item -ItemType Directory/);

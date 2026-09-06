@@ -8,8 +8,10 @@ const fail = (code, message, state = 'not_submitted') => Object.assign(new Error
 const id = value => typeof value === 'string' && value.length > 0 && value.length <= 240 && value.trim() === value && !/[\u0000-\u001f\u007f]/.test(value);
 const states = new Set(['prepared', 'submitted', 'available', 'archived', 'rejected']);
 function checkedRow(value, namespace) {
-  if (!value || value.version !== 1 || value.namespace !== namespace || !id(value.attemptId) || !/^[a-f0-9]{64}$/.test(value.channelKey || '') || !states.has(value.status)) throw fail('record', '服务请求记录不完整，请核查原任务');
-  const row = { version: 1, namespace, attemptId: value.attemptId, channelKey: value.channelKey, status: value.status, originalOnly: value.originalOnly === true,
+  if (!value || ![1,2].includes(value.version) || (value.version === 2 && value.originalOnly !== true) || value.namespace !== namespace || !id(value.attemptId) || !/^[a-f0-9]{64}$/.test(value.channelKey || '') || !states.has(value.status)) throw fail('record', '服务请求记录不完整或版本不兼容，请核查原任务');
+  // Version 2 is intentionally unreadable by pre-recovery clients. Otherwise a
+  // rollback could normalize the absent recipe into invented model defaults.
+  const row = { version: value.originalOnly === true ? 2 : 1, namespace, attemptId: value.attemptId, channelKey: value.channelKey, status: value.status, originalOnly: value.originalOnly === true,
     createdAt: Number(value.createdAt) || 0, logId: id(value.logId) ? value.logId : '',
     snapshot: sanitizeStoryboardSnapshot(value.snapshot, { source: 'novel' }),
     receipt: /^[a-f0-9]{64}$/.test(value.receipt || '') ? value.receipt : '',

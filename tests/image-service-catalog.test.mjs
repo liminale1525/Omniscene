@@ -85,7 +85,7 @@ test('a fresh device discovers and receives the actual original without any prov
   const f=await fixture(t);await f.service.submit(actor(),input('new-device'));
   const c=client(f.service),page=await c.api.catalog(),item={...page.originals[0],namespace:page.namespace};
   const remembered=await c.api.rememberOriginal(item,{chatKey:'chosen-chat'});
-  assert.equal(remembered.originalOnly,true);assert.equal(remembered.snapshot.chatKey,'chosen-chat');assert.equal(remembered.snapshot.prompt,'');
+  assert.equal(remembered.originalOnly,true);assert.equal(remembered.version,2);assert.equal(remembered.snapshot.chatKey,'chosen-chat');assert.equal(remembered.snapshot.prompt,'');
   let saves=0;const received=await c.api.retrieve(item.attemptId,async(data,row,checkpoint)=>{
     assert.equal(data.images[0].data,PNG);assert.equal(row.originalOnly,true);assert.equal(row.snapshot.chatKey,'chosen-chat');
     saves++;await checkpoint([{id:'saved',url:'/user/images/recovered.png',recipeUnavailable:true}]);return true;
