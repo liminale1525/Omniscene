@@ -10159,3 +10159,21 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-target-list { display: grid; gap: 8px; max-height: 220px; overflow: auto; min-width: 0; }
 #story-director-modal .sd-comfy-target-list b, #story-director-modal .sd-comfy-target-list small { display: block; }
 #story-director-modal .sd-comfy-target-list small { color: var(--sd-muted); font-size: 11px; }
+/* Comfy original retrieval shares the log actions, without squeezing mobile labels. */
+#story-director-modal .sd-storyboard-comfy-log-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+#story-director-modal .sd-storyboard-comfy-log-actions > .sd-btn {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  height: auto;
+  margin: 0;
+  box-sizing: border-box;
+}
+@media (min-width: 760px) {
+  #story-director-modal .sd-storyboard-comfy-log-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

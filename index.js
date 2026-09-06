@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.60';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.60';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.60';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.61';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.61';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.61';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.60';
+} from './qianmu-llm-output.js?v=1.59.61';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -172,183 +172,187 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.60';
+} from './qianmu-storyboard.js?v=1.59.61';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.60';
+const VERSION = '1.59.61';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.60'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.61'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.60'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.61'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.60'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.61'),
   },
   imageChannel: {
     label: 'NAI 跨页顺序生成',
-    load: () => import('./qianmu-image-channel.js?v=1.59.60'),
+    load: () => import('./qianmu-image-channel.js?v=1.59.61'),
   },
   imageServiceClient: {
     label: '增强生图任务',
-    load: () => import('./qianmu-image-service-client.js?v=1.59.60'),
+    load: () => import('./qianmu-image-service-client.js?v=1.59.61'),
   },
   comfySubmission: {
     label: 'Comfy 实例排队',
-    load: () => import('./qianmu-comfy-submission.js?v=1.59.60'),
+    load: () => import('./qianmu-comfy-submission.js?v=1.59.61'),
+  },
+  comfyRecovery: {
+    label: 'Comfy 原图领取',
+    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.61'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.60').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.61').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.60'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.61'),
   },
   comfyWorkbench: {
     label: 'Comfy 镜头台',
-    load: () => import('./qianmu-comfy-workbench.js?v=1.59.60'),
+    load: () => import('./qianmu-comfy-workbench.js?v=1.59.61'),
   },
   comfyLibrary: {
     label: 'Comfy 工作流库',
-    load: () => import('./qianmu-comfy-library-view.js?v=1.59.60'),
+    load: () => import('./qianmu-comfy-library-view.js?v=1.59.61'),
   },
   comfyPreflight: {
     label: 'Comfy 配置检查',
-    load: () => import('./qianmu-comfy-preflight.js?v=1.59.60'),
+    load: () => import('./qianmu-comfy-preflight.js?v=1.59.61'),
   },
   comfyReadiness: {
     label: 'Comfy 节点检查',
-    load: () => import('./qianmu-comfy-readiness.js?v=1.59.60'),
+    load: () => import('./qianmu-comfy-readiness.js?v=1.59.61'),
   },
   comfyTargets: {
     label: 'Comfy 可信连接',
-    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.60'),
+    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.61'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.60'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.61'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.60'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.61'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.60'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.61'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.60'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.61'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.60'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.61'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.60'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.61'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.60'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.61'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.60'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.61'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.60'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.61'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.60'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.61'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.60'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.61'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.60'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.61'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.60'),
+    load: () => import('./qianmu-video-task.js?v=1.59.61'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.60'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.61'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.60'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.61'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.60'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.61'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.60'),
+    load: () => import('./qianmu-video-store.js?v=1.59.61'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.60'),
+    load: () => import('./qianmu-video-result.js?v=1.59.61'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.60'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.61'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.60'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.61'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.60'),
+    load: () => import('./qianmu-video-media.js?v=1.59.61'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.60'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.61'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.60'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.61'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.60'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.61'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.60'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.61'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.60'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.61'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.60'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.61'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.60'),
-        import('./qianmu-theaters.js?v=1.59.60'),
+        import('./builtin-theaters.js?v=1.59.61'),
+        import('./qianmu-theaters.js?v=1.59.61'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1188,6 +1192,7 @@ const storyboardActiveJobs = new Map(); // 正在生成的任务；放弃时不�
 let storyboardAdmission = null;
 let storyboardImageChannel = null;
 let storyboardImageService = null;
+let storyboardComfyRecovery = null;
 let storyboardAdmissionEpoch = 0;
 const storyboardGenerationPreparing = new Set();
 const storyboardPlanRetries = new WeakSet();
@@ -16541,7 +16546,8 @@ function storyboardFinishLog(log, status, details = {}) {
   if (!log) return;
   log.status = status;
   log.finishedAt = Date.now();
-  log.durationMs = Math.max(0, log.finishedAt - Number(log.startedAt || log.queuedAt || log.finishedAt));
+  log.durationMs = Number.isFinite(details.durationMs) && details.durationMs >= 0 ? details.durationMs
+    : Math.max(0, log.finishedAt - Number(log.startedAt || log.queuedAt || log.finishedAt));
   if (details.error) log.error = String(details.error).slice(0, 1600);
   if (['not_submitted', 'rejected', 'unknown', 'accepted'].includes(details.submissionState)) log.submissionState = details.submissionState;
   if (details.recordId) log.recordId = String(details.recordId);
@@ -16716,7 +16722,7 @@ function renderStoryboardLogs(state) {
         ${stageRows ? `<ol class="sd-storyboard-pipeline-stages">${stageRows}</ol>` : ''}
         ${stageRows ? '<section class="sd-storyboard-stage-detail" hidden><header><b></b><button type="button" class="sd-icon-btn sd-storyboard-copy-stage" title="复制当前阶段" aria-label="复制当前阶段"><i class="fa-solid fa-copy"></i></button></header><pre></pre></section>' : ''}
         ${log.error ? `<pre>${htmlEscape(log.error)}</pre>` : ''}
-        <div class="sd-storyboard-log-actions"><button type="button" class="sd-btn sd-storyboard-load-log">载入镜头台</button>${log.snapshot?.serviceTask?.attemptId ? '<button type="button" class="sd-btn sd-storyboard-receive-log">领取原图</button>' : ''}${runAction}<button type="button" class="sd-btn sd-storyboard-copy-log">复制诊断</button></div>
+        <div class="sd-storyboard-log-actions${storyboardCanReceiveComfyLog(log) ? ' sd-storyboard-comfy-log-actions' : ''}"><button type="button" class="sd-btn sd-storyboard-load-log">载入镜头台</button>${log.snapshot?.serviceTask?.attemptId ? '<button type="button" class="sd-btn sd-storyboard-receive-log">领取原图</button>' : ''}${storyboardCanReceiveComfyLog(log) ? '<button type="button" class="sd-btn sd-storyboard-receive-comfy" title="领取原任务图片，不重新生成">领取原图</button>' : ''}${runAction}<button type="button" class="sd-btn sd-storyboard-copy-log">复制诊断</button></div>
       </div>
     </details>`;
   }).join('');
@@ -17060,12 +17066,12 @@ async function storyboardPaintVideoConnectionState(root = document.getElementByI
   if (remove) remove.disabled = !configured;
 }
 
-async function storyboardResolveApiKey(providerId, requestedCredentialId = '') {
+async function storyboardResolveApiKey(providerId, requestedCredentialId = '', { exact = false } = {}) {
   const state = storyboardState();
   const { group, active, draft } = storyboardConnectionState(state, providerId);
   const credentialId = requestedCredentialId || draft?.credentialId || active?.credentialId || storyboardCredentialId(providerId, 'draft');
   if (storyboardApiKeys.has(credentialId)) return storyboardApiKeys.get(credentialId);
-  if (storyboardApiKeys.has(providerId)) return storyboardApiKeys.get(providerId);
+  if (!exact && storyboardApiKeys.has(providerId)) return storyboardApiKeys.get(providerId);
   const browserValue = storyboardReadBrowserCredential(credentialId);
   if (browserValue) { storyboardApiKeys.set(credentialId, browserValue); return browserValue; }
   try {
@@ -18137,6 +18143,60 @@ async function storyboardImageServiceRuntime() {
   return storyboardImageService;
 }
 
+async function storyboardComfyRecoveryRuntime() {
+  const epoch = storyboardAdmissionEpoch;
+  const module = await featureRuntime.load('comfyRecovery');
+  if (epoch !== storyboardAdmissionEpoch) throw new Error('分镜会话已结束');
+  storyboardComfyRecovery ||= module.createComfyRecoveryClient({ headers: storyboardRequestHeaders });
+  return storyboardComfyRecovery;
+}
+
+function storyboardCanReceiveComfyLog(log) {
+  const snapshot = log?.snapshot;
+  return snapshot?.source === 'comfy' && snapshot.imageAdmission?.version === 1 && Boolean(snapshot.imageAdmission.attemptId)
+    && (snapshot.comfyServiceTask?.version === 1 || getStoryboardComfyTransport(snapshot.connection) === 'gateway');
+}
+
+async function storyboardResolveComfyRecoveryKey(connection) {
+  if (!connection?.credentialId) return '';
+  const root = value => { try { const url = new URL(value); return !url.username && !url.password && !url.search && !url.hash ? url.href.replace(/\/+$/, '') : ''; } catch (_) { return ''; } };
+  const expected = root(connection.baseUrl), credentialId = connection.credentialId;
+  // A draft credential id can be reused for another host after generation.
+  // Do not send today's unrelated Key back to the old server.
+  const matches = () => {
+    const group = storyboardState().connections.comfy;
+    const connections = [group?.draft, group?.active, ...(group?.presets || [])].filter(item => item?.credentialId === credentialId);
+    return expected && connections.length && connections.every(item => root(item.baseUrl) === expected);
+  };
+  if (!matches()) return '';
+  const apiKey = await storyboardResolveApiKey('comfy', credentialId, { exact: true });
+  return matches() ? apiKey : '';
+}
+
+async function storyboardReceiveComfyImage(log) {
+  try {
+    if (!storyboardCanReceiveComfyLog(log)) throw new Error('请使用原 Comfy 服务日志领取');
+    const snapshot = sanitizeStoryboardSnapshot(log.snapshot, { source: 'comfy' });
+    const job = { ...snapshot, id: snapshot.imageAdmission.attemptId, logId: log.id, recoveringOriginal: true };
+    if (job.chatKey && job.chatKey !== String(getChatKey() || '')) throw new Error('请返回原聊天后领取 Comfy 原图');
+    const service = await storyboardComfyRecoveryRuntime();
+    const apiKey = await storyboardResolveComfyRecoveryKey(job.connection);
+    const result = await service.retrieve(job, { apiKey,
+      deliver: (data, archiveFiles, checkpoint, guard) => storyboardDeliverGatewayResult(job, log, data, { service: true, archiveFiles, checkpoint,
+        guard: async () => { await guard(); if (job.chatKey && job.chatKey !== String(getChatKey() || '')) throw new Error('聊天已切换，请回原聊天继续领取'); },
+      }),
+    });
+    if (result.archived) {
+      log.error = ''; log.submissionState = 'accepted';
+      storyboardFinishLog(log, 'success', { durationMs: Number(log.durationMs) || 0 });
+      try { await (await storyboardImageAdmissionRuntime()).confirmResult(job.imageAdmission); }
+      catch (_) { result.warning ||= '原图已归档；本地任务状态尚待核查'; }
+    }
+    toast(result.warning || '原图已领取并归档', result.warning ? 'warning' : 'success');
+    renderModal();
+  } catch (error) { toast(error.message || 'Comfy 原图暂不可领取，未重新生成', 'warning'); }
+}
+
 async function storyboardReceiveServiceImage(attemptId, discovered = null, expectedNamespace = discovered?.namespace) {
   try {
     const service = await storyboardImageServiceRuntime();
@@ -18891,9 +18951,11 @@ function storyboardImageExtension(mime = '') {
 async function storyboardPersistGatewayImage(image, job, index, { requireLocal = false } = {}) {
   const utils = await storyboardUtilsModule().catch(() => null);
   const extension = storyboardImageExtension(image?.mime);
-  const filename = `qianmu_storyboard_${Date.now()}_${String(index + 1).padStart(2, '0')}`;
+  const comfyService = requireLocal && job.source === 'comfy';
+  const filename = comfyService ? await (await featureRuntime.load('comfySubmission')).comfyArchiveFilename(job, index)
+    : `qianmu_storyboard_${Date.now()}_${String(index + 1).padStart(2, '0')}`;
   if (image?.data && typeof utils?.saveBase64AsFile === 'function') {
-    const saved = await utils.saveBase64AsFile(String(image.data), getCharacterName() || 'Qianmu', filename, extension);
+    const saved = await utils.saveBase64AsFile(String(image.data), comfyService ? 'Qianmu-Comfy' : getCharacterName() || 'Qianmu', filename, extension);
     const url = storyboardSafeUrl(saved);
     if (url && (!requireLocal || new URL(url, location.origin).origin === location.origin)) return url;
   }
@@ -18958,19 +19020,19 @@ function storyboardCreateRecord(job, log, url, index, anchorState, response) {
   };
 }
 
-async function storyboardDeliverGatewayResult(job, log, data, { service = false, archiveRecords = [], checkpoint, guard = async () => {} } = {}) {
+async function storyboardDeliverGatewayResult(job, log, data, { service = false, archiveRecords = [], archiveFiles = [], checkpoint, guard = async () => {} } = {}) {
   const plan = storyboardPlanForJob(job);
   const images = Array.isArray(data.images) ? data.images.slice(0, 8) : [];
   if (!images.length) throw new Error('生图服务没有返回可用图片');
   await guard();
   const records = clone(archiveRecords);
-  if (records.length > images.length) throw new Error('原图归档数量与结果不符，请核查原任务');
+  if (records.length > images.length || archiveFiles.length > images.length) throw new Error('原图归档数量与结果不符，请核查原任务');
   if (records.length < images.length) {
     storyboardSetPlanStatus(plan, 'generating', { job, stage: 'persistence', progress: 0.8 });
     storyboardPipelineStage(log, 'asset_persistence', 'running', {}, { imageCount: images.length });
     for (let index = records.length; index < images.length; index++) {
       await guard();
-      const url = await storyboardPersistGatewayImage(images[index], job, index, { requireLocal: service });
+      const url = archiveFiles[index]?.url || await storyboardPersistGatewayImage(images[index], job, index, { requireLocal: service });
       await guard();
       const anchor = storyboardValidatedAnchor(job);
       const record = job.originalOnly ? { id: '', taskId: job.id, groupId: job.id, imageIndex: index, url, chatKey: job.chatKey,
@@ -19012,7 +19074,8 @@ async function storyboardDeliverGatewayResult(job, log, data, { service = false,
   storyboardPipelineStage(log, 'paragraph_anchor', 'success', {}, { requestedFloor: job.floor, finalFloor: anchorState.floor,
     fallback: !anchorState.valid && job.target !== 'gallery', deliveryState, deferredToOriginalChat: !currentOwnsResult });
   if (log) { log.error = ''; log.submissionState = 'accepted'; }
-  storyboardFinishLog(log, 'success', { recordId: records[0].id, recordIds: records.map(item => item.id), floor: anchorState.floor });
+  storyboardFinishLog(log, 'success', { recordId: records[0].id, recordIds: records.map(item => item.id), floor: anchorState.floor,
+    ...(job.recoveringOriginal ? { durationMs: Math.max(0, Number(data.durationMs) || 0) } : {}) });
   storyboardSetPlanStatus(plan, 'completed', { resultIds: records.map(item => item.id), job, floor: currentOwnsResult ? anchorState.floor : null,
     stage: currentOwnsResult ? 'complete' : 'delivery_pending', progress: currentOwnsResult ? 1 : 0.96,
     deliveryState, linkState: currentOwnsResult ? resultLinkState : 'foreign' });
@@ -19117,8 +19180,9 @@ async function storyboardRunJob(job, log) {
         }
         if (bindingVersion) gatewayRequest.modelBindingVersion = bindingVersion;
         if (job.source === 'comfy') {
-          const runtime = await featureRuntime.load('comfySubmission');
-          gatewayRequest.comfyQueue = await runtime.prepareComfySubmission(job);
+          const runtime = await storyboardComfyRecoveryRuntime();
+          gatewayRequest.comfyQueue = await runtime.prepare(job);
+          if (log?.snapshot) { log.snapshot.comfyServiceTask = { version: 1, attemptId: job.id }; saveSettings(); }
         }
         await beforeSubmit();
         const response = await fetch('/api/plugins/qianmu-tts/image/generate', {
@@ -19171,11 +19235,11 @@ async function storyboardRunJob(job, log) {
       return;
     }
     if (job.source === 'comfy' && data.comfyTask?.version === 1) {
-      const runtime = await featureRuntime.load('comfySubmission');
-      const archived = await storyboardDeliverGatewayResult(job, log, data, { service: true, guard: () => runtime.assertComfyAccount(job) });
-      if (archived) {
-        const warning = await runtime.acknowledgeComfyImage(job, data, { headers: storyboardRequestHeaders });
-        if (warning) toast(warning, 'warning');
+      const runtime = await storyboardComfyRecoveryRuntime();
+      const result = await runtime.deliver(job, data, (resultData, archiveFiles, checkpoint, guard) =>
+        storyboardDeliverGatewayResult(job, log, resultData, { service: true, archiveFiles, checkpoint, guard }));
+      if (result.warning) toast(result.warning, 'warning');
+      if (result.archived) {
         admissionOutcome = 'succeeded';
       }
     } else {
@@ -21278,6 +21342,11 @@ function bindStoryboardTabEvents(root) {
     });
     row.querySelector('.sd-storyboard-receive-log')?.addEventListener('click', () => {
       if (log?.snapshot?.serviceTask?.attemptId) void storyboardReceiveServiceImage(log.snapshot.serviceTask.attemptId);
+    });
+    row.querySelector('.sd-storyboard-receive-comfy')?.addEventListener('click', async event => {
+      event.currentTarget.disabled = true;
+      const button = event.currentTarget;
+      try { await storyboardReceiveComfyImage(log); } finally { button.disabled = false; }
     });
     row.querySelector('.sd-storyboard-cancel-queued-log')?.addEventListener('click', () => storyboardRemoveQueuedLog(log));
   });
@@ -34084,6 +34153,7 @@ function cleanupRuntime(resetSettings = false) {
       storyboardAdmission = null;
       storyboardImageChannel?.close(); storyboardImageChannel = null;
       storyboardImageService?.close(); storyboardImageService = null;
+      storyboardComfyRecovery?.close(); storyboardComfyRecovery = null;
       for (const job of storyboardActiveJobs.values()) {
         job.discardRequested = true;
         storyboardSyncTaskState(job, 'cancelled', { error: '扩展已停用或更新', plan: storyboardPlanForJob(job) });

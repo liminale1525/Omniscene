@@ -150,6 +150,10 @@ test('service capability handshake distinguishes old services from static accoun
   assert.equal(checkQianmuComfyExecutionBinding(await probe(current)).ok,true);
   const oldQueue = structuredClone(current); delete oldQueue.comfyQueue;
   assert.equal(checkQianmuComfyExecutionBinding(await probe(oldQueue)).ok, false, 'old accounting alone cannot bypass durable instance coordination');
+  for (const key of ['originalTaskLookup','resultRetrieval','outputReceiptVersion','cachedResults']) {
+    const oldRecovery = structuredClone(current); delete oldRecovery.comfyQueue[key];
+    assert.equal(checkQianmuComfyExecutionBinding(await probe(oldRecovery)).ok, false, `cannot submit without ${key}`);
+  }
   delete current.comfyExecution;assert.equal(checkQianmuComfyExecutionBinding(await probe(current)).ok,false);
   assert.equal(checkQianmuComfyExecutionBinding({status:'ready',comfyExecution:{version:1}}).ok,false);
 });

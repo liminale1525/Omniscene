@@ -68,7 +68,9 @@ function imageCapabilityResult(status, body = {}) {
     comfyExecution: status === 'ready' && body.comfyExecution?.version === 1 && body.comfyExecution.outputSelection === true
       && body.comfyExecution.staticAccounting === true ? { version: 1, outputSelection: true, staticAccounting: true } : null,
     comfyQueue: status === 'ready' && body.comfyQueue?.version === 1 && body.comfyQueue.scope === 'st-api-root'
-      && body.comfyQueue.durableAcceptance === true ? { version: 1, scope: 'st-api-root', durableAcceptance: true } : null,
+      && body.comfyQueue.durableAcceptance === true ? { version: 1, scope: 'st-api-root', durableAcceptance: true,
+        originalTaskLookup: body.comfyQueue.originalTaskLookup === true, resultRetrieval: body.comfyQueue.resultRetrieval === true,
+        outputReceiptVersion: body.comfyQueue.outputReceiptVersion === 1 ? 1 : 0, cachedResults: body.comfyQueue.cachedResults === true } : null,
   };
 }
 
@@ -117,8 +119,10 @@ export function checkQianmuComfyExecutionBinding(capabilities) {
   if (capabilities?.status === 'ready' && capabilities.comfyExecution?.version === 1
     && capabilities.comfyExecution.outputSelection === true && capabilities.comfyExecution.staticAccounting === true
     && capabilities.comfyQueue?.version === 1 && capabilities.comfyQueue.scope === 'st-api-root'
-    && capabilities.comfyQueue.durableAcceptance === true) return { ok: true, version: 1 };
-  return { ok: false, code: 'comfy_execution_incompatible', message: '尚未确认增强服务支持 Comfy 数量核查与实例排队；请同步更新千幕与增强服务并重启 ST' };
+    && capabilities.comfyQueue.durableAcceptance === true && capabilities.comfyQueue.originalTaskLookup === true
+    && capabilities.comfyQueue.resultRetrieval === true && capabilities.comfyQueue.outputReceiptVersion === 1
+    && capabilities.comfyQueue.cachedResults === true) return { ok: true, version: 1 };
+  return { ok: false, code: 'comfy_execution_incompatible', message: '尚未确认增强服务支持 Comfy 数量核查、实例排队与原图领取；请同步更新千幕与增强服务并重启 ST' };
 }
 
 // Workbench catalog, checks and generation invoke this only before an actual gateway fallback.

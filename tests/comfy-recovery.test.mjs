@@ -172,15 +172,15 @@ test('missing legacy output receipts and cache reservation failures never cause 
 const runJob = storyboardFunctionSource('storyboardRunJob');
 const deliveryStart = runJob.indexOf("    if (job.source === 'comfy' && data.comfyTask?.version === 1)");
 const deliveryBlock = runJob.slice(deliveryStart, runJob.indexOf('  } catch (error) {', deliveryStart));
-assert.ok(deliveryStart > 0 && deliveryBlock.includes('acknowledgeComfyImage'));
+assert.ok(deliveryStart > 0 && deliveryBlock.includes('runtime.deliver'));
 for (const archived of [true, false]) test(`actual Comfy delivery ${archived ? 'acknowledges only after durable archive' : 'retains server cache and accepted state when archive is incomplete'}`, async () => {
   const calls = [], job = { source: 'comfy' };
   const context = vm.createContext({ job, log: {}, data: { comfyTask: { version: 1 } }, storyboardRequestHeaders() {}, toast() {},
-    featureRuntime: { load: async name => { assert.equal(name, 'comfySubmission'); return {
-      assertComfyAccount: async value => { assert.equal(value, job); calls.push('guard'); },
-      acknowledgeComfyImage: async () => { calls.push('acknowledge'); return ''; },
-    }; } },
-    storyboardDeliverGatewayResult: async (_job, _log, _data, options) => { assert.equal(options.service, true); await options.guard(); calls.push('archive'); return archived; },
+    storyboardComfyRecoveryRuntime: async () => ({ deliver: async (value, data, deliver) => {
+      assert.equal(value, job); const saved = await deliver(data, [], async () => {}, async () => calls.push('guard'));
+      if (saved) calls.push('acknowledge'); return { archived: saved };
+    } }),
+    storyboardDeliverGatewayResult: async (_job, _log, _data, options) => { assert.equal(options.service, true); assert.equal(options.archiveFiles.length, 0); assert.equal(typeof options.checkpoint, 'function'); await options.guard(); calls.push('archive'); return archived; },
   });
   vm.runInContext(`async function run() { let admissionOutcome = 'accepted'; ${deliveryBlock} return admissionOutcome; }`, context);
   assert.equal(await context.run(), archived ? 'succeeded' : 'accepted');

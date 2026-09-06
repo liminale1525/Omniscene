@@ -6,6 +6,8 @@
     "qianmu-comfy-service.js",
     "qianmu-comfy-receipt.js",
     "qianmu-comfy-submission.js",
+    "qianmu-comfy-delivery-store.js",
+    "qianmu-comfy-recovery-client.js",
     "INSTALL-DOUBAO-APIKEY.md",
     "LICENSE",
     "README.md",

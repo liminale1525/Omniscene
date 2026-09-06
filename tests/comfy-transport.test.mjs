@@ -43,7 +43,7 @@ function transport(mode, { error, provider = 'comfy', currentMode = 'gateway' } 
     storyboardState: () => ({ enabled: true, connections: { comfy: { draft: { options: { comfyTransport: currentMode } } } } }),
     storyboardPrepareGatewayAssets: async () => { calls.push('assets'); return {}; }, storyboardGatewayRequest: () => ({}),
     storyboardPipelineStage() {}, storyboardRequestHeaders: () => ({}), apiKey: 'secret',
-    featureRuntime: { load: async name => { assert.equal(name, 'comfySubmission'); return { prepareComfySubmission: async value => { assert.equal(value, job); return { version: 1, attemptId: 'fixed' }; } }; } },
+    storyboardComfyRecoveryRuntime: async () => ({ prepare: async value => { assert.equal(value, job); return { version: 1, attemptId: 'fixed' }; } }),
     directImageRuntime: async () => { calls.push('loadBrowser'); return { isDirectImageTransportError: value => value.code === 'direct_transport',
       generateDirectImage: async () => { calls.push('browser'); if (error) throw error; return { ok: true }; } }; },
     storyboardConfirmGatewayModelBinding: async () => { calls.push('gatewayBinding'); return 0; },

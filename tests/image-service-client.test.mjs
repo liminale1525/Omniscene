@@ -174,6 +174,14 @@ test('shared archival helper defers a foreign chat and does not authorize ACK', 
   assert.equal(await s.context.storyboardDeliverGatewayResult(job(), {}, image('job-a'), { service: true }), false);
   assert.equal(s.gallery.length, 0); assert.equal(s.rows.length, 1);
 });
+test('Comfy lightweight file checkpoints restore full records without re-uploading saved files', async () => {
+  const s = deliverySetup(); let checkpoint;
+  const data = { ...image('job-a'), images: [image('job-a').images[0], image('job-a').images[0]] };
+  await s.context.storyboardDeliverGatewayResult(job({ source: 'comfy' }), {}, data, { service: true,
+    archiveFiles: [{ imageIndex: 0, url: '/user/images/already-saved.png' }], checkpoint: async rows => { checkpoint = rows; } });
+  assert.equal(s.writes, 1); assert.equal(s.gallery.length, 2); assert.equal(s.gallery[0].url, '/user/images/already-saved.png');
+  assert.equal(s.gallery[0].id, 'service-job-a-0'); assert.equal(checkpoint.length, 2); assert.equal(checkpoint[0].snapshot, undefined);
+});
 test('multi-image recovery checkpoints each file and resumes only the unfinished image', async () => {
   const s=deliverySetup();let records=[],calls=0;
   s.context.storyboardPersistGatewayImage=async(_image,_job,index)=>{calls++;if(calls===2)throw Error('second save failed');return `/user/images/${index}.png`;};

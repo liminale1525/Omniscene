@@ -18,6 +18,11 @@ export async function assertComfyAccount(job, { account = resolveImageAccountNam
   if (!job?.imageAdmission?.namespace || await account() !== job.imageAdmission.namespace) throw Object.assign(new Error('ST 账户已变化，请回原账户领取 Comfy 原图'), { code: 'comfy_delivery_account', submissionState: 'accepted' });
 }
 
+export async function comfyArchiveFilename(job, index) {
+  if (!job?.imageAdmission?.namespace || job.imageAdmission.attemptId !== job.id || !Number.isInteger(index) || index < 0 || index > 7) throw Error('Comfy 原图文件身份不完整');
+  return `qianmu_comfy_${await imageChannelKey(JSON.stringify([job.imageAdmission.namespace, job.id]))}_${index + 1}`;
+}
+
 export async function acknowledgeComfyImage(job, data, { account = resolveImageAccountNamespace, fetchImpl = globalThis.fetch, headers = () => ({}) } = {}) {
   if (!data?.comfyTask?.resultStored || !/^[a-f0-9]{64}$/.test(data.comfyTask.receipt || '')) return '';
   const receipt = data.comfyTask.receipt, attemptId = data.comfyTask.attemptId, baseUrl = job.connection?.baseUrl;
