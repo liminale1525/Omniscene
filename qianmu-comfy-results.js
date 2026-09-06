@@ -6,10 +6,16 @@ const component = value => typeof value === 'string' && value.length > 0 && valu
 export const comfyTaskId = value => typeof value === 'string' && /^[a-zA-Z0-9_-]{1,240}$/.test(value) ? value : '';
 
 // null means still waiting. Nonempty outputs alone never establish completion.
-export function collectComfyStillResults(data, promptId, { workflow = {}, maxImages = 8 } = {}) {
+export function collectComfyStillResults(data, promptId, { workflow = {}, maxImages = 8, execution } = {}) {
   if (!object(data)) fail('invalid_history', 'ComfyUI 任务状态格式无效');
   if (!comfyTaskId(promptId)) fail('invalid_prompt_id', 'ComfyUI 任务编号无效');
   if (!Number.isSafeInteger(maxImages) || maxImages < 1 || maxImages > 8) fail('invalid_output_limit', 'ComfyUI 收片上限无效');
+  if (execution && (execution.version !== 1 || !Array.isArray(execution.outputNodeIds) || !execution.outputNodeIds.length
+    || execution.outputNodeIds.some(id => typeof id !== 'string' || !/^[a-zA-Z0-9_:-]{1,120}$/.test(id))
+    || !Number.isSafeInteger(execution.maxImages) || execution.maxImages < 1 || execution.maxImages > 8
+    || (execution.expectedImages != null && (!Number.isSafeInteger(execution.expectedImages) || execution.expectedImages < 1 || execution.expectedImages > execution.maxImages)))) {
+    fail('execution_contract', 'ComfyUI 收片约定无效，未读取成图');
+  }
   const history = Object.hasOwn(data, promptId) ? data[promptId] : data.prompt_id === promptId ? data : null;
   if (history == null) {
     if (Object.hasOwn(data, 'prompt_id')) fail('history_mismatch', 'ComfyUI 返回了另一任务的状态，未收片');
@@ -22,7 +28,9 @@ export function collectComfyStillResults(data, promptId, { workflow = {}, maxIma
   if (status?.completed !== true) return null;
   if (status.status_str && status.status_str !== 'success') fail('invalid_history', 'ComfyUI 未确认任务成功，未收片');
   if (!object(history.outputs)) fail('missing_final_image', 'ComfyUI 已结束，但未返回最终静帧');
-  const rows = [], seen = new Set();
+  const rows = [], seen = new Set(), allSeen = new Set();
+  const selected = execution ? new Set(execution.outputNodeIds) : null;
+  if (execution) maxImages = execution.maxImages;
   for (const [nodeId, output] of Object.entries(history.outputs)) {
     if (workflow?.[nodeId]?.class_type === 'PreviewImage') continue;
     if (!object(output)) fail('invalid_output', 'ComfyUI 输出记录无效');
@@ -37,6 +45,9 @@ export function collectComfyStillResults(data, promptId, { workflow = {}, maxIma
         || (subfolder && !subfolder.split('/').every(component))) fail('invalid_output_path', 'ComfyUI 图片位置无效，未读取');
       if (!/\.(?:png|jpe?g|webp)$/i.test(item.filename)) continue;
       const identity = JSON.stringify([subfolder, item.filename]);
+      allSeen.add(identity);
+      if (allSeen.size > 8) fail('output_limit', 'ComfyUI 实际保存超过 8 张图片；请核查原任务，勿重复生成');
+      if (selected && !selected.has(nodeId)) continue;
       if (seen.has(identity)) continue;
       seen.add(identity);
       if (rows.length >= maxImages) fail('output_limit', `ComfyUI 成图超过 ${maxImages} 张收片上限；原任务已执行，请到 ComfyUI 核查，勿重复生成`);
@@ -44,6 +55,8 @@ export function collectComfyStillResults(data, promptId, { workflow = {}, maxIma
     }
   }
   if (!rows.length) fail('missing_final_image', 'ComfyUI 已结束，但只有预览、动画或无最终静帧');
+  if (execution?.automatic && allSeen.size !== 1) fail('output_count_changed', 'ComfyUI 实际保存数超过自动单镜约定，请核查原任务，勿重复生成');
+  if (execution?.expectedImages != null && rows.length !== execution.expectedImages) fail('output_count_changed', 'ComfyUI 实际成图数与核查结果不一致，请查看原任务，勿重复生成');
   return rows;
 }
 

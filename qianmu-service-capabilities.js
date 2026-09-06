@@ -65,6 +65,8 @@ function imageCapabilityResult(status, body = {}) {
     bindingVersion: status === 'ready' ? IMAGE_MODEL_BINDING_VERSION : 0,
     novel: status === 'ready' && novel?.protocol === 'novelai' ? { protocol: 'novelai', capabilityModelIds: ids } : null,
     protocolBinding: { version: status === 'ready' && body.protocolBinding?.version === IMAGE_PROTOCOL_BINDING_VERSION ? IMAGE_PROTOCOL_BINDING_VERSION : 0, providers: protocolProviders },
+    comfyExecution: status === 'ready' && body.comfyExecution?.version === 1 && body.comfyExecution.outputSelection === true
+      && body.comfyExecution.staticAccounting === true ? { version: 1, outputSelection: true, staticAccounting: true } : null,
   };
 }
 
@@ -107,6 +109,12 @@ export function checkQianmuImageModelBinding(capabilities, identity) {
     return fail('image_capability_unsupported', '增强服务尚未支持所选模型能力档，请更新服务或改用可直连的连接');
   }
   return { ok: true, bindingVersion: IMAGE_MODEL_BINDING_VERSION };
+}
+
+export function checkQianmuComfyExecutionBinding(capabilities) {
+  if (capabilities?.status === 'ready' && capabilities.comfyExecution?.version === 1
+    && capabilities.comfyExecution.outputSelection === true && capabilities.comfyExecution.staticAccounting === true) return { ok: true, version: 1 };
+  return { ok: false, code: 'comfy_execution_incompatible', message: '尚未确认增强服务支持工作流数量核查与输出选择；请同步更新千幕与增强服务并重启 ST' };
 }
 
 // Workbench catalog, checks and generation invoke this only before an actual gateway fallback.

@@ -10,6 +10,8 @@ import {
 import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { collectComfyStillResults, comfyTaskId, comfyStillMime, readComfyImageBytes } from './qianmu-comfy-results.js';
+import { auditComfyWorkflow, requireComfyExecution } from './qianmu-comfy-audit.js';
+export { inspectComfyImageExecution, requireComfyExecution } from './qianmu-comfy-audit.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
 
 const MAX_IMAGES = 8;
@@ -548,11 +550,15 @@ function directRequestId() {
 
 async function generateComfyDirect(input, fetchImpl, waitImpl) {
   const started = Date.now(), parameters = directParameters(input), references = directReferences(input);
-  let template, referenceBytes;
+  let template, referenceBytes, execution;
   try {
     const rawReferences = input.referenceImages || input.references || [];
     if (!Array.isArray(rawReferences) || references.length !== rawReferences.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
     template = prepareComfyWorkflow(parameters.workflow || input.workflow, { ...input, parameters, referenceCount: references.length });
+    if (Object.hasOwn(input, 'comfyExecution')) {
+      const report = auditComfyWorkflow(template.bind(references.map((_,i) => `qianmu-audit-${i}.png`)), input.comfyExecution);
+      execution = requireComfyExecution(report, input.comfyExecution);
+    }
     let total = 0;
     referenceBytes = references.map(reference => {
       const encoded = reference.data.replace(/^data:[^;,]+;base64,/, '').replace(/\s+/g, '');
@@ -564,7 +570,7 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
       if (!bytes.byteLength || bytes.byteLength > 16 * 1024 * 1024 || total > 48 * 1024 * 1024) throw Object.assign(new Error('参考图单张须小于 16 MB，总计须小于 48 MB'), { code: 'references_too_large' });
       return bytes;
     });
-  } catch (error) { throw new DirectImageError(error.message, { code: error.code }); }
+  } catch (error) { throw new DirectImageError(error.message, { code: error.code, submissionState: 'not_submitted' }); }
   const headers = text(input.apiKey, 2048) ? { Authorization: `Bearer ${text(input.apiKey, 2048)}` } : {};
   const referenceNames = [];
   for (const [index, reference] of references.entries()) {
@@ -595,7 +601,7 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
       await waitImpl(interval);
       const response = await directFetch(providerEndpoint(input.baseUrl, `history/${encodeURIComponent(promptId)}`, 'comfy'), { method: 'GET', headers, signal: input.signal }, fetchImpl);
       const data = await responseJson(response, 'ComfyUI 状态读取失败');
-      descriptors = collectComfyStillResults(data, promptId, { workflow });
+      descriptors = collectComfyStillResults(data, promptId, { workflow, execution });
       if (descriptors) break;
     }
     if (!descriptors) throw new DirectImageError('ComfyUI 工作流等待超时；任务可能仍在运行，请核查原任务', { code: 'comfy_timeout' });

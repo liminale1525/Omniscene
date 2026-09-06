@@ -16,6 +16,7 @@
     "qianmu-blobstore.js",
     "qianmu-comfy-workflow.js",
     "qianmu-comfy-results.js",
+    "qianmu-comfy-audit.js",
     "qianmu-data-migrations.js",
     "qianmu-director-candidate.js",
     "qianmu-director-decision.js",

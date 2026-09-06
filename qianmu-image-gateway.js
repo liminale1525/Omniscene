@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { collectComfyStillResults, comfyTaskId, comfyStillMime } from './qianmu-comfy-results.js';
+import { auditComfyWorkflow, requireComfyExecution, normalizeComfyExecution, COMFY_EXECUTION_VERSION } from './qianmu-comfy-audit.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
 import { IMAGE_PROTOCOL_BINDING_VERSION, IMAGE_COMPATIBLE_PROTOCOLS } from './qianmu-image-models.js';
 import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
@@ -66,6 +67,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
       providers: { novel: { protocol: 'novelai', capabilityModelIds: NOVEL_STATIC_MODELS.map(([id]) => id) } },
     },
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
+    comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
   };
 }
 
@@ -201,12 +203,18 @@ export function sanitizeImageRequest(input) {
   const vibes = normalizeReferences(source.vibes, referenceBudget);
   const workflow = plainObject(parameters.workflow || source.workflow);
   const compatibility = imageTransportProvider(provider, binding) === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
+  let comfyExecution;
+  if (provider === 'comfy' && Object.hasOwn(source, 'comfyExecution')) {
+    try { comfyExecution = normalizeComfyExecution(source.comfyExecution); }
+    catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
+  }
   return {
     provider,
     ...(provider !== imageTransportProvider(provider, binding) ? { ...binding, imageProtocolVersion: IMAGE_PROTOCOL_BINDING_VERSION } : {}),
     apiKey,
     baseUrl: asString(source.baseUrl || definition.defaultBaseUrl, 2048),
     allowPrivateNetwork: provider === 'comfy' && source.allowPrivateNetwork === true,
+    ...(comfyExecution ? { comfyExecution } : {}),
     model,
     ...(source.capabilityModelId ? { capabilityModelId: asString(source.capabilityModelId, 240) } : {}),
     prompt,
@@ -687,7 +695,7 @@ function requestWithinDeadline(request, deadline) {
   return { ...request, parameters: { ...request.parameters, timeoutMs: Math.max(1, Math.min(request.parameters.timeoutMs, remaining)) } };
 }
 
-async function generateComfy(request, base, fetchImpl, template) {
+async function generateComfy(request, base, fetchImpl, template, execution) {
   const deadline = Date.now() + request.parameters.timeoutMs;
   const comfyClientId = randomUUID();
   const referenceNames = [];
@@ -710,7 +718,7 @@ async function generateComfy(request, base, fetchImpl, template) {
       const pollRequest = requestWithinDeadline(request, deadline);
       const response = await fetchUpstream(endpoint(base, `history/${encodeURIComponent(promptId)}`), { method: 'GET', headers: request.apiKey ? authHeaders(request) : {} }, pollRequest, fetchImpl);
       const json = parseUpstreamJson(await readLimited(response, 4 * 1024 * 1024));
-      descriptors = collectComfyStillResults(json, promptId, { workflow });
+      descriptors = collectComfyStillResults(json, promptId, { workflow, execution });
       if (descriptors) break;
     }
     if (!descriptors) throw new ImageGatewayError(504, 'comfy_timeout', 'ComfyUI 工作流等待超时；任务可能仍在服务端运行，请核查原任务');
@@ -758,12 +766,16 @@ export async function generateImage(input, options = {}) {
   };
   try {
     const request = sanitizeImageRequest(input);
-    let comfyTemplate;
+    let comfyTemplate, comfyExecution;
     if (request.provider === 'comfy') {
       try {
         const references = input.referenceImages || input.references || [];
         if (!Array.isArray(references) || references.length !== request.references.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
         comfyTemplate = prepareComfyWorkflow(request.parameters.workflow, { ...request, referenceCount: request.references.length });
+        if (request.comfyExecution) {
+          const report = auditComfyWorkflow(comfyTemplate.bind(request.references.map((_,i) => `qianmu-audit-${i}.png`)), request.comfyExecution);
+          comfyExecution = requireComfyExecution(report, request.comfyExecution);
+        }
       } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
     }
     const validatedBase = await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
@@ -775,7 +787,7 @@ export async function generateImage(input, options = {}) {
     else if (request.provider === 'banana') result = await generateGemini(request, base, fetchImpl);
     else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
     else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
-    else result = await generateComfy(request, base, fetchImpl, comfyTemplate);
+    else result = await generateComfy(request, base, fetchImpl, comfyTemplate, comfyExecution);
     if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');
     return {
       ok: true,
