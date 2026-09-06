@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import * as runtime from '../qianmu-image-direct.js';
 import * as capabilities from '../qianmu-service-capabilities.js';
 import * as storyboard from '../qianmu-storyboard.js';
+import {renderComfyLibrary} from '../qianmu-comfy-library-view.js';
 import { imageGatewayCapabilities } from '../qianmu-image-gateway.js';
 import { createStoryboardFormFixture, storyboardFunctionSource as section } from './helpers/storyboard-form-fixture.mjs';
 
@@ -64,9 +65,10 @@ test('retry never inherits previous manual uncertainty consent',async()=>{
   h.waiting.length=0;assert.equal(await h.context.storyboardQueueJob(h.job),true);assert.equal(h.confirmations.length,2);
 });
 
-test('production renderer exposes saved output nodes, not a control for other image families',()=>{
+test('workflow library editor exposes saved output nodes; daily workbench and other families do not duplicate them',()=>{
   const comfy=createStoryboardFormFixture({family:'comfy',workflow:workflow()});
-  assert.match(comfy.content,/data-storyboard-field="comfyOutputNodeId"/);assert.match(comfy.content,/value="save"[^>]*>save · SaveImage/);
+  const editor=renderComfyLibrary({draft:{name:'Example',document:{workflow:JSON.stringify(workflow()),outputNodeId:'save',parameters:{}}}});
+  assert.match(comfy.content,/sd-comfy-open-library/);assert.match(editor,/data-comfy-draft="outputNodeId"/);assert.match(editor,/value="save"[^>]*>save · SaveImage/);
   const novel=createStoryboardFormFixture({family:'novel'});assert.doesNotMatch(novel.content,/comfyOutputNodeId/);
 });
 

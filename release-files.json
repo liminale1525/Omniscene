@@ -18,6 +18,8 @@
     "qianmu-comfy-results.js",
     "qianmu-comfy-audit.js",
     "qianmu-comfy-workbench.js",
+    "qianmu-comfy-library.js",
+    "qianmu-comfy-library-view.js",
     "qianmu-data-migrations.js",
     "qianmu-director-candidate.js",
     "qianmu-director-decision.js",

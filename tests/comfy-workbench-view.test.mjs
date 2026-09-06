@@ -10,11 +10,11 @@ const graph={node:{class_type:'TestNode',inputs:{text:'%qianmu_prompt%',width:'%
 test('Comfy daily UI separates connection/workflow and only exposes real bound controls',()=>{
   const {content}=createStoryboardFormFixture({family:'comfy',workflow:graph});
   assert.match(content,/sd-comfy-workbench/);assert.match(content,/data-storyboard-engine="model"/);assert.match(content,/data-storyboard-engine="comfy"/);
-  assert.match(content,/<b>连接<\/b>/);assert.match(content,/data-storyboard-card="comfy-workflow"/);assert.match(content,/sd-comfy-import-workflow/);
+  assert.match(content,/<b>连接<\/b>/);assert.match(content,/data-storyboard-card="comfy-workflow"/);assert.match(content,/sd-comfy-open-library/);
   assert.match(content,/data-storyboard-field="width"/);assert.match(content,/data-storyboard-field="cfg"/);
   assert.doesNotMatch(content,/data-storyboard-field="(?:height|sampler|scheduler|novelSm)"|sd-storyboard-model-picker|sd-storyboard-provider|sd-storyboard-tag-quick|sd-storyboard-open-artist-library|sd-storyboard-param-vibes/);
-  assert.equal((content.match(/class="text_pole sd-storyboard-workflow"/g)||[]).length,1);
-  assert.equal((content.match(/data-storyboard-field="comfyOutputNodeId"/g)||[]).length,1);
+  assert.equal((content.match(/class="text_pole sd-storyboard-workflow"/g)||[]).length,0,'large JSON lives in dedicated editor, not the daily page');
+  assert.equal((content.match(/data-storyboard-field="comfyOutputNodeId"/g)||[]).length,0,'output selection moved with its JSON to the editor');
 });
 
 test('workflow settings default collapsed; blank/invalid documents remain repairable and markup is escaped',()=>{

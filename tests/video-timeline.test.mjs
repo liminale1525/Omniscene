@@ -119,7 +119,7 @@ test('timeline validation rejects duplicate clip ids and incomplete stable refer
 test('the timeline contract ships as an idle feature chunk', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
-assert.match(source, /videoTimeline:\s*\{[\s\S]*import\('\.\/qianmu-video-timeline\.js\?v=1\.59\.52'\)/);
+assert.match(source, /videoTimeline:\s*\{[\s\S]*import\('\.\/qianmu-video-timeline\.js\?v=1\.59\.53'\)/);
   assert.ok(release.files.includes('qianmu-video-timeline.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('videoTimeline'\)/);

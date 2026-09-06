@@ -10106,3 +10106,29 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-workbench .sd-storyboard-workflow { min-height: 144px; max-height: 45vh; resize: vertical; font-family: monospace; }
 #story-director-modal .sd-comfy-workbench-loading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
 #story-director-modal .sd-comfy-workflow-card .sd-storyboard-workflow-warning[hidden] { display: none !important; }
+
+/* Workflow library/editor: bounded, isolated and consistent on narrow and wide screens. */
+#story-director-modal .sd-comfy-library { min-width: 0; text-align: start; }
+#story-director-modal .sd-comfy-library fieldset { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
+#story-director-modal .sd-comfy-library .sd-card { min-width: 0; margin: 0; }
+#story-director-modal .sd-comfy-library :is(.sd-comfy-library-tools,.sd-comfy-library-row-actions,.sd-comfy-library-row-head) { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#story-director-modal .sd-comfy-library-tools > :is(input,span) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+#story-director-modal .sd-comfy-library label { display: flex; flex-direction: column; align-items: stretch; gap: 5px; min-width: 0; text-align: start; }
+#story-director-modal .sd-comfy-library label > span { font-size: 12px; color: var(--sd-muted); text-align: start; }
+#story-director-modal .sd-comfy-library .sd-storyboard-card-body { display: flex; flex-direction: column; gap: 10px; }
+#story-director-modal .sd-comfy-library .sd-storyboard-card-body.sd-storyboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+#story-director-modal .sd-comfy-library .text_pole { box-sizing: border-box; width: 100%; min-width: 0; margin: 0; font: inherit; font-size: 12px; border-radius: 9px; text-align: start; }
+#story-director-modal .sd-comfy-library :is(input,select).text_pole { height: 40px; min-height: 40px; max-height: 40px; padding: 7px 10px; }
+#story-director-modal .sd-comfy-library textarea.text_pole { min-height: 96px; max-height: 55dvh; resize: vertical; padding: 10px; }
+#story-director-modal .sd-comfy-library textarea.sd-comfy-library-json { height: 32dvh; min-height: 180px; font-family: monospace; white-space: pre; overflow: auto; }
+#story-director-modal .sd-comfy-library :is(.sd-btn,.sd-icon-btn) { height: 40px; min-height: 40px; margin: 0; border-radius: 9px; font-size: 12px; }
+#story-director-modal .sd-comfy-library .sd-icon-btn { flex: 0 0 40px; width: 40px; min-width: 40px; padding: 0; }
+#story-director-modal .sd-comfy-library-note { color: var(--sd-muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+#story-director-modal .sd-comfy-library-rows { display: flex; flex-direction: column; gap: 8px; }
+#story-director-modal .sd-comfy-library-row { padding: 12px; }
+#story-director-modal .sd-comfy-library-row[hidden] { display: none !important; }
+#story-director-modal .sd-comfy-library-row-head > span { color: var(--sd-muted); font-size: 11px; }
+#story-director-modal .sd-comfy-library-name { flex: 1; min-width: 0; padding: 4px 0; background: none; border: 0; color: var(--sd-text); font-size: 13px; font-weight: 600; text-align: start; overflow-wrap: anywhere; cursor: pointer; }
+#story-director-modal .sd-comfy-library-row-actions { margin-top: 8px; }
+#story-director-modal .sd-comfy-library-row-actions > .sd-btn { flex: 1; min-width: 0; }
+#story-director-modal .sd-comfy-library fieldset:disabled { opacity: .65; }

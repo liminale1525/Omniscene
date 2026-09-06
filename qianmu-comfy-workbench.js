@@ -7,19 +7,16 @@ const fields = [
   ['cfg','CFG','number','min="0" max="100" step="0.1"'],
   ['seed','Seed','number','min="-1"'],['sampler','Sampler','text',''],['scheduler','Scheduler','text',''],
 ];
-export function renderComfyWorkbench({profile, capabilities, collapsed={}, promptLayer={}, workflowNotice='', workflowNodes=0}, shared={}) {
+export function renderComfyWorkbench({profile, capabilities, collapsed={}, promptLayer={}, workflowNotice='', workflowNodes=0, librarySelection=null}, shared={}) {
   const controls=fields.filter(([key])=>capabilities[key]).map(([key,label,type,attrs])=>
     `<label><span>${label}</span><input class="text_pole sd-storyboard-field${['width','height'].includes(key)?` sd-storyboard-${key}`:''}" data-storyboard-field="${key}" type="${type}" ${attrs} value="${escape(profile[key])}"></label>`).join('');
   const workflow=typeof profile.comfyWorkflow==='string'&&profile.comfyWorkflow.trim().startsWith('{')?profile.comfyWorkflow:'';
   return `<div class="sd-storyboard-create sd-comfy-workbench">
     ${shared.modes||''}${shared.automation||''}${shared.production||''}${shared.connection||''}
     <details class="sd-card sd-comfy-workflow-card" data-storyboard-card="comfy-workflow" ${!workflow||workflowNotice||collapsed['comfy-workflow']===false?'open':''}>
-      <summary><span><b>工作流</b><small>${workflowNodes?`${workflowNodes} 个节点`:'API Workflow'}</small></span><button type="button" class="sd-icon-btn sd-comfy-import-workflow" title="导入 API 工作流" aria-label="导入 API 工作流"><i class="fa-solid fa-upload"></i></button></summary>
+      <summary><span><b>工作流</b><small>${workflowNodes?`${workflowNodes} 个节点`:'API Workflow'}</small></span><button type="button" class="sd-icon-btn sd-comfy-open-library" title="工作流库" aria-label="工作流库"><i class="fa-solid fa-folder-open"></i></button></summary>
       <div class="sd-storyboard-card-body">
-        <input type="file" class="sd-comfy-workflow-file" accept=".json,application/json" hidden>
-        <label><span>API Workflow</span><textarea class="text_pole sd-storyboard-workflow" spellcheck="false" aria-label="API Workflow JSON">${escape(workflow)}</textarea></label>
-        <button type="button" class="sd-btn sd-comfy-workflow-apply">更新可调参数</button>
-        <label><span>最终静帧输出</span><select class="text_pole sd-storyboard-field" data-storyboard-field="comfyOutputNodeId">${shared.outputOptions||''}</select></label>
+        <button type="button" class="sd-btn sd-comfy-open-library">${librarySelection?.name?`基于 ${escape(librarySelection.name)} · v${Number(librarySelection.version)||1}`:workflow?'当前自定义工作流':'选择或导入工作流'}</button>
         <div class="sd-storyboard-workflow-warning sd-storyboard-connection-result failed" ${workflowNotice?'':'hidden'} role="status"><span>${escape(workflowNotice)}</span></div>
       </div>
     </details>
