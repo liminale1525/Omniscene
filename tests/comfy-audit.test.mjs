@@ -148,6 +148,8 @@ test('service capability handshake distinguishes old services from static accoun
   const current=imageGatewayCapabilities();assert.equal(current.comfyExecution.version,1);
   const probe=body=>probeQianmuImageCapabilities({fetchImpl:async()=>new Response(JSON.stringify(body))});
   assert.equal(checkQianmuComfyExecutionBinding(await probe(current)).ok,true);
+  const oldQueue = structuredClone(current); delete oldQueue.comfyQueue;
+  assert.equal(checkQianmuComfyExecutionBinding(await probe(oldQueue)).ok, false, 'old accounting alone cannot bypass durable instance coordination');
   delete current.comfyExecution;assert.equal(checkQianmuComfyExecutionBinding(await probe(current)).ok,false);
   assert.equal(checkQianmuComfyExecutionBinding({status:'ready',comfyExecution:{version:1}}).ok,false);
 });

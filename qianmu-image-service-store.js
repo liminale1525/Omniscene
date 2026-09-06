@@ -17,11 +17,14 @@ const safeError = cause => String(cause?.code || '').startsWith('image_service_'
 const isMissing = cause => cause?.code === 'ENOENT';
 const sameFile = (one, two) => one.dev === two.dev && one.ino === two.ino;
 
-export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels = 128,
+export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels = 128, scope = 'novel',
   maxRecordBytes = 2 * 1024 * 1024, maxPending = 64 } = {}) {
   if (typeof dataRoot !== 'string' || !path.isAbsolute(dataRoot) || dataRoot.includes('\0') || path.resolve(dataRoot) === path.parse(path.resolve(dataRoot)).root) {
     throw error('root', '增强服务缺少可信的 ST 数据目录');
   }
+  // Host-only, closed choice. Existing NAI data stays at its original path.
+  if (!['novel', 'comfy'].includes(scope)) throw error('scope', '生图服务记录范围无效');
+  const queueDirectory = scope === 'comfy' ? 'comfy-queue-v1' : 'image-queue-v1';
   const channelLimit = Math.max(1, Math.min(128, Math.trunc(Number(maxChannels) || 128)));
   const recordLimit = Math.max(1024, Math.min(2 * 1024 * 1024, Math.trunc(Number(maxRecordBytes) || 2 * 1024 * 1024)));
   const pendingLimit = Math.max(1, Math.min(64, Math.trunc(Number(maxPending) || 64)));
@@ -37,7 +40,7 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
       const root = await io.realpath(dataRoot);
       if (!(await io.stat(root)).isDirectory() || path.resolve(root) === path.parse(root).root) throw error('root', 'ST 数据目录无效');
       let current = root;
-      for (const segment of ['.qianmu-service', 'image-queue-v1']) {
+      for (const segment of ['.qianmu-service', queueDirectory]) {
         current = path.join(current, segment);
         if (create) { try { await io.mkdir(current, { mode: 0o700 }); } catch (cause) { if (cause?.code !== 'EEXIST') throw cause; } }
         try { await checkDirectory(current); } catch (cause) { if (!create && isMissing(cause)) return false; throw cause; }

@@ -3,6 +3,8 @@
   "bundleName": "qianmuwanxiang-V2-Directors-Cut",
   "outputDirectory": "dist",
   "files": [
+    "qianmu-comfy-service.js",
+    "qianmu-comfy-submission.js",
     "INSTALL-DOUBAO-APIKEY.md",
     "LICENSE",
     "README.md",

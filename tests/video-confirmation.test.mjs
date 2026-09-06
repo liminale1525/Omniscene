@@ -120,7 +120,7 @@ test('the confirmation contract stays lazy and only submits after the explicit f
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
   assert.doesNotMatch(source, /^import[^\n]*qianmu-video-confirmation\.js/m);
-assert.match(source, /videoConfirmation:\s*\{[\s\S]*qianmu-video-confirmation\.js\?v=1\.59\.58/);
+assert.match(source, /videoConfirmation:\s*\{[\s\S]*qianmu-video-confirmation\.js\?v=1\.59\.59/);
   assert.ok(release.files.includes('qianmu-video-confirmation.js'));
   const editor = source.slice(source.indexOf('async function storyboardOpenVideoDraftEditor'), source.indexOf('function renderStoryboardVideoDraftShelf'));
   assert.match(editor, /storyboardEnsureVideoCoordinator\(\)/);

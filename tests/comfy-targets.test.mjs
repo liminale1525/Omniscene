@@ -8,6 +8,7 @@ import { createComfyTargetStore, comfyTargetId } from '../qianmu-comfy-target-st
 import { createComfyTargets } from '../qianmu-comfy-targets.js';
 import { requestComfyTargets, requireTrustedComfyConnection } from '../qianmu-comfy-targets-view.js';
 import { init } from '../server-plugin.js';
+import { imageServiceAccount } from '../qianmu-image-service-access.js';
 
 const admin = () => ({ user: { profile: { handle: 'alice', enabled: true, admin: true } } });
 const user = () => ({ user: { profile: { handle: 'bob', enabled: true, admin: false } } });
@@ -105,7 +106,10 @@ test('installed routes persist trust, reject before DNS, and stop polling a task
         callback(incoming); incoming.end(JSON.stringify({ prompt_id: 'original-only' })); void revoke?.(); done(); },
     }),
   } });
-  const body = { provider: 'comfy', baseUrl: trust().baseUrl, prompt: 'test', parameters: { pollIntervalMs: 250, workflow: { a: { inputs: { text: '%qianmu_prompt%' } } } } };
+  const body = { provider: 'comfy', baseUrl: trust().baseUrl, prompt: 'test',
+    comfyQueue: { version: 1, attemptId: 'trusted-attempt', expectedAccount: imageServiceAccount(admin()).namespace, automatic: false },
+    comfyExecution: { version: 1, automatic: false, outputNodeIds: ['save'], maxImages: 1, allowUnverified: false },
+    parameters: { pollIntervalMs: 250, workflow: { a: { class_type: 'EmptyImage', inputs: { text: '%qianmu_prompt%', batch_size: 1 } }, save: { class_type: 'SaveImage', inputs: { images: ['a', 0] } } } } };
   for (const path of ['check', 'models', 'generate']) { const res = response(); await routes.get(`POST /image/${path}`)({ ...admin(), body }, res); assert.equal(res.body.code, 'comfy_targets_untrusted'); }
   assert.deepEqual(calls, []); assert.equal(resolutions, 0);
   const save = response(); await routes.get('POST /image/comfy/targets')({ ...admin(), body: trust() }, save);
@@ -114,6 +118,10 @@ test('installed routes persist trust, reject before DNS, and stop polling a task
   const generated = response(); await routes.get('POST /image/generate')({ ...admin(), body }, generated);
   assert.deepEqual(calls, ['/api/prompt']); assert.equal(generated.body.submissionState, 'accepted'); assert.equal(generated.body.upstreamId, 'original-only');
   assert.equal(generated.body.code, 'comfy_targets_revoked');
+  const queried = response(); await routes.get('POST /image/comfy/tasks/query')({ ...admin(), body: { ...body.comfyQueue, baseUrl: body.baseUrl } }, queried);
+  assert.equal(queried.body.task.upstreamId, 'original-only'); assert.equal(queried.body.task.status, 'uncertain');
+  const foreign = response(); await routes.get('POST /image/comfy/tasks/query')({ ...user(), body: { ...body.comfyQueue, expectedAccount: imageServiceAccount(user()).namespace, baseUrl: body.baseUrl } }, foreign);
+  assert.equal(foreign.body.task, null); assert.deepEqual(calls, ['/api/prompt'], 'local receipt queries never read remote history or resubmit');
   const anonymous = response(); await routes.get('GET /image/comfy/targets')({}, anonymous); assert.equal(anonymous.statusCode, 401);
 });
 

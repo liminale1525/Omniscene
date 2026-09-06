@@ -69,6 +69,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
     comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
     comfyServerTransport: { version: 2, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: true },
+    comfyQueue: { version: 1, scope: 'st-api-root', durableAcceptance: true, originalTaskLookup: true, resultRetrieval: false },
   };
 }
 
@@ -697,7 +698,7 @@ function requestWithinDeadline(request, deadline) {
   return { ...request, parameters: { ...request.parameters, timeoutMs: Math.max(1, Math.min(request.parameters.timeoutMs, remaining)) } };
 }
 
-async function generateComfy(request, base, fetchImpl, template, execution) {
+async function generateComfy(request, base, fetchImpl, template, execution, onComfyAccepted) {
   const deadline = Date.now() + request.parameters.timeoutMs;
   const comfyClientId = randomUUID();
   const referenceNames = [];
@@ -714,6 +715,9 @@ async function generateComfy(request, base, fetchImpl, template, execution) {
   const promptId = comfyTaskId(submitted.prompt_id || submitted.promptId);
   if (!promptId) throw new ImageGatewayError(502, 'comfy_missing_prompt_id', 'ComfyUI 未返回任务编号');
   try {
+    // Persist the original id before any polling. A failed receipt write does
+    // not revoke acceptance and must never trigger another POST /prompt.
+    await onComfyAccepted?.(promptId);
     let descriptors;
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, request.parameters.pollIntervalMs));
@@ -792,7 +796,7 @@ export async function generateImage(input, options = {}) {
     else if (request.provider === 'banana') result = await generateGemini(request, base, fetchImpl);
     else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
     else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
-    else result = await generateComfy(request, base, fetchImpl, comfyTemplate, comfyExecution);
+    else result = await generateComfy(request, base, fetchImpl, comfyTemplate, comfyExecution, options.onComfyAccepted);
     try { await comfyTransport?.verify(); }
     catch (error) { if (result.upstreamId) error.upstreamId = result.upstreamId; throw error; }
     if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');

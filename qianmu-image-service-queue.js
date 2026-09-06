@@ -69,6 +69,11 @@ export function normalizeImageServiceChannel(value, channelKey, maxEntries = 409
       ownerId: id(raw.ownerId, '服务会话'), fence: id(raw.fence, '服务请求票'), status: raw.status,
       automatic: raw.automatic, createdAt: time(raw.createdAt), updatedAt: time(raw.updatedAt),
     };
+    if (Object.hasOwn(raw, 'upstreamId')) {
+      if (typeof raw.upstreamId !== 'string' || !/^[a-zA-Z0-9_-]{1,240}$/.test(raw.upstreamId)
+        || ['reserved', 'released', 'rejected'].includes(raw.status)) throw fail('state', '原任务编号或受理状态无效，请先核查');
+      row.upstreamId = raw.upstreamId;
+    }
     const identity = JSON.stringify([row.namespace, row.attemptId]);
     if (seen.has(identity) || row.updatedAt < row.createdAt) throw fail('state', '生图服务请求身份或时间重复');
     seen.add(identity); return row;
@@ -82,9 +87,11 @@ export function normalizeImageServiceChannel(value, channelKey, maxEntries = 409
 // disk failure after an atomic rename may leave a committed, conservatively fenced
 // record. Callers must not assume a rejected transaction means nothing was saved.
 export function createImageServiceQueue({ store, ownerId = randomUUID(), now = Date.now,
-  maxPending = 32, maxActive = 2, maxPendingBytes = 128 * 1024 * 1024, maxEntries = 4096, waitTimeoutMs = 10 * 60_000 } = {}) {
+  maxPending = 32, maxActive = 2, maxPendingBytes = 128 * 1024 * 1024, maxEntries = 4096, waitTimeoutMs = 10 * 60_000,
+  resourceLabel = 'NAI 连接' } = {}) {
   if (typeof store?.transaction !== 'function') throw fail('storage', '增强服务缺少持久请求记录，未启用服务端生图');
   id(ownerId, '服务会话');
+  id(resourceLabel, '资源名称', 64);
   const capacity = Math.max(1, Math.min(32, Math.trunc(Number(maxPending) || 32)));
   const activeLimit = Math.max(1, Math.min(8, Math.trunc(Number(maxActive) || 2)));
   const byteLimit = Math.max(1, Math.min(128 * 1024 * 1024, Math.trunc(Number(maxPendingBytes) || 128 * 1024 * 1024)));
@@ -116,7 +123,7 @@ export function createImageServiceQueue({ store, ownerId = randomUUID(), now = D
       }
       // A new service session cannot infer whether an older process is dead.
       // Only the persistent store's recovery procedure may mark old work uncertain.
-      if (state.entries.some(row => PENDING.has(row.status))) throw fail('busy', '此 NAI 连接仍有在途请求，请查看原任务');
+      if (state.entries.some(row => PENDING.has(row.status))) throw fail('busy', `此 ${resourceLabel} 仍有在途请求，请查看原任务`);
       const uncertain = state.entries.filter(row => row.status === 'uncertain');
       const confirmation = uncertain.length ? hash(JSON.stringify(uncertain.map(row => JSON.stringify([row.namespace, row.attemptId, row.fence, row.updatedAt])).sort())) : '';
       if (confirmation && (identity.automatic || input.confirmation !== confirmation)) {
@@ -138,9 +145,20 @@ export function createImageServiceQueue({ store, ownerId = randomUUID(), now = D
           await transact(key, (state, at) => {
             const row = owned(state, identity, fence);
             if (!['reserved', 'submitting'].includes(row.status)) throw fail('changed', '原服务请求不允许再次提交');
+            if (row.upstreamId) throw fail('already_submitted', '远端已受理原任务，未再次提交');
             row.status = 'submitting'; row.updatedAt = at;
           });
           check(valid, signal); submitted = true;
+        },
+        async recordUpstreamId(upstreamId) {
+          if (!submitted || typeof upstreamId !== 'string' || !/^[a-zA-Z0-9_-]{1,240}$/.test(upstreamId)) throw fail('state', '远端任务编号未获确认');
+          // Record accepted evidence even if the caller disconnects or changes
+          // account. Ownership was frozen before submission; this grants no IO.
+          await transact(key, (state, at) => {
+            const row = owned(state, identity, fence);
+            if (row.status !== 'submitting' || (row.upstreamId && row.upstreamId !== upstreamId)) throw fail('changed', '原任务受理记录已变化');
+            row.upstreamId = upstreamId; row.updatedAt = at;
+          });
         },
       }));
       finished = true; return result;

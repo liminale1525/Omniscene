@@ -67,6 +67,8 @@ function imageCapabilityResult(status, body = {}) {
     protocolBinding: { version: status === 'ready' && body.protocolBinding?.version === IMAGE_PROTOCOL_BINDING_VERSION ? IMAGE_PROTOCOL_BINDING_VERSION : 0, providers: protocolProviders },
     comfyExecution: status === 'ready' && body.comfyExecution?.version === 1 && body.comfyExecution.outputSelection === true
       && body.comfyExecution.staticAccounting === true ? { version: 1, outputSelection: true, staticAccounting: true } : null,
+    comfyQueue: status === 'ready' && body.comfyQueue?.version === 1 && body.comfyQueue.scope === 'st-api-root'
+      && body.comfyQueue.durableAcceptance === true ? { version: 1, scope: 'st-api-root', durableAcceptance: true } : null,
   };
 }
 
@@ -113,8 +115,10 @@ export function checkQianmuImageModelBinding(capabilities, identity) {
 
 export function checkQianmuComfyExecutionBinding(capabilities) {
   if (capabilities?.status === 'ready' && capabilities.comfyExecution?.version === 1
-    && capabilities.comfyExecution.outputSelection === true && capabilities.comfyExecution.staticAccounting === true) return { ok: true, version: 1 };
-  return { ok: false, code: 'comfy_execution_incompatible', message: '尚未确认增强服务支持工作流数量核查与输出选择；请同步更新千幕与增强服务并重启 ST' };
+    && capabilities.comfyExecution.outputSelection === true && capabilities.comfyExecution.staticAccounting === true
+    && capabilities.comfyQueue?.version === 1 && capabilities.comfyQueue.scope === 'st-api-root'
+    && capabilities.comfyQueue.durableAcceptance === true) return { ok: true, version: 1 };
+  return { ok: false, code: 'comfy_execution_incompatible', message: '尚未确认增强服务支持 Comfy 数量核查与实例排队；请同步更新千幕与增强服务并重启 ST' };
 }
 
 // Workbench catalog, checks and generation invoke this only before an actual gateway fallback.

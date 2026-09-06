@@ -1,15 +1,24 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { Writable, PassThrough } from 'node:stream';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { createComfyServerTransport, pinnedComfyFetch } from '../qianmu-comfy-server-transport.js';
-import { init } from '../server-plugin.js';
+import { init, exit } from '../server-plugin.js';
+import * as fs from 'node:fs/promises';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { imageServiceAccount } from '../qianmu-image-service-access.js';
 import { comfyTargetId } from '../qianmu-comfy-target-store.js';
 
 const account = (admin = false) => ({ user: { profile: { handle: 'alice', enabled: true, admin } } });
+const workflow = (refs = false) => ({ '1': { class_type: 'FixtureOutput', inputs: { text: '%qianmu_prompt%', ...(refs ? { refs: '%qianmu_references%' } : {}) } }, save: { class_type: 'SaveImage', inputs: { images: ['1', 0] } } });
 const input = (extra = {}) => ({ provider: 'comfy', baseUrl: 'https://comfy.test/api', apiKey: 'test-only-secret', model: 'workflow', prompt: 'rain',
-  parameters: { pollIntervalMs: 250, workflow: { '1': { inputs: { text: '%qianmu_prompt%' } } } }, ...extra });
+  comfyQueue: { version: 1, attemptId: 'fixture-attempt', expectedAccount: imageServiceAccount(account()).namespace, automatic: false },
+  comfyExecution: { version: 1, automatic: false, outputNodeIds: ['save'], maxImages: 1, allowUnverified: true },
+  parameters: { pollIntervalMs: 250, workflow: workflow() }, ...extra });
+const roots = [];
+after(async () => { await exit(); for (const root of roots) { assert.equal(path.dirname(root), path.resolve(tmpdir())); assert.ok(path.basename(root).startsWith('qianmu-comfy-routes-')); await fs.rm(root, { recursive: true, force: true }); } });
 const publicDns = async () => [{ address: '8.8.8.8', family: 4 }];
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==', 'base64');
 function mockNodeRequest(calls, respond = () => ({ body: {} })) {
@@ -29,10 +38,11 @@ function mockNodeRequest(calls, respond = () => ({ body: {} })) {
 const response = () => ({ statusCode: 200, headers: {}, set(k, v) { this.headers[k.toLowerCase()] = v; return this; }, status(v) { this.statusCode = v; return this; }, json(v) { this.body = v; return this; } });
 async function routes(options = {}) {
   const handlers = new Map();
+  const dataRoot = await fs.mkdtemp(path.join(tmpdir(), 'qianmu-comfy-routes-')); roots.push(dataRoot);
   const comfyTargetStore = { read: async () => ({ schemaVersion: 1, revision: 1, targets: [
     ['https://comfy.test/api', false], ['http://127.0.0.1:8188', true],
   ].map(([baseUrl, allowPrivateNetwork]) => ({ id: comfyTargetId(baseUrl, allowPrivateNetwork), baseUrl, allowPrivateNetwork, shared: !allowPrivateNetwork, name: 'Approved fixture', grantId: '00000000-0000-4000-8000-000000000000', updatedAt: 0 })) }) };
-  await init({ get: (path, handler) => handlers.set(`GET ${path}`, handler), post: (path, handler) => handlers.set(`POST ${path}`, handler) }, { comfyTransportOptions: options, comfyTargetStore });
+  await init({ get: (path, handler) => handlers.set(`GET ${path}`, handler), post: (path, handler) => handlers.set(`POST ${path}`, handler) }, { dataRoot, comfyTransportOptions: options, comfyTargetStore });
   return handlers;
 }
 
@@ -41,7 +51,7 @@ test('every installed Comfy gateway operation requires ST identity and private a
   for (const path of ['check', 'models', 'generate']) {
     for (const [req, body, status] of [[{}, input(), 401], [account(false), input({ allowPrivateNetwork: true }), 403]]) {
       const res = response(); await handlers.get(`POST /image/${path}`)({ ...req, body }, res);
-      assert.equal(res.statusCode, status); assert.match(res.body.code, /^comfy_transport_/); assert.equal(res.headers['cache-control'], 'no-store');
+      assert.equal(res.statusCode, status); assert.match(res.body.code, path === 'generate' && status === 403 ? /^comfy_targets_/ : /^comfy_transport_/); assert.equal(res.headers['cache-control'], 'no-store');
       if (path === 'generate') assert.equal(res.body.submissionState, 'not_submitted');
     }
   }
@@ -123,7 +133,7 @@ test('actual generation route pins upload, prompt, original history and view to 
     assert.fail(path);
   }) });
   const res = response(); await handlers.get('POST /image/generate')({ ...account(), body: input({ referenceImages: [{ data: png.toString('base64'), mime: 'image/png' }],
-    parameters: { pollIntervalMs: 250, workflow: { '1': { inputs: { text: '%qianmu_prompt%', refs: '%qianmu_references%' } } } } }) }, res);
+    parameters: { pollIntervalMs: 250, workflow: workflow(true) } }) }, res);
   assert.equal(res.statusCode, 200); assert.equal(res.body.upstreamId, 'original-id'); assert.equal(res.body.images.length, 1);
   assert.equal(resolutions, 1); assert.equal(calls.length, 4);
   for (const call of calls) { assert.equal(call.options.headers.authorization, 'Bearer test-only-secret'); call.options.lookup('comfy.test', {}, (error, ip) => { assert.equal(error, null); assert.equal(ip, '8.8.8.8'); }); }

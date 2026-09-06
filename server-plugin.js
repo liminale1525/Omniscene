@@ -8,6 +8,7 @@ import { checkServerComfyReadiness } from './qianmu-comfy-readiness-server.js';
 import { createComfyServerTransport } from './qianmu-comfy-server-transport.js';
 import { createComfyTargetStore } from './qianmu-comfy-target-store.js';
 import { createComfyTargets } from './qianmu-comfy-targets.js';
+import { createComfyService } from './qianmu-comfy-service.js';
 import {
   checkImageConnection,
   ImageGatewayError,
@@ -180,6 +181,23 @@ export async function init(router, options = {}) {
     return comfyTargets ||= createComfyTargets({ store: options.comfyTargetStore || createComfyTargetStore({ dataRoot: hostDataRoot() }) });
   };
   const comfyTransportOptions = () => ({ ...(options.comfyTransportOptions || {}), authorizeTarget: (req, input) => targetsFor(req).acquire(req, input) });
+  let comfyTasks;
+  const comfyTasksFor = req => {
+    try { imageServiceAccount(req); } catch (_) { throw Object.assign(new ImageGatewayError(401, 'comfy_transport_authentication', '请先登录 ST 账户'), { submissionState: 'not_submitted' }); }
+    if (!comfyTasks) {
+      comfyTasks = createComfyService({ dataRoot: hostDataRoot(), ...(options.comfyTaskOptions || {}),
+        authorizeTarget: (request, input) => targetsFor(request).acquire(request, input),
+        prepareTransport: (request, input, operation) => createComfyServerTransport(request, input, { ...comfyTransportOptions(), operation }),
+      });
+      imageTaskServices.add(comfyTasks);
+    }
+    return comfyTasks;
+  };
+  router.post('/image/comfy/tasks/query', async (req, res) => {
+    prepareImageResponse(res);
+    try { return res.json(await comfyTasksFor(req).query(req, req.body)); }
+    catch (error) { const result = imageGatewayErrorPayload(error); return res.status(result.status).json(result.body); }
+  });
   router.get('/image/comfy/targets', async (req, res) => {
     prepareImageResponse(res);
     try { return res.json(await targetsFor(req).list(req)); }
@@ -271,13 +289,21 @@ export async function init(router, options = {}) {
 
   router.post('/image/generate', async (req, res) => {
     prepareImageResponse(res);
+    const controller = new AbortController();
+    const onClose = () => { if (!res.writableEnded) controller.abort(); };
+    res.once?.('close', onClose);
     try {
+      if (String(req.body?.provider || '').trim().toLowerCase() === 'comfy') {
+        const result = await comfyTasksFor(req).submit(req, req.body, { signal: controller.signal });
+        if (!res.destroyed && !res.writableEnded) return res.json(result);
+        return undefined;
+      }
       return res.json(await generateImage(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...comfyTransportOptions(), operation }) }));
     } catch (error) {
       const result = imageGatewayErrorPayload(error);
       console.warn('[千幕分镜网关] 生成失败', result.body.code, result.body.upstreamStatus || '');
-      return res.status(result.status).json(result.body);
-    }
+      if (!res.destroyed && !res.writableEnded) return res.status(result.status).json(result.body);
+    } finally { res.off?.('close', onClose); }
   });
 
   router.get('/video/minimax/capabilities', (_req, res) => prepareImageResponse(res).json({
