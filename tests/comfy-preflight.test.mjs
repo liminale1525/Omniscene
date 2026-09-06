@@ -39,7 +39,8 @@ function environment({automatic=false}={}) {
     storyboardScheduleAutomaticCapture:()=>{},storyboardScheduleInlineRender:()=>{},storyboardSchedulePlanArchive:()=>{},
     storyboardResolveRoutingProfile:(s,route)=>({...s.profiles[route.providerId],...(s.parameterPresets.find(p=>p.id===route.parameterPresetId)?.profile||{})}),
     storyboardCompilerContext:async()=>{calls.push('context');return {floor:0,messages:[],worldRows:[]};},
-    featureRuntime:{load:async key=>{calls.push(key);return key==='comfyPreflight'?preflight:{buildStoryboardPlanContractRequest:()=>({messages:[],schema:{},schemaId:'test'})};}},
+    storyboardRequestHeaders:()=>({}),
+    featureRuntime:{load:async key=>{calls.push(key);return key==='comfyPreflight'?preflight:key==='comfyTargets'?{requireTrustedComfyConnection:async()=>calls.push('trust-check')}:{buildStoryboardPlanContractRequest:()=>({messages:[],schema:{},schemaId:'test'})};}},
     storyboardCompilerRequestConfig:()=>({}),storyboardCallCompiler:async()=>{calls.push('llm');return '{}';},
     storyboardCompilerResult:async()=>({shouldGenerate:false,skipReason:'no shot'}),sanitizeStoryboardDiagnosticData:value=>value,
     uid:()=> 'test-id',toast:message=>notices.push(message),MODULE_NAME:'test',console:{error:()=>{}},
@@ -89,4 +90,15 @@ test('unmatched types use current workbench fallback; genuinely conditional rout
 test('configuration changed while lazy preflight loaded cannot continue to the LLM',async()=>{
   const e=environment();e.context.featureRuntime.load=async()=>{e.invalidate();return preflight;};
   await e.context.storyboardCompilePrompt(null,{plan:e.plan});assert.equal(e.calls.includes('llm'),false);assert.equal(e.calls.includes('context'),false);
+});
+
+test('explicit ST route verifies the trusted target before context/LLM, while browser direct never reads the ST registry', async () => {
+  for (const transport of ['gateway', 'browser']) {
+    const e = environment(); e.state.connections.comfy.draft.options.comfyTransport = transport;
+    const load = e.context.featureRuntime.load;
+    e.context.featureRuntime.load = async key => key === 'comfyTargets' ? { requireTrustedComfyConnection: async () => { e.calls.push('untrusted'); throw Error('请先登记可信连接'); } } : load(key);
+    await e.context.storyboardCompilePrompt(null, { plan: e.plan });
+    assert.equal(e.calls.includes('llm'), transport === 'browser'); assert.equal(e.calls.includes('context'), transport === 'browser');
+    assert.equal(e.calls.includes('untrusted'), transport === 'gateway');
+  }
 });

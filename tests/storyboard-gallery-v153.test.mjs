@@ -6,7 +6,7 @@ const source = await readFile(new URL('index.js', root), 'utf8');
 const css = await readFile(new URL('style.css', root), 'utf8');
 const manifest = JSON.parse(await readFile(new URL('manifest.json', root), 'utf8'));
 
-assert.equal(manifest.version, '1.59.57');
+assert.equal(manifest.version, '1.59.58');
 assert.match(source, /function storyboardGalleryCollections\(\)[\s\S]*storyboardCollections/, 'collections must persist with chat metadata');
 assert.match(source, /function storyboardGalleryGroupId[\s\S]*variantRootId[\s\S]*planShotId[\s\S]*groupId/, 'old and new image records need stable variant grouping');
 assert.match(source, /function storyboardCreateRecord[\s\S]*variantRootId: job\.variantRootId \|\| job\.planShotId \|\| job\.id/, 'new images must record their variant root');

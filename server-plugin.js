@@ -6,8 +6,11 @@ import { createImageService, imageServiceTaskErrorPayload, IMAGE_SERVICE_TASK_VE
 import { imageServiceAccount } from './qianmu-image-service-access.js';
 import { checkServerComfyReadiness } from './qianmu-comfy-readiness-server.js';
 import { createComfyServerTransport } from './qianmu-comfy-server-transport.js';
+import { createComfyTargetStore } from './qianmu-comfy-target-store.js';
+import { createComfyTargets } from './qianmu-comfy-targets.js';
 import {
   checkImageConnection,
+  ImageGatewayError,
   generateImage,
   imageGatewayErrorPayload,
   imageGatewayCapabilities,
@@ -171,6 +174,22 @@ export async function init(router, options = {}) {
 
   let imageTasks;
   const hostDataRoot = () => options.dataRoot === undefined ? globalThis.DATA_ROOT : options.dataRoot;
+  let comfyTargets;
+  const targetsFor = req => {
+    try { imageServiceAccount(req); } catch (_) { throw new ImageGatewayError(401, 'comfy_targets_authentication', '请先登录 ST 账户'); }
+    return comfyTargets ||= createComfyTargets({ store: options.comfyTargetStore || createComfyTargetStore({ dataRoot: hostDataRoot() }) });
+  };
+  const comfyTransportOptions = () => ({ ...(options.comfyTransportOptions || {}), authorizeTarget: (req, input) => targetsFor(req).acquire(req, input) });
+  router.get('/image/comfy/targets', async (req, res) => {
+    prepareImageResponse(res);
+    try { return res.json(await targetsFor(req).list(req)); }
+    catch (error) { const result = imageGatewayErrorPayload(error); return res.status(result.status).json(result.body); }
+  });
+  router.post('/image/comfy/targets', async (req, res) => {
+    prepareImageResponse(res);
+    try { return res.json(await targetsFor(req).change(req, req.body)); }
+    catch (error) { const result = imageGatewayErrorPayload(error); return res.status(result.status).json(result.body); }
+  });
   const tasksFor = (req) => {
     imageServiceAccount(req);
     if (!imageTasks) {
@@ -218,7 +237,7 @@ export async function init(router, options = {}) {
     const onClose = () => { if (!res.writableEnded) controller.abort(); };
     res.once?.('close', onClose);
     try {
-      const result = await checkServerComfyReadiness(req, req.body, { ...(options.comfyTransportOptions || {}), signal: controller.signal });
+      const result = await checkServerComfyReadiness(req, req.body, { ...comfyTransportOptions(), signal: controller.signal });
       if (!res.destroyed && !res.writableEnded) return res.json(result);
     } catch (error) {
       const status = Number.isInteger(error?.status) && error.status >= 400 && error.status <= 599 ? error.status : 400;
@@ -231,7 +250,7 @@ export async function init(router, options = {}) {
   router.post('/image/check', async (req, res) => {
     prepareImageResponse(res);
     try {
-      return res.json(await checkImageConnection(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...(options.comfyTransportOptions || {}), operation }) }));
+      return res.json(await checkImageConnection(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...comfyTransportOptions(), operation }) }));
     } catch (error) {
       const result = imageGatewayErrorPayload(error);
       console.warn('[千幕分镜网关] 连接检查失败', result.body.code);
@@ -242,7 +261,7 @@ export async function init(router, options = {}) {
   router.post('/image/models', async (req, res) => {
     prepareImageResponse(res);
     try {
-      return res.json(await listImageModels(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...(options.comfyTransportOptions || {}), operation }) }));
+      return res.json(await listImageModels(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...comfyTransportOptions(), operation }) }));
     } catch (error) {
       const result = imageGatewayErrorPayload(error);
       console.warn('[千幕分镜网关] 模型列表读取失败', result.body.code, result.body.upstreamStatus || '');
@@ -253,7 +272,7 @@ export async function init(router, options = {}) {
   router.post('/image/generate', async (req, res) => {
     prepareImageResponse(res);
     try {
-      return res.json(await generateImage(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...(options.comfyTransportOptions || {}), operation }) }));
+      return res.json(await generateImage(req.body, { prepareComfyTransport: (input, operation) => createComfyServerTransport(req, input, { ...comfyTransportOptions(), operation }) }));
     } catch (error) {
       const result = imageGatewayErrorPayload(error);
       console.warn('[千幕分镜网关] 生成失败', result.body.code, result.body.upstreamStatus || '');

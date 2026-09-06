@@ -10,6 +10,6 @@ export async function checkServerComfyReadiness(req, input = {}, options = {}) {
   prepareComfyReadiness(input); // No DNS or host IO for an invalid local graph.
   const transport = await createComfyServerTransport(req, input, { ...options, operation: 'readiness' });
   const result = await checkComfyReadiness(input, { fetchImpl: transport.fetchImpl, signal: options.signal });
-  transport.assertCurrent();
+  await transport.verify();
   return { ...result, transport: 'gateway', requester: 'ST 主机' };
 }

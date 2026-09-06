@@ -68,7 +68,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
     },
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
     comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
-    comfyServerTransport: { version: 1, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: false },
+    comfyServerTransport: { version: 2, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: true },
   };
 }
 
@@ -793,7 +793,7 @@ export async function generateImage(input, options = {}) {
     else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
     else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
     else result = await generateComfy(request, base, fetchImpl, comfyTemplate, comfyExecution);
-    try { comfyTransport?.assertCurrent(); }
+    try { await comfyTransport?.verify(); }
     catch (error) { if (result.upstreamId) error.upstreamId = result.upstreamId; throw error; }
     if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');
     return {
@@ -901,7 +901,7 @@ export async function checkImageConnection(input, options = {}) {
   try {
     const response = await fetchUpstream(url, { method: 'GET', headers }, request, comfyTransport?.fetchImpl || options.fetchImpl || fetch);
     await readLimited(response, 2 * 1024 * 1024);
-    comfyTransport?.assertCurrent();
+    await comfyTransport?.verify();
     return { ok: true, provider, model, verified: provider !== 'comfy', message: provider === 'comfy' ? '地址可达，请以生图验证' : '连接通过' };
   } catch (error) {
     // NAI 官方与部分兼容站会允许生图，却不开放订阅/模型探测接口。404 能证明地址可达，
@@ -948,7 +948,7 @@ export async function listImageModels(input, options = {}) {
       method: 'GET', headers: apiKey ? authHeaders({ apiKey }) : {},
     }, request, fetchImpl);
     const json = parseUpstreamJson(await readLimited(response, 24 * 1024 * 1024));
-    comfyTransport?.assertCurrent();
+    await comfyTransport?.verify();
     return modelsFromComfyObjectInfo(json);
   }
 

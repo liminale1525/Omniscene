@@ -61,7 +61,7 @@ assert.deepEqual(mediaSafe.mediaRefs, ['asset-1']);
 assert.doesNotMatch(JSON.stringify(mediaSafe), /SHOULD_NOT_SURVIVE|imageData|bytes/, '制片包只能存媒体 ID，不得携带二进制');
 
 const indexSource = await readFile(new URL('../index.js', import.meta.url), 'utf8');
-assert.match(indexSource, /productionPacket:[\s\S]*import\('\.\/qianmu-production-packet\.js\?v=1\.59\.57'\)/, '第二摄影机适配器必须保持按需加载');
+assert.match(indexSource, /productionPacket:[\s\S]*import\('\.\/qianmu-production-packet\.js\?v=1\.59\.58'\)/, '第二摄影机适配器必须保持按需加载');
 assert.match(indexSource, /void refreshDirectorProductionPackets\(newPlan/, '制片包失败不得阻塞或回滚推演结果');
 assert.match(indexSource, /productionPackets:\s*directorProductionPacketState\.packets\.length/, '开发诊断必须能核对会话内制片包缓存');
 

@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { createComfyServerTransport, pinnedComfyFetch } from '../qianmu-comfy-server-transport.js';
 import { init } from '../server-plugin.js';
+import { comfyTargetId } from '../qianmu-comfy-target-store.js';
 
 const account = (admin = false) => ({ user: { profile: { handle: 'alice', enabled: true, admin } } });
 const input = (extra = {}) => ({ provider: 'comfy', baseUrl: 'https://comfy.test/api', apiKey: 'test-only-secret', model: 'workflow', prompt: 'rain',
@@ -28,7 +29,10 @@ function mockNodeRequest(calls, respond = () => ({ body: {} })) {
 const response = () => ({ statusCode: 200, headers: {}, set(k, v) { this.headers[k.toLowerCase()] = v; return this; }, status(v) { this.statusCode = v; return this; }, json(v) { this.body = v; return this; } });
 async function routes(options = {}) {
   const handlers = new Map();
-  await init({ get: (path, handler) => handlers.set(`GET ${path}`, handler), post: (path, handler) => handlers.set(`POST ${path}`, handler) }, { comfyTransportOptions: options });
+  const comfyTargetStore = { read: async () => ({ schemaVersion: 1, revision: 1, targets: [
+    ['https://comfy.test/api', false], ['http://127.0.0.1:8188', true],
+  ].map(([baseUrl, allowPrivateNetwork]) => ({ id: comfyTargetId(baseUrl, allowPrivateNetwork), baseUrl, allowPrivateNetwork, shared: !allowPrivateNetwork, name: 'Approved fixture', grantId: '00000000-0000-4000-8000-000000000000', updatedAt: 0 })) }) };
+  await init({ get: (path, handler) => handlers.set(`GET ${path}`, handler), post: (path, handler) => handlers.set(`POST ${path}`, handler) }, { comfyTransportOptions: options, comfyTargetStore });
   return handlers;
 }
 

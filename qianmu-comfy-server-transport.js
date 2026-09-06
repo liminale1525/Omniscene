@@ -24,6 +24,12 @@ const safeRoot = raw => {
   return base;
 };
 
+export function normalizeComfyTarget(raw) {
+  const base = safeRoot(raw);
+  base.pathname = base.pathname.replace(/\/+$/, '') || '/';
+  return base.toString().replace(/\/$/, '');
+}
+
 function addressList(addresses) {
   if (!Array.isArray(addresses) || !addresses.length || addresses.length > 32) throw fail('address', 'Comfy 地址解析结果无效');
   return addresses.map(item => {
@@ -58,7 +64,7 @@ function allowedOperation(base, url, method, operation) {
   return !folder || folder.split('/').every(oneSegment);
 }
 
-export function pinnedComfyFetch(base, addresses, { operation, requestImpl, assertCurrent = () => {}, signal } = {}) {
+export function pinnedComfyFetch(base, addresses, { operation, requestImpl, assertCurrent = () => {}, beforeRequest, signal } = {}) {
   base = new URL(base); // Do not retain a caller-mutable URL or DNS answer array.
   const host = base.hostname.toLowerCase().replace(/^\[|\]$/g, '');
   const list = addressList(addresses);
@@ -67,6 +73,7 @@ export function pinnedComfyFetch(base, addresses, { operation, requestImpl, asse
     assertCurrent(); signal?.throwIfAborted();
     const url = new URL(rawUrl), method = String(init.method || 'GET').toUpperCase();
     if (!allowedOperation(base, url, method, operation)) throw fail('target_changed', 'Comfy 请求目标或操作已变化');
+    await beforeRequest?.(); assertCurrent(); signal?.throwIfAborted();
     const headers = new Headers(init.headers);
     if ([...headers.keys()].some(key => !['authorization', 'content-type', 'accept'].includes(key))) throw fail('headers', 'Comfy 请求包含不允许的转发头');
     if (method === 'GET' && init.body != null) throw fail('body', 'Comfy 只读请求不能携带正文');
@@ -102,7 +109,7 @@ export function pinnedComfyFetch(base, addresses, { operation, requestImpl, asse
   };
 }
 
-export async function createComfyServerTransport(req, input, { operation, resolveHost = lookup, requestImpl, signal, dnsTimeoutMs = 5000 } = {}) {
+export async function createComfyServerTransport(req, input, { operation, resolveHost = lookup, requestImpl, signal, dnsTimeoutMs = 5000, authorizeTarget } = {}) {
   let account;
   try { account = imageServiceAccount(req); } catch (_) { throw fail('authentication_required', '请先登录 ST 账户再连接 Comfy', 401); }
   const allowPrivateNetwork = input?.allowPrivateNetwork === true;
@@ -115,6 +122,9 @@ export async function createComfyServerTransport(req, input, { operation, resolv
   const rawBase = safeRoot(input?.baseUrl);
   if (!allowPrivateNetwork && rawBase.protocol !== 'https:') throw fail('address', '远程 Comfy 地址必须使用 HTTPS');
   assertCurrent();
+  const verifyTarget = await authorizeTarget?.(req, { baseUrl: rawBase.toString(), allowPrivateNetwork });
+  assertCurrent();
+  const verify = async () => { assertCurrent(); await verifyTarget?.(); assertCurrent(); };
   let addresses, timer;
   const resolveOnce = async (host, settings) => {
     if (addresses) return addresses;
@@ -133,6 +143,6 @@ export async function createComfyServerTransport(req, input, { operation, resolv
   // Resolve once ourselves so validation cannot swallow an authentication/DNS error.
   await resolveOnce(rawBase.hostname.replace(/^\[|\]$/g, ''), { all: true, verbatim: true });
   const base = await validateGatewayBaseUrl(rawBase.toString(), { allowPrivateNetwork, resolveHost: async () => addresses });
-  assertCurrent();
-  return { base, assertCurrent, fetchImpl: pinnedComfyFetch(base, addresses, { operation, requestImpl, assertCurrent, signal }) };
+  await verify();
+  return { base, assertCurrent, verify, fetchImpl: pinnedComfyFetch(base, addresses, { operation, requestImpl, assertCurrent, beforeRequest: verify, signal }) };
 }

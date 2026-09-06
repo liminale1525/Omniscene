@@ -10,7 +10,7 @@ const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'ut
 const readme = await readFile(new URL('README.md', root), 'utf8');
 const license = await readFile(new URL('LICENSE', root), 'utf8');
 
-assert.equal(manifest.version, '1.59.57');
+assert.equal(manifest.version, '1.59.58');
 assert.equal(packageJson.version, manifest.version, 'manifest 与 package 版本必须一致');
 assert.equal(packageJson.license, 'PolyForm-Noncommercial-1.0.0');
 assert.equal(manifest.js, `index.js?v=${manifest.version}`, '入口脚本必须按版本破除浏览器模块缓存');
@@ -23,7 +23,7 @@ assert.match(readme, /PolyForm Noncommercial License 1\.0\.0/);
 assert.match(license, /^# PolyForm Noncommercial License 1\.0\.0/m);
 assert.match(license, /^Required Notice: Copyright © 2026 Liminale-art\./m);
 assert.doesNotMatch(license, /AGPL-3\.0-or-later/);
-assert.match(source, /const VERSION = '1\.59\.57';/);
+assert.match(source, /const VERSION = '1\.59\.58';/);
 
 assert.match(source, /Symbol\.for\('qianmu\.omniscene\.runtime'\)/, '不同 URL 和安装目录必须共用一把运行锁');
 assert.match(source, /function init\(\) \{\s*if \(initialized \|\| !acquireRuntimeOwnership\(\)\) return;\s*try \{/, '初始化必须先取得所有权并启用事务保护');
@@ -89,8 +89,8 @@ duplicate.release();
 for (const removedPath of ['qianmu-icons.js', 'assets/qianmu-phosphor-icons.svg', 'assets/qianmu-phosphor-v1454.svg']) {
   await assert.rejects(access(new URL(removedPath, root)), undefined, `${removedPath} 不得出现在稳定版`);
 }
-assert.match(source, /qianmu-icon-renderer\.js\?v=1\.59\.57/, '稳定版必须按版本加载局部图标渲染器');
-assert.match(source, /qianmu-storyboard\.js\?v=1\.59\.57/, '分镜数据契约必须随发布版本破除子模块缓存');
+assert.match(source, /qianmu-icon-renderer\.js\?v=1\.59\.58/, '稳定版必须按版本加载局部图标渲染器');
+assert.match(source, /qianmu-storyboard\.js\?v=1\.59\.58/, '分镜数据契约必须随发布版本破除子模块缓存');
 assert.doesNotMatch(source, /qianmu-icons\.js|installQianmuIconSystem/, '稳定版不得恢复旧图标系统');
 assert.doesNotMatch(iconRendererSource, /\bMutationObserver\b/, '局部图标渲染器不得观察全页 DOM');
 

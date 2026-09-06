@@ -10114,8 +10114,8 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-deployment-guide { min-width: 0; text-align: left; color: var(--sd-muted); font-size: 12px; }
 #story-director-modal .sd-comfy-deployment-guide summary { cursor: pointer; font-size: 12px; }
 #story-director-modal .sd-comfy-deployment-guide p { margin: 8px 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
-#story-director-modal .sd-storyboard-root .sd-comfy-private-network { display: flex !important; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
-#story-director-modal .sd-storyboard-root .sd-comfy-private-network > span { margin: 0; }
+#story-director-modal .sd-storyboard-root .sd-comfy-private-network { display: flex !important; flex-direction: row !important; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+#story-director-modal .sd-storyboard-root .sd-comfy-private-network > span { margin: 0; flex: 1; text-align: left; }
 #story-director-modal .sd-storyboard-root .sd-comfy-private-network > input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: 0; }
 
 /* Workflow library/editor: bounded, isolated and consistent on narrow and wide screens. */
@@ -10143,3 +10143,19 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-library-row-actions { margin-top: 8px; }
 #story-director-modal .sd-comfy-library-row-actions > .sd-btn { flex: 1; min-width: 0; }
 #story-director-modal .sd-comfy-library fieldset:disabled { opacity: .65; }
+
+/* Connection trust is deliberately folded and loaded only on demand. */
+#story-director-modal .sd-comfy-targets { min-width: 0; margin-top: 8px; }
+#story-director-modal .sd-comfy-targets > summary { color: var(--sd-muted); font-size: 12px; text-align: left; cursor: pointer; }
+#story-director-modal .sd-comfy-targets-body { display: grid; gap: 8px; padding-top: 8px; min-width: 0; }
+#story-director-modal .sd-comfy-targets-body p { margin: 0; color: var(--sd-muted); font-size: 12px; overflow-wrap: anywhere; text-align: left; }
+#story-director-modal .sd-comfy-targets-body label { display: grid; gap: 4px; min-width: 0; text-align: left; }
+#story-director-modal .sd-comfy-targets-body label > span { font-size: 12px; color: var(--sd-muted); }
+#story-director-modal .sd-comfy-target-tools, #story-director-modal .sd-comfy-target-list > div { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#story-director-modal .sd-comfy-target-tools > span, #story-director-modal .sd-comfy-target-list > div > span { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; text-align: left; }
+#story-director-modal .sd-comfy-target-tools > button, #story-director-modal .sd-comfy-target-list button { width: auto; flex: 0 0 auto; }
+#story-director-modal .sd-comfy-targets-body .sd-comfy-target-share { display: flex; flex-direction: row; align-items: center; min-height: 32px; }
+#story-director-modal .sd-comfy-target-share input { width: 18px; height: 18px; flex: 0 0 18px; }
+#story-director-modal .sd-comfy-target-list { display: grid; gap: 8px; max-height: 220px; overflow: auto; min-width: 0; }
+#story-director-modal .sd-comfy-target-list b, #story-director-modal .sd-comfy-target-list small { display: block; }
+#story-director-modal .sd-comfy-target-list small { color: var(--sd-muted); font-size: 11px; }
