@@ -194,3 +194,30 @@ test('bounded waiting and closing reject unsent mutations without abandoning an 
 test('new private metadata store remains outside live service routes and release until recovery is integrated', async () => {
   for (const file of ['../server-plugin.js', '../release-files.json']) assert.doesNotMatch(await fs.readFile(new URL(file, import.meta.url), 'utf8'), /qianmu-image-service-store/);
 });
+
+test('reading absent metadata does not create a service database', async t => {
+  const { store, root } = await fixture(t);
+  assert.equal(await store.inspectChannel(key), undefined);
+  assert.deepEqual(await fs.readdir(root), []);
+  assert.equal(store.inspect().initialized, false);
+  await store.transaction(key, () => ({ state: metadata() }));
+  assert.equal((await store.inspectChannel(key)).entries[0].status, 'submitting');
+});
+
+test('maintenance fencing prevents both new transactions and the pre-lock race while allowing read-only inspection', async t => {
+  const { store, root, directory } = await fixture(t);
+  await store.transaction(key, () => ({ state: metadata() }));
+  const maintenance = path.join(directory, '.maintenance.lock');
+  await fs.writeFile(maintenance, 'offline maintenance');
+  await assert.rejects(store.transaction(key, never), { code: 'image_service_storage_maintenance' });
+  assert.equal((await store.inspectChannel(key)).entries[0].status, 'submitting');
+  await fs.unlink(maintenance);
+  const racing = createImageServiceStore({ dataRoot: root, fileSystem: { ...fs, open: async (target, ...rest) => {
+    const handle = await fs.open(target, ...rest);
+    if (target.endsWith('.transaction.lock')) await fs.writeFile(maintenance, 'maintenance started after initial check');
+    return handle;
+  } } }); t.after(() => racing.close());
+  await assert.rejects(racing.transaction(key, never), { code: 'image_service_storage_maintenance' });
+  assert.ok(!(await fs.readdir(directory)).includes('.transaction.lock'));
+  assert.equal(await fs.readFile(maintenance, 'utf8'), 'maintenance started after initial check');
+});

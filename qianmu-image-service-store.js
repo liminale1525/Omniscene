@@ -33,22 +33,29 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
     const stat = await io.lstat(target);
     if (!stat.isDirectory() || stat.isSymbolicLink() || path.resolve(await io.realpath(target)) !== path.resolve(target)) throw error('path', '生图服务目录不符合安全要求');
   }
-  async function initialize() {
-    if (!initialization) initialization = (async () => {
+  async function resolveDirectory(create) {
       const root = await io.realpath(dataRoot);
       if (!(await io.stat(root)).isDirectory() || path.resolve(root) === path.parse(root).root) throw error('root', 'ST 数据目录无效');
       let current = root;
       for (const segment of ['.qianmu-service', 'image-queue-v1']) {
         current = path.join(current, segment);
-        try { await io.mkdir(current, { mode: 0o700 }); } catch (cause) { if (cause?.code !== 'EEXIST') throw cause; }
-        await checkDirectory(current);
+        if (create) { try { await io.mkdir(current, { mode: 0o700 }); } catch (cause) { if (cause?.code !== 'EEXIST') throw cause; } }
+        try { await checkDirectory(current); } catch (cause) { if (!create && isMissing(cause)) return false; throw cause; }
       }
-      directory = current;
-    })().catch(cause => { poisoned = true; throw safeError(cause); });
+      directory = current; return true;
+  }
+  async function initialize(create = true) {
+    if (!initialization && !create) return resolveDirectory(false);
+    if (!initialization) initialization = resolveDirectory(true).catch(cause => { poisoned = true; throw safeError(cause); });
     await initialization;
     // Detect replacement/junctions after initialization rather than following them.
     await checkDirectory(path.dirname(directory)); await checkDirectory(directory);
     return directory;
+  }
+  async function checkMaintenance() {
+    try { await io.lstat(path.join(directory, '.maintenance.lock')); }
+    catch (cause) { if (isMissing(cause)) return; throw cause; }
+    throw error('maintenance', '生图服务正在恢复记录，未授权新请求');
   }
   async function syncDirectory() {
     // Windows does not expose directory fsync through Node. File data is flushed
@@ -111,6 +118,7 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
   }
   async function lockedTransaction(key, reduce) {
     await initialize();
+    await checkMaintenance();
     const lock = path.join(directory, '.transaction.lock');
     let handle, identity;
     try { handle = await io.open(lock, 'wx', 0o600); }
@@ -118,6 +126,8 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
     try {
       identity = await handle.stat();
       await handle.writeFile(JSON.stringify({ schema: 'qianmu.image-service-lock.v1', owner: randomUUID(), pid: process.pid }));
+      // Close the race where offline maintenance begins after the first check.
+      await checkMaintenance();
       const previous = await readRecord(key);
       await checkCapacity(Boolean(previous));
       const next = reduce(previous?.state);
@@ -154,7 +164,7 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
       } catch (cause) { return Promise.reject(safeError(cause)); }
     },
     inspectChannel(key) {
-      try { checkKey(key); return enqueue(async () => { await initialize(); return (await readRecord(key))?.state; }); }
+      try { checkKey(key); return enqueue(async () => { if (!await initialize(false)) return undefined; return (await readRecord(key))?.state; }); }
       catch (cause) { return Promise.reject(safeError(cause)); }
     },
     close() { closed = true; return tail; },
