@@ -184,7 +184,7 @@ test('server public target pins once-resolved IPs, exact origin and GET-only nod
   const result = await checkServerComfyReadiness(user(false), input(), { resolveHost: async () => { resolutions++; return [{ address: '8.8.8.8', family: 4 }]; }, requestImpl: transport(calls) });
   assert.equal(result.ready, true); assert.equal(result.requester, 'ST 主机'); assert.equal(resolutions, 1); assert.equal(calls.length, 6);
   for (const call of calls) {
-    assert.equal(call.options.headers.Authorization, 'Bearer private-key');
+    assert.equal(call.options.headers.authorization, 'Bearer private-key');
     call.options.lookup('comfy.example', { all: true }, (error, list) => { assert.equal(error, null); assert.deepEqual(list, [{ address: '8.8.8.8', family: 4 }]); });
     call.options.lookup('changed.example', {}, error => assert.ok(error));
   }
@@ -195,7 +195,7 @@ test('server public target pins once-resolved IPs, exact origin and GET-only nod
 test('private target is opt-in, metadata targets remain blocked, DNS rebinding cannot change resolved request addresses', async () => {
   await assert.rejects(checkServerComfyReadiness(user(false), input(), { resolveHost: async () => [{ address: '127.0.0.1' }] }), { code: 'private_network_blocked' });
   for (const address of ['169.254.169.254', '0.0.0.0', '224.0.0.1', 'fe80::1', '::ffff:127.0.0.1']) {
-    await assert.rejects(checkServerComfyReadiness(user(true), { ...input(), allowPrivateNetwork: true }, { resolveHost: async () => [{ address }] }), { code: 'comfy_readiness_unsafe_target' });
+    await assert.rejects(checkServerComfyReadiness(user(true), { ...input(), allowPrivateNetwork: true }, { resolveHost: async () => [{ address }] }), { code: 'comfy_transport_unsafe_target' });
   }
   const calls = [];
   assert.equal((await checkServerComfyReadiness(user(true), { ...input(), baseUrl: 'http://127.0.0.1:8188', allowPrivateNetwork: true }, { resolveHost: async () => [{ address: '127.0.0.1' }], requestImpl: transport(calls) })).ready, true);
@@ -205,7 +205,7 @@ test('private target is opt-in, metadata targets remain blocked, DNS rebinding c
 test('account changes during an inspection cannot deliver a successful result to a new account', async () => {
   const req = user(false), calls = [];
   await assert.rejects(checkServerComfyReadiness(req, input(), { resolveHost: async () => [{ address: '8.8.8.8' }],
-    requestImpl: transport(calls, () => { req.user.profile.handle = 'bob'; }) }), { code: 'comfy_readiness_account_changed' });
+    requestImpl: transport(calls, () => { req.user.profile.handle = 'bob'; }) }), { code: 'comfy_transport_account_changed' });
   assert.equal(calls.length, 1);
 });
 
@@ -215,6 +215,6 @@ test('server redirect response never forwards authorization to another host', as
     calls++; const out = new EventEmitter(); out.end = () => {
       const incoming = new PassThrough(); incoming.statusCode = 302; incoming.headers = { location: 'http://127.0.0.1' }; callback(incoming);
     }; return out;
-  } }), { code: 'comfy_readiness_redirect' });
+  } }), { code: 'comfy_transport_redirect' });
   assert.equal(calls, 1);
 });

@@ -223,7 +223,7 @@ test('coordinated service routes use the durable service and do not silently rep
   const source = await readFile(new URL('../server-plugin.js', import.meta.url), 'utf8');
   const release = await readFile(new URL('../release-files.json', import.meta.url), 'utf8');
   assert.match(source, /createImageService/);
-  assert.match(source, /await generateImage\(req.body\)/);
+  assert.match(source, /await generateImage\(req.body, \{ prepareComfyTransport:/);
   assert.match(release, /qianmu-image-service-queue/);
   assert.match(release, /qianmu-image-service-store/);
   assert.match(release, /qianmu-image-service-recovery/);

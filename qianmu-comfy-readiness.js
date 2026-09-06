@@ -121,7 +121,7 @@ export async function checkComfyReadiness(input, { fetchImpl = globalThis.fetch,
       let response;
       try { response = await fetchImpl(url.toString(), { method: 'GET', redirect: 'error', credentials: 'omit', cache: 'no-store',
         headers: { Accept: 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) }, signal: controller.signal }); }
-      catch (error) { if (controller.signal.aborted || String(error?.code || '').startsWith('comfy_readiness_')) throw error; throw fail('transport', '无法读取 Comfy 节点清单，请核对网络、浏览器跨域限制或 ST 转发方式'); }
+      catch (error) { if (controller.signal.aborted || /^(?:comfy_readiness_|comfy_transport_)/.test(error?.code || '')) throw error; throw fail('transport', '无法读取 Comfy 节点清单，请核对网络、浏览器跨域限制或 ST 转发方式'); }
       if (!response.ok) {
         await response.body?.cancel?.();
         const message = response.status === 401 || response.status === 403 ? 'Comfy 节点清单访问被拒绝，请核对令牌与权限'

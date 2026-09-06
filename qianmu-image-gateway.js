@@ -68,6 +68,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
     },
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
     comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
+    comfyServerTransport: { version: 1, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: false },
   };
 }
 
@@ -187,6 +188,7 @@ export function sanitizeImageRequest(input) {
   const provider = asString(source.provider, 40).toLowerCase();
   const definition = IMAGE_GATEWAY_PROVIDERS[provider];
   if (!definition) throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
+  if (provider === 'comfy' && (typeof source.baseUrl !== 'string' || source.baseUrl.length > 2048)) throw new ImageGatewayError(400, 'invalid_base_url', 'Comfy API 根地址无效或过长');
   const prompt = asString(source.prompt, MAX_PROMPT_LENGTH);
   if (!prompt) throw new ImageGatewayError(400, 'empty_prompt', '提示词不能为空');
   const model = asString(source.model, 240);
@@ -746,7 +748,7 @@ async function generateComfy(request, base, fetchImpl, template, execution) {
 
 export async function generateImage(input, options = {}) {
   let submissionState = 'not_submitted', acceptedWrites = 0;
-  const upstreamFetch = options.fetchImpl || fetch;
+  let upstreamFetch = options.fetchImpl || fetch;
   const fetchImpl = async (url, init = {}) => {
     const writes = !['GET', 'HEAD', 'OPTIONS'].includes(String(init.method || 'GET').toUpperCase());
     if (writes) {
@@ -778,7 +780,10 @@ export async function generateImage(input, options = {}) {
         }
       } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
     }
-    const validatedBase = await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
+    const comfyTransport = request.provider === 'comfy' && options.prepareComfyTransport
+      ? await options.prepareComfyTransport(request, 'generate') : null;
+    const validatedBase = comfyTransport?.base || await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
+    if (comfyTransport) upstreamFetch = comfyTransport.fetchImpl;
     const transportProvider = imageTransportProvider(request.provider, { protocol: request.protocol });
     const base = normalizeProviderBase(validatedBase, transportProvider);
     const startedAt = Date.now();
@@ -788,6 +793,8 @@ export async function generateImage(input, options = {}) {
     else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
     else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
     else result = await generateComfy(request, base, fetchImpl, comfyTemplate, comfyExecution);
+    try { comfyTransport?.assertCurrent(); }
+    catch (error) { if (result.upstreamId) error.upstreamId = result.upstreamId; throw error; }
     if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');
     return {
       ok: true,
@@ -863,7 +870,9 @@ export async function checkImageConnection(input, options = {}) {
   const apiKey = asString(source.apiKey, 2048);
   if (definition.requiresKey && !apiKey) throw new ImageGatewayError(400, 'missing_api_key', '请先填写 API Key');
   const allowPrivateNetwork = provider === 'comfy' && source.allowPrivateNetwork === true;
-  const validatedBase = await validateGatewayBaseUrl(source.baseUrl || definition.defaultBaseUrl, { allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
+  const comfyTransport = provider === 'comfy' && options.prepareComfyTransport
+    ? await options.prepareComfyTransport(source, 'check') : null;
+  const validatedBase = comfyTransport?.base || await validateGatewayBaseUrl(source.baseUrl || definition.defaultBaseUrl, { allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
   const base = normalizeProviderBase(validatedBase, transportProvider);
   const model = asString(source.model, 240);
   const compatibility = transportProvider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
@@ -890,9 +899,10 @@ export async function checkImageConnection(input, options = {}) {
   }
   const request = { apiKey, parameters: { timeoutMs: 20_000 } };
   try {
-    const response = await fetchUpstream(url, { method: 'GET', headers }, request, options.fetchImpl || fetch);
+    const response = await fetchUpstream(url, { method: 'GET', headers }, request, comfyTransport?.fetchImpl || options.fetchImpl || fetch);
     await readLimited(response, 2 * 1024 * 1024);
-    return { ok: true, provider, model, verified: true, message: '连接通过' };
+    comfyTransport?.assertCurrent();
+    return { ok: true, provider, model, verified: provider !== 'comfy', message: provider === 'comfy' ? '地址可达，请以生图验证' : '连接通过' };
   } catch (error) {
     // NAI 官方与部分兼容站会允许生图，却不开放订阅/模型探测接口。404 能证明地址可达，
     // 但不能证明令牌有效；与实际生图分开说明，避免把可用连接误判为失败。
@@ -915,7 +925,9 @@ export async function listImageModels(input, options = {}) {
   const apiKey = asString(source.apiKey, 2048);
   if (definition.requiresKey && !apiKey) throw new ImageGatewayError(400, 'missing_api_key', '请先填写 API Key');
   const allowPrivateNetwork = provider === 'comfy' && source.allowPrivateNetwork === true;
-  const validatedBase = await validateGatewayBaseUrl(source.baseUrl || definition.defaultBaseUrl, {
+  const comfyTransport = provider === 'comfy' && options.prepareComfyTransport
+    ? await options.prepareComfyTransport(source, 'models') : null;
+  const validatedBase = comfyTransport?.base || await validateGatewayBaseUrl(source.baseUrl || definition.defaultBaseUrl, {
     allowPrivateNetwork,
     resolveHost: options.resolveHost || dnsLookup,
   });
@@ -925,7 +937,7 @@ export async function listImageModels(input, options = {}) {
     return finalizeModelList(provider, [], { source: 'disabled' });
   }
   const request = { apiKey, parameters: { timeoutMs: 20_000 } };
-  const fetchImpl = options.fetchImpl || fetch;
+  const fetchImpl = comfyTransport?.fetchImpl || options.fetchImpl || fetch;
 
   if (provider === 'novel' && base.hostname.toLowerCase() === 'image.novelai.net') {
     return finalizeModelList(provider, NOVEL_STATIC_MODELS.map(([id, label]) => ({ id, label, imageCapable: true, kind: 'model' })), { source: 'builtin' });
@@ -936,6 +948,7 @@ export async function listImageModels(input, options = {}) {
       method: 'GET', headers: apiKey ? authHeaders({ apiKey }) : {},
     }, request, fetchImpl);
     const json = parseUpstreamJson(await readLimited(response, 24 * 1024 * 1024));
+    comfyTransport?.assertCurrent();
     return modelsFromComfyObjectInfo(json);
   }
 

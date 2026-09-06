@@ -129,8 +129,8 @@ try {
   await routes.get('POST /image/models')({
     body: { provider: 'comfy', baseUrl: 'http://127.0.0.1:8188', allowPrivateNetwork: true },
   }, modelResponse);
-  assert.equal(modelResponse.statusCode, 200);
-  assert.equal(modelResponse.body.models[0].id, 'model.safetensors');
+  assert.equal(modelResponse.statusCode, 401);
+  assert.equal(modelResponse.body.code, 'comfy_transport_authentication_required');
   assert.equal(modelResponse.headers['cache-control'], 'no-store');
   assert.equal(modelResponse.headers['x-content-type-options'], 'nosniff');
 
