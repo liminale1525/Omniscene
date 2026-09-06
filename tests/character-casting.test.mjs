@@ -152,9 +152,10 @@ test('real browser and service request builders keep identical NAI per-person ne
   assert.equal(requests[0].parameters.v4_negative_prompt.caption.char_captions[0].char_caption,'Alice unwanted trait');
 });
 
-function compilerRuntime({changeAccount=false,ambiguous=false}={}) {
+function compilerRuntime({changeAccount=false,ambiguous=false,references=false}={}) {
   const e=environment(),state=storyboard.createStoryboardDefaults(),plan={id:'plan',chatKey:'chat-a',floor:0,status:'screening'};
   state.enabled=true;state.source='novel';state.profiles.novel.model='nai-diffusion-5-full';if(ambiguous)e.documents.set('bob',doc('Bob','char',['Alice']));
+  if (references) Object.assign(state.profiles.novel,{model:'nai-diffusion-4-5-full',characterReferenceEnabled:true});
   const calls=[],notices=[],errors=[];let namespace='st-user:test';
   const guard={assertCurrent(){},isCurrent:()=>true,ownsCurrentContext:()=>true,dispose(){}};
   const context=vm.createContext({...storyboard,clone:structuredClone,Date,JSON,Number,Object,Map,Set,
@@ -175,6 +176,7 @@ function compilerRuntime({changeAccount=false,ambiguous=false}={}) {
           current_state:{outfit:['no coat'],expression:[],pose:[],action:['holds a spoon'],gaze:[],props:['spoon']},spatial:{order:1,region:'center',center:{x:.5,y:.5},visible_crop:'waist'}}],
         shared_relations:[],composition:{ratio_id:'3:2',orientation:'landscape',camera_side:'axis-side-a',angle:'eye-level',focus:'spoon',negative_space:'',intent:'show action',continuity_key:'kitchen'},
         prompt_atoms:{global:['kitchen'],character_ids:['C1'],scene_negative:[]},sensitive:false,safety_notes:[],
+        ...(references ? {primary_subject_id:'C1'} : {}),
       }]});
     },
     storyboardSetPlanStatus:(p,status,extra={})=>Object.assign(p,{status,...extra}),renderModal(){},saveSettings(){},
@@ -193,6 +195,17 @@ test('actual extraction context -> strict parser -> saved plan -> image payload 
   const generation=payloadRuntime(e.state).storyboardGenerationPayload(e.state,e.state.profiles.novel,{shot:e.plan.shots[0]});
   assert.equal(generation.parameters.providerOptions.v4_negative_prompt.caption.char_captions[0].char_caption,'Alice unwanted trait');
   assert.deepEqual(Array.from(generation.shotSpec.characters[0].outfit),['no coat']);
+});
+test('reference-enabled extraction freezes only file receipts, remaps the primary ID and keeps all file data out of LLM input',async()=>{
+  const e=compilerRuntime({references:true});assert.equal(await e.context.storyboardCompilePrompt(null,{plan:e.plan}),true,JSON.stringify(e.errors));
+  assert.equal(e.calls.length,1);assert.doesNotMatch(JSON.stringify(e.calls[0]),/private.png|sha256|st-user|SENSITIVE/);
+  const shot=e.plan.shots[0];assert.equal(shot.shotSpec.primarySubjectId,'archive:alice');
+  const old=shot.shotSpec.characters[0].archiveSnapshot.imageReference;
+  assert.equal(old.namespace,'st-user:test');assert.equal(old.reference.url,'/user/images/private.png');
+  e.e.documents.get('alice').imagegen.reference.url='/user/images/new.png';
+  const payload=payloadRuntime(e.state).storyboardGenerationPayload(e.state,e.state.profiles.novel,{shot});
+  assert.equal(payload.characterReference.reference.url,'/user/images/private.png');
+  assert.equal(payload.characterReference.subjectId,'archive:alice');assert.equal(payload.characterReference.status,'selected');
 });
 test('actual extraction reports ambiguity in user notices and logs without adding a guessed archive',async()=>{
   const e=compilerRuntime({ambiguous:true});assert.equal(await e.context.storyboardCompilePrompt(null,{plan:e.plan}),true,JSON.stringify(e.errors));

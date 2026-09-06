@@ -1,7 +1,7 @@
 // Explicitly selected, immutable ST files. Loaded only for Comfy reference work.
 import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { comfyReferenceStillMime } from './qianmu-comfy-results.js';
-import { normalizeComfyReferenceSelection, comfyReferencePath, comfyReferenceError, COMFY_REFERENCE_BYTES, COMFY_REFERENCE_TOTAL } from './qianmu-comfy-reference-contract.js';
+import { normalizeStaticReferenceReceipt, normalizeComfyReferenceSelection, comfyReferencePath, comfyReferenceError, COMFY_REFERENCE_BYTES, COMFY_REFERENCE_TOTAL } from './qianmu-comfy-reference-contract.js';
 const fail = message => { throw comfyReferenceError(message); };
 const digest = async bytes => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(value => value.toString(16).padStart(2,'0')).join('');
 const base64 = bytes => { let text = ''; for (let at = 0; at < bytes.length; at += 8192) text += String.fromCharCode(...bytes.subarray(at, at + 8192)); return btoa(text); };
@@ -43,6 +43,13 @@ export async function saveStaticReferenceFile(file, {save,guard = async () => {}
 }
 export async function readComfyReferenceImages({workflow,selection,namespace,guard = async () => {},fetchImpl = fetch, timeoutMs = 30000}) {
   const items = await checkComfyReferenceSelection({workflow,selection,namespace}); await guard();
+  return readStaticReferenceImages(items,{guard,fetchImpl,timeoutMs});
+}
+// Shared byte reader; callers independently authorize their engine/account binding first.
+export async function readStaticReferenceImages(receipts, {guard = async () => {},fetchImpl = fetch,timeoutMs = 30000} = {}) {
+  if (!Array.isArray(receipts) || receipts.length > 16) fail('参考图数量无效');
+  const items = receipts.map(normalizeStaticReferenceReceipt);
+  if (items.reduce((sum,item) => sum + item.bytes,0) > COMFY_REFERENCE_TOTAL) fail('参考图总计须在 48 MB 以内');
   const images = [];
   for (const item of items) {
     await guard(); const controller = new AbortController(), timer = setTimeout(() => controller.abort(), Math.min(30000, Math.max(1000, timeoutMs)));

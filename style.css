@@ -7574,6 +7574,10 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 .sd-storyboard-capture-paragraph,
 .sd-storyboard-prompt-editor-dialog > label { display: grid; gap: 6px; }
 .sd-storyboard-prompt-editor-dialog textarea { width: 100%; resize: vertical; }
+.sd-storyboard-prompt-editor-dialog .sd-character-reference-picker { box-sizing: border-box; width: 100%; min-width: 0; height: 40px; min-height: 40px; font-size: 12px; }
+#story-director-modal .sd-character-reference-help { display: block; color: var(--sd-muted); font-size: 11px; line-height: 1.5; text-align: left; }
+#story-director-modal .sd-character-reference-settings { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; }
+@media (min-width: 700px) { #story-director-modal .sd-character-reference-settings { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 
 /* 正文成片只保留一列克制的快捷工具；多图仍以横向吸附滑动。 */
 #chat .mes .sd-storyboard-inline-actions {

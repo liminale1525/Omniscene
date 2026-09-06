@@ -4,6 +4,7 @@ import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { retainComfyReferenceSelection } from './qianmu-comfy-reference-contract.js';
 import { normalizeCharacterCastingSnapshot, assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
 export { assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
+export { planCharacterReference, assertCharacterReferencePlan, characterReferenceNotice, characterReferenceChoice, renderCharacterReferencePicker, applyCharacterReferenceChoice } from './qianmu-character-reference.js';
 
 // 千幕·分镜数据契约。这里只描述数据与请求计划，不持有密钥，也不发起网络请求。
 export const STORYBOARD_SCHEMA_VERSION = 24;
@@ -1079,6 +1080,8 @@ export function normalizeStoryboardShotSpec(value = {}) {
     shotRole: STORYBOARD_SHOT_ROLES.includes(raw.shotRole || raw.shot_role || raw.role) ? (raw.shotRole || raw.shot_role || raw.role) : 'action',
     shotScale: STORYBOARD_SHOT_SCALES.includes(raw.shotScale || raw.shot_scale || raw.shotType) ? (raw.shotScale || raw.shot_scale || raw.shotType) : 'medium_shot',
     subject: str(raw.subject, 1000), scene, sceneId: sceneFingerprint.sceneId, sceneFingerprint, characters,
+    ...(Object.hasOwn(raw,'primarySubjectId') ? {primarySubjectId:typeof raw.primarySubjectId === 'string' && raw.primarySubjectId.length <= 160 ? raw.primarySubjectId : '[invalid-primary-subject]'} : {}),
+    ...(Object.hasOwn(raw,'characterReferenceDisabled') ? {characterReferenceDisabled:raw.characterReferenceDisabled === true} : {}),
     sharedRelations: shotStringList(raw.sharedRelations || raw.shared_relations, 30, 800),
     composition: {
       ratioId: STORYBOARD_RATIOS.some((ratio) => ratio.id === composition.ratioId || ratio.id === composition.ratio_id) ? (composition.ratioId || composition.ratio_id) : '',
@@ -2008,6 +2011,7 @@ export function buildImagineCommand({ prompt, negative = '', width = '', height 
 export function normalizeStoryboardParameterProfile(value, providerId) {
   if (!getStoryboardProvider(providerId)) throw new Error('请选择有效的生图系列');
   const base = legacyProfile(), p = obj(value) ? value : {};
+  if (providerId === 'novel' && Object.hasOwn(p,'characterReferenceEnabled')) base.characterReferenceEnabled = p.characterReferenceEnabled === true;
   for (const [key, fallback] of Object.entries(base)) {
     const value = Object.hasOwn(p, key) ? p[key] : undefined;
     base[key] = value === undefined ? fallback : (typeof fallback === 'boolean' ? flag(value) : str(value, key === 'comfyWorkflow' ? 2 * 1024 * 1024 : 2048));
@@ -2204,7 +2208,7 @@ function safeData(value, depth = 5) {
   for (const [rawKey, rawValue] of Object.entries(value).slice(0, 150)) {
     const key = str(rawKey, 120);
     if (!key || isUnsafeObjectKey(key) || isSensitiveField(key)) continue;
-    if (isBinaryField(key) && (typeof rawValue !== 'string' || looksLikeBase64(rawValue))) continue;
+    if (isBinaryField(key) && !isByteCount(key,rawValue) && (typeof rawValue !== 'string' || looksLikeBase64(rawValue))) continue;
     const normalized = safeData(rawValue, depth - 1);
     if (normalized !== undefined) out[key] = normalized;
   }
@@ -2224,7 +2228,7 @@ function redact(value, depth = 0, maxString = 24000, maxDepth = 6) {
       const result = sanitizeStoryboardWorkflow(rawValue);
       out[key] = result.ok ? result.workflow : '[invalid workflow omitted]';
     } else if (isSensitiveField(key)) out[key] = '[redacted]';
-    else if (isBinaryField(key) && (typeof rawValue !== 'string' || looksLikeBase64(rawValue))) out[key] = '[image omitted]';
+    else if (isBinaryField(key) && !isByteCount(key,rawValue) && (typeof rawValue !== 'string' || looksLikeBase64(rawValue))) out[key] = '[image omitted]';
     else out[key] = redact(rawValue, depth + 1, maxString, maxDepth);
   }
   return out;
@@ -2242,6 +2246,7 @@ function isSensitiveField(value) {
 }
 function isReservedProviderField(value) { return ['model', 'prompt', 'input', 'apikey', 'authorization', 'url', 'baseurl', 'modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion', 'imageprotocolversion'].includes(String(value || '').replace(/[-_]/g, '').toLowerCase()); }
 function isBinaryField(value) { return /^(?:data|base64|b64|b64_json|imageData|image_data|bytes)$/i.test(String(value || '')); }
+function isByteCount(key,value) { return key === 'bytes' && Number.isSafeInteger(value) && value >= 0; }
 function looksLikeBase64(value) { const text = String(value || '').replace(/\s+/g, ''); return /^data:image\/[^;]+;base64,/i.test(text) || text.length >= 256 && text.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(text); }
 function status(value) { if (value === 'generating') return 'running'; return ['queued', 'running', 'success', 'failed', 'cancelled', 'skipped'].includes(value) ? value : 'failed'; }
 function accept(target, dropped, capability, key, value, outputKey = key) { if (value === '' || value == null) return; if (capability[key]) target[outputKey] = value; else dropped.push(outputKey); }

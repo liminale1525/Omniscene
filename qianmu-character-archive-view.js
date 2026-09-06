@@ -8,7 +8,7 @@ const safeImage=value=>{
   try{for(const part of value.split('/').slice(1)){const decoded=decodeURIComponent(part);if(!decoded||decoded==='.'||decoded==='..'||/[\\/%\u0000-\u001f\u007f]/.test(decoded))return '';}}catch(_){return '';}
   return value;
 };
-const status=view=>`<p class="sd-character-status" role="status">${escape(view.error||'普通形象用于取景；参考图与性征暂不参与生成')}</p>`;
+const status=view=>`<p class="sd-character-status" role="status">${escape(view.error||'参考图须在支持的镜头台启用；性征暂不参与生成')}</p>`;
 const field=(name,label,value,max,textarea=false)=>`<label><span>${label}</span>${textarea?`<textarea class="text_pole" data-archive-field="${name}" maxlength="${max}">${escape(value)}</textarea>`:`<input class="text_pole" data-archive-field="${name}" maxlength="${max}" value="${escape(value)}">`}</label>`;
 
 export async function saveCharacterReference(file,{save,guard,createBitmap=globalThis.createImageBitmap,createCanvas=()=>document.createElement('canvas')}={}) {
@@ -37,6 +37,10 @@ export function renderCharacterArchive(view,{identity=()=>''}={}) {
         <div class="sd-character-main-fields">${field('name','档案名',doc.name,80)}${field('appearance','角色形象',doc.imagegen.appearance,12000,true)}${field('sensitiveAppearance','性征',doc.imagegen.sensitiveAppearance,6000,true)}</div>
         <div class="sd-character-full">${field('negative','模型接口专属负面',doc.imagegen.negative,6000,true)}</div>
       </div></section>
+      <details class="sd-card"><summary><b>NAI 参考设置</b></summary><div class="sd-storyboard-card-body"><div class="sd-character-reference-settings">
+        <label><span>强度</span><input class="text_pole" type="number" min="0" max="1" step="0.05" data-archive-field="referenceStrength" value="${escape(doc.imagegen.novelReference?.strength ?? 0.6)}"></label>
+        <label><span>保真度</span><input class="text_pole" type="number" min="0" max="1" step="0.05" data-archive-field="referenceFidelity" value="${escape(doc.imagegen.novelReference?.fidelity ?? 1)}"></label>
+      </div></div></details>
       <details class="sd-card"><summary><b>绑定与识别</b></summary><div class="sd-storyboard-card-body">
         ${field('aliases','别名 / 称呼',doc.aliases.join('，'),1943)}
         <label><span>年龄状态</span><select class="text_pole" data-archive-field="ageStatus">${[['unknown','未确认'],['adult','已确认成年'],['minor','未成年']].map(([id,label])=>`<option value="${id}" ${doc.ageStatus===id?'selected':''}>${label}</option>`).join('')}</select></label>
@@ -149,6 +153,10 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
       if(key==='name'||key==='ageStatus')doc[key]=field.value;
       else if(key==='aliases')doc.aliases=field.value.split(/[,，\n]/).map(value=>value.trim()).filter(Boolean);
       else if(['appearance','negative','sensitiveAppearance'].includes(key))doc.imagegen[key]=field.value;
+      else if(key==='referenceStrength'||key==='referenceFidelity'){
+        doc.imagegen.novelReference ||= {strength:0.6,fidelity:1};
+        doc.imagegen.novelReference[key==='referenceStrength'?'strength':'fidelity']=field.value===''?'invalid':Number(field.value);
+      }
     }));
     host.querySelectorAll('[data-archive-binding]').forEach(field=>field.addEventListener('change',()=>{if(!view.bindingEditor)return;view.bindingEditor[field.dataset.archiveBinding]=field.value;if(field.dataset.archiveBinding==='scope'){const row=currentBinding(view.bindingEditor);view.bindingEditor.archiveId=row?.archiveId||'';draw();}}));
     host.querySelector('[data-archive-file]')?.addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;void run(async guard=>{

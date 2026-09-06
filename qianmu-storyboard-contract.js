@@ -369,7 +369,7 @@ function validateShot(value, index, options, errors) {
     'shot_role', 'shot_scale', 'subject', 'scene', 'characters', 'shared_relations',
     'composition', 'prompt_atoms', 'sensitive', 'safety_notes',
   ];
-  if (!exactKeys(value, keys, keys, path, errors)) return;
+  if (!exactKeys(value, [...keys,'primary_subject_id'], options.requirePrimarySubject ? [...keys,'primary_subject_id'] : keys, path, errors)) return;
   const paragraphIds = stringArray(value.source_paragraph_ids, `${path}.source_paragraph_ids`, errors, { min: 1, max: 80, itemMax: 160 });
   const insertAfter = stringValue(value.insert_after, `${path}.insert_after`, errors, { max: 160 });
   for (const paragraphId of paragraphIds) {
@@ -427,6 +427,10 @@ function validateShot(value, index, options, errors) {
         }
       }
     }
+  }
+  if (Object.hasOwn(value,'primary_subject_id') || options.requirePrimarySubject) {
+    const primary = stringValue(value.primary_subject_id, `${path}.primary_subject_id`, errors, {max:160,required:characterIds.length > 0});
+    if (characterIds.length ? !characterIds.includes(primary) : Boolean(primary)) issue(errors,'invalid_primary_subject',`${path}.primary_subject_id`,'主视觉人物须来自本镜可见人物；空镜须为空字符串');
   }
   stringArray(value.shared_relations, `${path}.shared_relations`, errors, { max: 30, itemMax: 800 });
 
@@ -497,6 +501,7 @@ function normalizedOptions(options = {}) {
     : {};
   return {
     maxShots,
+    requirePrimarySubject: options.requirePrimarySubject === true,
     manualSupplement: options.manualSupplement === true,
     requiredInsertAfter: String(options.requiredInsertAfter || ''),
     requiredSourceParagraphIds: new Set(Array.isArray(options.requiredSourceParagraphIds) ? options.requiredSourceParagraphIds.map(String) : []),
@@ -765,6 +770,7 @@ function orientationForRatioId(ratioId) {
  * 本函数不发请求，便于独立回归与后续替换模型渠道。
  */
 export function buildStoryboardPlanContractRequest(context = {}, config = {}) {
+  const requirePrimarySubject = context.characterCasting?.referenceMode === 'novel-primary';
   const paragraphIds = paragraphIdsForContext(context);
   const maxShots = Math.max(1, Math.min(4, Number(config.maxShots) || 1));
   const manualSupplement = config.manualSupplement === true;
@@ -821,6 +827,7 @@ export function buildStoryboardPlanContractRequest(context = {}, config = {}) {
     continuity_updates: [],
     decisions: [],
   };
+  if (requirePrimarySubject) example.shots[0].primary_subject_id = 'C1';
   const styleRule = config.providerId === 'novel'
     ? 'prompt_atoms 使用精确、简洁、逗号化的英文视觉标签。'
     : 'prompt_atoms 使用清晰、具体、可直接绘制的视觉短语。';
@@ -871,18 +878,25 @@ export function buildStoryboardPlanContractRequest(context = {}, config = {}) {
       character_id: 'subject_id_when_unambiguous',
       unlisted_people: 'allowed',
       candidates: characterCastingInput(context.characterCasting),
+      ...(requirePrimarySubject ? {primary_subject_id:'one_visible_character_id_or_empty_for_no_character',reference_policy:'primary_subject_only'} : {}),
     },
     selected_worldbook: clippedText(context.world, 16000),
   };
   return {
     messages: [{ role: 'system', content: system }, { role: 'user', content: JSON.stringify(payload) }],
-    schema: STORYBOARD_PLAN_RESPONSE_SCHEMA,
+    schema: requirePrimarySubject ? (() => {
+      const schema = JSON.parse(JSON.stringify(STORYBOARD_PLAN_RESPONSE_SCHEMA));
+      schema.properties.shots.items.properties.primary_subject_id = {type:'string',description:'ID of the primary visible character in this shot; empty for a shot without characters.'};
+      schema.properties.shots.items.required.push('primary_subject_id');
+      return schema;
+    })() : STORYBOARD_PLAN_RESPONSE_SCHEMA,
     schemaId: STORYBOARD_PLAN_RESPONSE_SCHEMA_ID,
     paragraphIds,
     requiredSourceParagraphIds: requiredParagraphIds,
     requiredInsertAfter,
     maxShots: manualSupplement ? 1 : maxShots,
     manualSupplement,
+    requirePrimarySubject,
   };
 }
 
@@ -1184,6 +1198,7 @@ export function adaptStoryboardPlanContract(value, options = {}) {
       shotRole: shot.shot_role,
       shotScale: shot.shot_scale,
       subject: shot.subject,
+      ...(Object.hasOwn(shot,'primary_subject_id') ? {primarySubjectId:shot.primary_subject_id} : {}),
       scene: sceneText,
       sceneId: shot.composition?.continuity_key,
       location: shot.scene?.location,

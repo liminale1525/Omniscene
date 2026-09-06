@@ -1,5 +1,6 @@
 // New image-generation identities. Never revive the retired characters/entities settings.
 import { normalizeStaticReferenceReceipt } from './qianmu-comfy-reference-contract.js';
+import { normalizeCharacterReferenceSettings } from './qianmu-character-reference.js';
 export const CHARACTER_ARCHIVE_SCHEMA = 'qianmu.character.archive.v1';
 export const CHARACTER_CATEGORIES = Object.freeze(['char', 'user', 'other']);
 export const characterArchiveError = (code, message) => Object.assign(new Error(message), { code: `character_archive_${code}` });
@@ -23,6 +24,7 @@ export function normalizeCharacterArchive(value) {
     ageStatus:['unknown','adult','minor'].includes(value.ageStatus) ? value.ageStatus : 'unknown',
     imagegen:{appearance:text(imagegen.appearance,12000),negative:text(imagegen.negative,6000),
       sensitiveAppearance:text(imagegen.sensitiveAppearance,6000),reference,preview:preview?{...preview,sourceSha256:reference.sha256}:null}};
+  if (Object.hasOwn(imagegen,'novelReference')) document.imagegen.novelReference = normalizeCharacterReferenceSettings(imagegen.novelReference);
   if (new TextEncoder().encode(JSON.stringify(document)).byteLength > 64 * 1024) fail('size','档案文字过长，请缩短后保存');
   return document;
 }

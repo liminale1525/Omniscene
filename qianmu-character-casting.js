@@ -1,4 +1,5 @@
 import {characterIdentityProjection, selectCharacterBinding, characterArchiveError} from './qianmu-character-archive.js';
+import {normalizeCharacterReferenceSnapshot} from './qianmu-character-reference.js';
 
 export const CHARACTER_CASTING_SCHEMA = 'qianmu.character.casting.v1';
 const fail = (code, message) => { throw characterArchiveError(code, message); };
@@ -25,8 +26,12 @@ export function normalizeCharacterCastingSnapshot(value) {
     || typeof value.name !== 'string' || !value.name || value.name.length > 80
     || value.negativeScope !== 'model_interface'
     || typeof value.negative !== 'string' || value.negative.length > 6000) return {schema:CHARACTER_CASTING_SCHEMA,invalid:true};
+  let imageReference;
+  try { if (Object.hasOwn(value,'imageReference')) imageReference = normalizeCharacterReferenceSnapshot(value.imageReference); }
+  catch (_) { return {schema:CHARACTER_CASTING_SCHEMA,invalid:true}; }
   return {schema:CHARACTER_CASTING_SCHEMA,subjectId:value.subjectId,archiveId:value.archiveId,archiveVersion:value.archiveVersion,
-    category:value.category,name:value.name,sourceCharacterId:value.sourceCharacterId,match:value.match,negativeScope:'model_interface',negative:value.negative};
+    category:value.category,name:value.name,sourceCharacterId:value.sourceCharacterId,match:value.match,negativeScope:'model_interface',negative:value.negative,
+    ...(imageReference ? {imageReference} : {})};
 }
 
 export function assertCharacterCastingSnapshots(shot) {
@@ -61,7 +66,7 @@ export async function readCharacterCasting(options) {
   finally { store.close(); }
 }
 
-export async function prepareCharacterCasting({store,namespace,subjects=[],chatKey='',text='',guard=async()=>{}}) {
+export async function prepareCharacterCasting({store,namespace,subjects=[],chatKey='',text='',includeReferences=false,guard=async()=>{}}) {
   await guard();
   const [heads, bindings] = await Promise.all([store.list(namespace),store.bindings(namespace)]);
   await guard();
@@ -85,9 +90,11 @@ export async function prepareCharacterCasting({store,namespace,subjects=[],chatK
     if (!record || record.head.revision !== headById.get(archiveId).revision) fail('conflict','角色档案读取期间已变化，请重新提取');
     const identity = characterIdentityProjection(archiveId,record.head.version,record.document);
     identity.aliases = [...new Set([...identity.aliases,...active.filter(row => row.archiveId === archiveId).map(row => row.name).filter(Boolean)])];
-    entries.push({identity,negative:record.document.imagegen.negative});
+    entries.push({identity,negative:record.document.imagegen.negative,...(includeReferences ? {imageReference:normalizeCharacterReferenceSnapshot({
+      version:1,namespace,reference:record.document.imagegen.reference,...record.document.imagegen.novelReference})} : {})});
   }
   const prepared = {schema:CHARACTER_CASTING_SCHEMA,entries,unboundNames:active.filter(row => !row.archiveId).map(row => nameKey(row.name)).filter(Boolean)};
+  if (includeReferences) prepared.referenceMode = 'novel-primary';
   characterCastingInput(prepared); // Validate the entire payload before any LLM request; no truncation.
   return freeze(prepared);
 }
@@ -130,9 +137,11 @@ export function applyCharacterCasting(shot, prepared) {
     // or override explicit hair/pose/state with an unstructured archive blob after the LLM returns.
     return {...visual,id:identity.subjectId,archiveSnapshot:{schema:CHARACTER_CASTING_SCHEMA,subjectId:identity.subjectId,
       archiveId:identity.archiveId,archiveVersion:identity.archiveVersion,category:identity.category,name:identity.name,
-      sourceCharacterId:character.id,match:match.match,negativeScope:'model_interface',negative:entry.negative}};
+      sourceCharacterId:character.id,match:match.match,negativeScope:'model_interface',negative:entry.negative,
+      ...(entry.imageReference ? {imageReference:normalizeCharacterReferenceSnapshot(entry.imageReference)} : {})}};
   });
   const result = {...shot,characters};
+  if (Object.hasOwn(shot,'primarySubjectId')) result.primarySubjectId = remap.get(shot.primarySubjectId) || shot.primarySubjectId;
   if (shot.sceneFingerprint) result.sceneFingerprint = {...shot.sceneFingerprint,castIds:(shot.sceneFingerprint.castIds||[]).map(value=>remap.get(value)||value)};
   if (shot.continuityUpdates) {
     result.continuityUpdates = {...shot.continuityUpdates};

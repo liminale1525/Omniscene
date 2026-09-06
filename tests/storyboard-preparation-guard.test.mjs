@@ -56,6 +56,7 @@ function environment() {
 for (const [name, mutate] of [
   ['model', (e) => { e.state.profiles.novel.model = 'nai-diffusion-3'; }],
   ['capability', (e) => { e.state.profiles.novel.capabilityModelId = 'nai-diffusion-3'; }],
+  ['character reference toggle', (e) => { e.state.profiles.novel.characterReferenceEnabled = true; }],
   ['series', (e) => { e.state.source = 'openai'; }],
   ['connection URL', (e) => { e.state.connections.novel.draft.baseUrl = 'https://different.example'; }],
   ['image key revision', (e) => { e.context.storyboardCredentialRevision++; }],

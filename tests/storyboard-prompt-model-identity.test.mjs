@@ -7,6 +7,7 @@ import {
   resolveStoryboardModelBinding, resolveStoryboardJobModelIdentity,
   resolveStoryboardConnectionBinding, projectStoryboardProtocolParameters,
   getStoryboardCapabilities, synchronizeStoryboardCaptionBase,
+  planCharacterReference, characterReferenceChoice,
 } from '../qianmu-storyboard.js';
 import { generateDirectImage } from '../qianmu-image-direct.js';
 import { generateImage } from '../qianmu-image-gateway.js';
@@ -32,10 +33,12 @@ function runtime(state = createStoryboardDefaults(), extra = {}, names = []) {
     structuredClone, clone: structuredClone, Date,
     uniqueClean: (items) => [...new Set(items.filter(Boolean))],
     storyboardState: () => state,
+    getChatKey: () => 'fixture-chat',
     storyboardSelectedArtistPreset: () => state.artistPresets.find((item) => item.id === state.selectedArtistPresetId) || null,
     compileStoryboardPrompt, normalizeStoryboardShotSpec, resolveStoryboardModelBinding,
     resolveStoryboardJobModelIdentity, getStoryboardCapabilities, synchronizeStoryboardCaptionBase,
     resolveStoryboardConnectionBinding, projectStoryboardProtocolParameters,
+    planCharacterReference, characterReferenceChoice,
     STORYBOARD_GENERIC_PROMPT_DEFAULTS: { positive: 'generic quality', negative: 'generic exclusions' },
     STORYBOARD_NAI_QUALITY_DEFAULTS: { [V3]: 'quality v3', [V45]: 'quality v45', [V5]: 'quality v5' },
     STORYBOARD_NAI_NEGATIVE_DEFAULTS: { [V3]: 'negative v3', [V45]: 'negative v45', [V5]: 'negative v5' },
