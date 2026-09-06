@@ -2151,6 +2151,17 @@ function snapshot(value, fallback = {}) {
   const raw = obj(value) ? value : {}, source = getStoryboardProvider(raw.source) ? raw.source : (getStoryboardProvider(fallback.source) ? fallback.source : 'novel'), safe = safeData(raw, 8);
   const profile = normalizeStoryboardParameterProfile(raw.profile, source);
   const payload = safeData(raw.payload, 12) || {};
+  // Preserve the separately bounded role contract without raising the generic snapshot depth budget.
+  // A truncated recipe must never later be interpreted as a role that has no Comfy configuration.
+  for (const [original,clean] of [[raw.shotSpec,safe?.shotSpec],[raw.payload?.shotSpec,payload.shotSpec]]) {
+    if (!Array.isArray(original?.characters) || !Array.isArray(clean?.characters)) continue;
+    clean.characters.forEach((character,index) => {
+      const archive = original.characters[index]?.archiveSnapshot;
+      if (obj(character) && obj(archive) && Object.hasOwn(archive,'comfyImplementation')) {
+        character.archiveSnapshot = safeData(normalizeCharacterCastingSnapshot(archive),12);
+      }
+    });
+  }
   if (source === 'comfy' && raw.payload?.parameters?.workflow !== undefined) {
     const result = sanitizeStoryboardWorkflow(raw.payload.parameters.workflow);
     payload.parameters ||= {};

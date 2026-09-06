@@ -1,6 +1,7 @@
 // New image-generation identities. Never revive the retired characters/entities settings.
 import { normalizeStaticReferenceReceipt } from './qianmu-comfy-reference-contract.js';
 import { normalizeCharacterReferenceSettings } from './qianmu-character-reference.js';
+import { normalizeComfyCharacterSettings } from './qianmu-comfy-character-contract.js';
 export const CHARACTER_ARCHIVE_SCHEMA = 'qianmu.character.archive.v1';
 export const CHARACTER_CATEGORIES = Object.freeze(['char', 'user', 'other']);
 export const characterArchiveError = (code, message) => Object.assign(new Error(message), { code: `character_archive_${code}` });
@@ -25,6 +26,7 @@ export function normalizeCharacterArchive(value) {
     imagegen:{appearance:text(imagegen.appearance,12000),negative:text(imagegen.negative,6000),
       sensitiveAppearance:text(imagegen.sensitiveAppearance,6000),reference,preview:preview?{...preview,sourceSha256:reference.sha256}:null}};
   if (Object.hasOwn(imagegen,'novelReference')) document.imagegen.novelReference = normalizeCharacterReferenceSettings(imagegen.novelReference);
+  if (Object.hasOwn(value,'comfy')) document.comfy = normalizeComfyCharacterSettings(value.comfy);
   if (new TextEncoder().encode(JSON.stringify(document)).byteLength > 64 * 1024) fail('size','档案文字过长，请缩短后保存');
   return document;
 }
@@ -39,14 +41,19 @@ export function characterIdentityProjection(id, version, document) {
 }
 export function exportCharacterArchive(document) {
   const normalized = normalizeCharacterArchive(document);
-  return {schema:CHARACTER_ARCHIVE_SCHEMA,document:{...normalized,imagegen:{...normalized.imagegen,reference:null,preview:null}},referenceOmitted:Boolean(normalized.imagegen.reference)};
+  // Workflow IDs, versions and reference permission are local bindings, not portable identity text.
+  const {comfy,...portable} = normalized;
+  return {schema:CHARACTER_ARCHIVE_SCHEMA,document:{...portable,imagegen:{...normalized.imagegen,reference:null,preview:null}},referenceOmitted:Boolean(normalized.imagegen.reference),
+    ...(comfy ? {comfyOmitted:true} : {})};
 }
 export function importCharacterArchive(contents) {
   if (typeof contents !== 'string' || new TextEncoder().encode(contents).byteLength > 128 * 1024) fail('import','档案文件须小于 128 KB');
   let value; try { value = JSON.parse(contents); } catch (_) { fail('import','档案文件不是有效 JSON'); }
   if (value?.schema !== CHARACTER_ARCHIVE_SCHEMA || !object(value.document)) fail('schema','请选择千幕角色档案文件');
   // A portable document cannot grant access to another account's ST file.
-  return {document:normalizeCharacterArchive({...value.document,imagegen:{...value.document.imagegen,reference:null,preview:null}}),referenceOmitted:Boolean(value.referenceOmitted || value.document.imagegen?.reference)};
+  const {comfy,...portable} = value.document;
+  return {document:normalizeCharacterArchive({...portable,imagegen:{...portable.imagegen,reference:null,preview:null}}),referenceOmitted:Boolean(value.referenceOmitted || value.document.imagegen?.reference),
+    ...(comfy || value.comfyOmitted ? {comfyOmitted:true} : {})};
 }
 export function characterBindingTarget(value) {
   if (!object(value) || !['char','user'].includes(value.category) || typeof value.subjectKey !== 'string' || !value.subjectKey || value.subjectKey.length > 1024

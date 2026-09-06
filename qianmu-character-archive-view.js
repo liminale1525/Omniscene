@@ -108,7 +108,7 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
   };
   const edit=(document,head={})=>{remember();view.draft={id:head.id||'',revision:head.revision||'',version:head.version||0,document:clone(document),dirty:false};view.bindingEditor=null;view.bindingShown=24;scrolls.editor=0;};
   const toList=()=>{remember();view.draft=null;};
-  const exportDocument=doc=>{const data=exportCharacterArchive(doc);download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),`${doc.name.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_')}.character.qianmu.json`);if(data.referenceOmitted)notify('已导出文字档案，参考图请在目标环境重新选择','info');};
+  const exportDocument=doc=>{const data=exportCharacterArchive(doc);download(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),`${doc.name.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_')}.character.qianmu.json`);if(data.comfyOmitted)notify('已导出文字档案，参考图与 Comfy 实现请在目标环境重新绑定','info');else if(data.referenceOmitted)notify('已导出文字档案，参考图请在目标环境重新选择','info');};
   const currentBinding=picker=>view.bindings.find(row=>row.category===picker.subject.category&&row.subjectKey===picker.subject.subjectKey&&row.scope===picker.scope&&row.chatKey===(picker.scope==='chat'?view.chatKey:''));
   async function act(action,button) {
     if(action==='import'){if(!view.busy)host.querySelector('[data-archive-file]')?.click();return;}
@@ -160,7 +160,7 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
     }));
     host.querySelectorAll('[data-archive-binding]').forEach(field=>field.addEventListener('change',()=>{if(!view.bindingEditor)return;view.bindingEditor[field.dataset.archiveBinding]=field.value;if(field.dataset.archiveBinding==='scope'){const row=currentBinding(view.bindingEditor);view.bindingEditor.archiveId=row?.archiveId||'';draw();}}));
     host.querySelector('[data-archive-file]')?.addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;void run(async guard=>{
-      if(file.size>128*1024)throw Error('档案文件须小于 128 KB');const imported=importCharacterArchive(await file.text());await guard();edit(imported.document);view.draft.dirty=true;if(imported.referenceOmitted)notify('文字档案已载入，请重新选择参考图','info');
+      if(file.size>128*1024)throw Error('档案文件须小于 128 KB');const imported=importCharacterArchive(await file.text());await guard();edit(imported.document);view.draft.dirty=true;if(imported.comfyOmitted)notify('文字档案已载入，请重新绑定参考图与 Comfy 实现','info');else if(imported.referenceOmitted)notify('文字档案已载入，请重新选择参考图','info');
     });});
     host.querySelector('[data-archive-image]')?.addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;const draft=view.draft;void run(async guard=>{
       const result=await saveReference(file,guard);await guard();if(view.draft!==draft)throw Error('编辑页已变化，原档案未修改');draft.document.imagegen.reference=result.reference;draft.document.imagegen.preview=result.preview;draft.dirty=true;

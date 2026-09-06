@@ -16,6 +16,8 @@
     "qianmu-character-archive-view.js",
     "qianmu-character-casting.js",
     "qianmu-character-reference.js",
+    "qianmu-comfy-character-contract.js",
+    "qianmu-comfy-character-plan.js",
     "INSTALL-DOUBAO-APIKEY.md",
     "LICENSE",
     "README.md",
