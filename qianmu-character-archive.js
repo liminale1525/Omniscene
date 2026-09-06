@@ -31,6 +31,7 @@ export function newCharacterArchive(category = 'char') {
 }
 // Identification projection deliberately excludes negative/sensitive fields and file locations.
 export function characterIdentityProjection(id, version, document) {
+  if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,152}$/.test(id) || !Number.isSafeInteger(version) || version < 1) fail('id','角色档案身份或版本无效');
   const value = normalizeCharacterArchive(document);
   return {subjectId:`archive:${id}`,archiveId:id,archiveVersion:version,category:value.category,name:value.name,aliases:[...value.aliases],appearance:value.imagegen.appearance};
 }

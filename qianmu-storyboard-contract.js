@@ -7,6 +7,7 @@ import {
   STORYBOARD_SHOT_SCALES,
   normalizeStoryboardShotSpec,
 } from './qianmu-storyboard.js';
+import { characterCastingInput } from './qianmu-character-casting.js';
 
 // LLM 返回协议只负责“把原始 JSON 变成可信结构”，不发请求，也不猜测缺失内容。
 export const STORYBOARD_PLAN_RESPONSE_SCHEMA_ID = 'qianmu.storyboard.plan.v1';
@@ -864,6 +865,13 @@ export function buildStoryboardPlanContractRequest(context = {}, config = {}) {
     })),
     character_setting: clippedText(context.currentCharacter, 10000),
     user_persona: clippedText(context.persona, 8000),
+    character_archive: {
+      catalogue_is_cast: false,
+      appearance_priority: 'explicit_target_text_over_archive',
+      character_id: 'subject_id_when_unambiguous',
+      unlisted_people: 'allowed',
+      candidates: characterCastingInput(context.characterCasting),
+    },
     selected_worldbook: clippedText(context.world, 16000),
   };
   return {

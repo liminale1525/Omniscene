@@ -2,6 +2,8 @@ import { normalizeOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } f
 import { resolveImageProtocolBinding, IMAGE_NATIVE_PROTOCOLS, IMAGE_PROTOCOL_BINDING_VERSION } from './qianmu-image-models.js';
 import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { retainComfyReferenceSelection } from './qianmu-comfy-reference-contract.js';
+import { normalizeCharacterCastingSnapshot, assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
+export { assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
 
 // 千幕·分镜数据契约。这里只描述数据与请求计划，不持有密钥，也不发起网络请求。
 export const STORYBOARD_SCHEMA_VERSION = 24;
@@ -794,6 +796,7 @@ export function normalizeStoryboardCharacterVisualState(value, index = 0) {
     gaze: shotStringList(raw.gaze, 8, 300),
     props: shotStringList(raw.props, 20, 300),
     spatial: normalizeSpatial(raw.spatial, index),
+    ...(raw.archiveSnapshot != null ? { archiveSnapshot: normalizeCharacterCastingSnapshot(raw.archiveSnapshot) } : {}),
   };
 }
 
@@ -1441,6 +1444,7 @@ export function compileStoryboardPrompt(input = {}) {
     ...(Object.hasOwn(input, 'remoteModelId') ? { remoteModelId: input.remoteModelId } : {}),
   });
   const shotInput = input.productionPacket ? adaptProductionPacketToStoryboardShotSpec(input.productionPacket, input.shotOverrides) : input.shot;
+  assertCharacterCastingSnapshots(shotInput);
   const validation = validateStoryboardShotSpec(shotInput, { providerId: input.providerId, modelId: modelBinding.capabilityModelId });
   const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId, input.workflow, input.connection);
   const shot = validation.shot, common = [
@@ -1450,9 +1454,19 @@ export function compileStoryboardPrompt(input = {}) {
     promptPart(shot.promptAtoms.camera), shot.shotScale, promptPart(shot.composition.framing),
     capability.ratio ? shot.composition.ratioId : '', shot.composition.negativeSpace, promptPart(shot.sharedRelations),
   ].filter(Boolean).join(', ');
-  const characterBlocks = shot.characters.map(characterPrompt).filter(Boolean);
+  const useNativeCharacters = input.providerId === 'novel' && capability.multiCharacter && shot.characters.length > 0;
+  // Shared identity is not a Comfy implementation. Model-interface exclusions never acquire node bindings.
+  const characterNegatives = shot.characters.map(character => input.providerId === 'comfy' ? '' : character.archiveSnapshot?.negative || '');
+  if (input.providerId === 'comfy' && shot.characters.some(character => character.archiveSnapshot?.negative)) {
+    validation.warnings.push('Comfy 使用共用身份；模型接口专属负面不参与工作流');
+  }
+  if (characterNegatives.some(Boolean) && !useNativeCharacters && !capability.supportsExclusionText) {
+    throw Object.assign(new Error('当前模型或工作流没有人物专属负面输入，请先调整角色配置'), {code:'character_archive_negative_capability'});
+  }
+  const characterBlocks = shot.characters.map((character, index) => [characterPrompt(character),
+    !useNativeCharacters && characterNegatives[index] ? `Undesired traits for ${JSON.stringify(character.name || character.id)} only: ${characterNegatives[index]}` : '',
+  ].filter(Boolean).join('. ')).filter(Boolean);
   const environment = promptPart(shot.promptAtoms.environment), quality = promptPart(shot.promptAtoms.quality);
-  const useNativeCharacters = input.providerId === 'novel' && capability.multiCharacter && characterBlocks.length > 0;
   const prompt = [common, ...(useNativeCharacters ? [] : characterBlocks), environment, quality].filter(Boolean).join(', ');
   const antiMix = shot.characters.length > 1 ? 'mixed identities, merged bodies, swapped character traits, swapped character actions' : '';
   const negative = capability.supportsNativeNegative || capability.supportsExclusionText
@@ -1467,7 +1481,8 @@ export function compileStoryboardPrompt(input = {}) {
       use_coords: true,
       use_order: true,
     };
-    providerOptions.v4_negative_prompt = { caption: { base_caption: negative, char_captions: [] }, legacy_uc: false };
+    providerOptions.v4_negative_prompt = { caption: { base_caption: negative, char_captions: characterNegatives.some(Boolean)
+      ? shot.characters.map((character,index) => ({char_caption:characterNegatives[index],centers:[{x:character.spatial.center[0],y:character.spatial.center[1]}]})) : [] }, legacy_uc: false };
   }
   return {
     prompt, negative, providerOptions, characterBlocks, validation, modelBinding,

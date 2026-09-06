@@ -8,7 +8,7 @@ const safeImage=value=>{
   try{for(const part of value.split('/').slice(1)){const decoded=decodeURIComponent(part);if(!decoded||decoded==='.'||decoded==='..'||/[\\/%\u0000-\u001f\u007f]/.test(decoded))return '';}}catch(_){return '';}
   return value;
 };
-const status=view=>`<p class="sd-character-status" role="status">${escape(view.error||'档案管理已开放，逐镜生成联动待接入')}</p>`;
+const status=view=>`<p class="sd-character-status" role="status">${escape(view.error||'普通形象用于取景；参考图与性征暂不参与生成')}</p>`;
 const field=(name,label,value,max,textarea=false)=>`<label><span>${label}</span>${textarea?`<textarea class="text_pole" data-archive-field="${name}" maxlength="${max}">${escape(value)}</textarea>`:`<input class="text_pole" data-archive-field="${name}" maxlength="${max}" value="${escape(value)}">`}</label>`;
 
 export async function saveCharacterReference(file,{save,guard,createBitmap=globalThis.createImageBitmap,createCanvas=()=>document.createElement('canvas')}={}) {
@@ -35,7 +35,7 @@ export function renderCharacterArchive(view,{identity=()=>''}={}) {
       <section class="sd-card"><div class="sd-storyboard-card-body sd-character-detail-grid">
         <div class="sd-character-cover-field"><label class="sd-character-cover-upload" aria-label="上传参考图">${cover?`<img src="${escape(cover)}" alt="参考图">`:'<i data-qm-icon="qm-regular-image"></i>'}<input type="file" data-archive-image accept="image/png,image/jpeg,image/webp" class="sd-reader-native-file"></label>${cover?icon('clear-image','移除参考图选择','x'):''}</div>
         <div class="sd-character-main-fields">${field('name','档案名',doc.name,80)}${field('appearance','角色形象',doc.imagegen.appearance,12000,true)}${field('sensitiveAppearance','性征',doc.imagegen.sensitiveAppearance,6000,true)}</div>
-        <div class="sd-character-full">${field('negative','专属负面提示词',doc.imagegen.negative,6000,true)}</div>
+        <div class="sd-character-full">${field('negative','模型接口专属负面',doc.imagegen.negative,6000,true)}</div>
       </div></section>
       <details class="sd-card"><summary><b>绑定与识别</b></summary><div class="sd-storyboard-card-body">
         ${field('aliases','别名 / 称呼',doc.aliases.join('，'),1943)}

@@ -158,14 +158,14 @@ test('a late failed safety request aborts instead of turning into a local fallba
 });
 
 for (const phase of ['before repair request', 'during repair request']) {
-  test(`actual compiler repair is isolated ${phase}`, async () => {
-    const e = environment(), gate = deferred();
+  test(`actual compiler repair is isolated ${phase}`, {timeout:2000}, async () => {
+    const e = environment(), gate = deferred(), reached = deferred();
     let llmCalls = 0;
     const contract = {
       buildStoryboardPlanContractRequest: () => ({ messages: [], schema: {}, schemaId: 'test' }),
       parseStoryboardContractResponse: () => ({ ok: false, errors: ['invalid'] }),
       repairStoryboardContractOnce: async ({ request }) => {
-        if (phase === 'before repair request') await gate.promise;
+        if (phase === 'before repair request') { reached.resolve(); await gate.promise; }
         await request([]);
         return { ok: false };
       },
@@ -174,12 +174,12 @@ for (const phase of ['before repair request', 'during repair request']) {
     e.context.featureRuntime.load = async () => contract;
     e.context.storyboardCallCompiler = async () => {
       llmCalls++;
-      if (llmCalls === 2 && phase === 'during repair request') await gate.promise;
+      if (llmCalls === 2 && phase === 'during repair request') { reached.resolve(); await gate.promise; }
       return 'invalid output';
     };
     vm.runInContext(section('storyboardCompilerResult'), e.context);
     const work = e.context.storyboardCompilePrompt(null, { plan: e.plan });
-    await tick(); e.state.prompt = 'new manual prompt'; gate.resolve();
+    await reached.promise; e.state.prompt = 'new manual prompt'; gate.resolve();
     assert.equal(await work, false);
     assert.equal(llmCalls, phase === 'before repair request' ? 1 : 2);
     assert.equal(e.state.prompt, 'new manual prompt');
