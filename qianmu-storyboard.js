@@ -1126,7 +1126,7 @@ export function adaptProductionPacketToStoryboardShotSpec(value = {}, overrides 
   const duty = STORYBOARD_VISUAL_DUTIES.includes(visual.duty) ? visual.duty : 'action';
   const role = ({ space: 'establishing', relationship: 'relationship', action: 'action', reaction: 'reaction', detail: 'detail', atmosphere: 'establishing', motif: 'detail', transition: 'turn' })[duty] || 'action';
   const scale = ({ master: 'wide_shot', two_shot: 'medium_shot', over_shoulder: 'medium_close_up', single_reaction: 'close_up', action: 'medium_full', insert: 'insert', atmosphere: 'extreme_wide_shot', montage: 'wide_shot' })[pattern] || 'medium_shot';
-  const characters = (Array.isArray(packet.characterState) ? packet.characterState : []).slice(0, 12).map((character, index) => ({
+  const characters = (Array.isArray(packet.characterState) ? packet.characterState : []).filter(character=>character?.visible!==false).slice(0, 12).map((character, index) => ({
     id: character?.id || character?.name || `character-${index + 1}`,
     name: character?.name || character?.id || '',
     temporaryState: [character?.state].filter(Boolean),

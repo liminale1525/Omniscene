@@ -20,6 +20,7 @@ function normalizeCharacterState(value, index = 0) {
     id,
     name: text(raw.name || id, 160),
     state: text(raw.state || raw.emotional_state || raw.current_goal || raw.next_action, 1000),
+    ...(raw.visible === false ? {visible:false} : {}),
     knowledge: list(raw.knowledge || raw.knows, 30),
   };
 }

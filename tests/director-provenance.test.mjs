@@ -59,7 +59,7 @@ test('provenance normalization drops unknown and sensitive payloads', () => {
 test('world-side submission validates its durable decision immediately before generation', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const create = source.slice(source.indexOf('async function storyboardGenerateProductionPacket'), source.indexOf('async function storyboardGenerate(root'));
-  assert.match(create, /outputs: \{ storyboard: true, voice: true, subtitle: true, film: true \}/);
+  assert.match(create, /outputs: \{ storyboard: true \}/, 'still-image confirmation must not authorize other consumers');
   assert.match(create, /shotInput\.directorDecision = decision/);
   const submit = source.slice(source.indexOf('async function storyboardGenerate(root'), source.indexOf('async function storyboardRunQueuedJob'));
   assert.match(submit, /storyboardDirectorDecisionSnapshot\(productionDraft\)/);

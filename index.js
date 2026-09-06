@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.68';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.68';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.68';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.69';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.69';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.69';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.68';
+} from './qianmu-llm-output.js?v=1.59.69';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -175,219 +175,223 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.68';
+} from './qianmu-storyboard.js?v=1.59.69';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.68';
+const VERSION = '1.59.69';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.68'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.69'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.68'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.69'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.68'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.69'),
   },
   imageChannel: {
     label: 'NAI 跨页顺序生成',
-    load: () => import('./qianmu-image-channel.js?v=1.59.68'),
+    load: () => import('./qianmu-image-channel.js?v=1.59.69'),
   },
   imageServiceClient: {
     label: '增强生图任务',
-    load: () => import('./qianmu-image-service-client.js?v=1.59.68'),
+    load: () => import('./qianmu-image-service-client.js?v=1.59.69'),
   },
   comfySubmission: {
     label: 'Comfy 实例排队',
-    load: () => import('./qianmu-comfy-submission.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-submission.js?v=1.59.69'),
   },
   comfyRecovery: {
     label: 'Comfy 原图领取',
-    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.69'),
   },
   comfyInbox: {
     label: 'Comfy 收片管理',
-    load: () => import('./qianmu-comfy-inbox-view.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-inbox-view.js?v=1.59.69'),
   },
   comfyReferences: {
     label: 'Comfy 参考图',
-    load: () => import('./qianmu-comfy-references.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-references.js?v=1.59.69'),
   },
   characterArchive: {
     label: '角色档案',
-    load: () => import('./qianmu-character-archive-view.js?v=1.59.68'),
+    load: () => import('./qianmu-character-archive-view.js?v=1.59.69'),
   },
   characterCasting: {
     label: '角色取景绑定',
-    load: () => import('./qianmu-character-casting.js?v=1.59.68'),
+    load: () => import('./qianmu-character-casting.js?v=1.59.69'),
+  },
+  worldShot: {
+    label: '造物之眼确认',
+    load: () => import('./qianmu-world-shot.js?v=1.59.69'),
   },
   characterShotEditor: {
     label: '本镜人物编辑',
-    load: () => import('./qianmu-character-shot-view.js?v=1.59.68'),
+    load: () => import('./qianmu-character-shot-view.js?v=1.59.69'),
   },
   characterReference: {
     label: '角色参考图',
-    load: () => import('./qianmu-character-reference.js?v=1.59.68'),
+    load: () => import('./qianmu-character-reference.js?v=1.59.69'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.68').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.69').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.68'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.69'),
   },
   comfyWorkbench: {
     label: 'Comfy 镜头台',
-    load: () => import('./qianmu-comfy-workbench.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-workbench.js?v=1.59.69'),
   },
   comfyCharacters: {
     label: 'Comfy 角色实现',
-    load: () => import('./qianmu-comfy-character-plan.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-character-plan.js?v=1.59.69'),
   },
   comfyCharacterReadiness: {
     label: '角色节点检查',
-    load: () => import('./qianmu-comfy-character-readiness.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-character-readiness.js?v=1.59.69'),
   },
   comfyLibrary: {
     label: 'Comfy 工作流库',
-    load: () => import('./qianmu-comfy-library-view.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-library-view.js?v=1.59.69'),
   },
   comfyPreflight: {
     label: 'Comfy 配置检查',
-    load: () => import('./qianmu-comfy-preflight.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-preflight.js?v=1.59.69'),
   },
   comfyReadiness: {
     label: 'Comfy 节点检查',
-    load: () => import('./qianmu-comfy-readiness.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-readiness.js?v=1.59.69'),
   },
   comfyTargets: {
     label: 'Comfy 可信连接',
-    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.68'),
+    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.69'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.68'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.69'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.68'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.69'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.68'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.69'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.68'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.69'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.68'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.69'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.68'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.69'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.68'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.69'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.68'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.69'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.68'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.69'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.68'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.69'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.68'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.69'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.68'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.69'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.68'),
+    load: () => import('./qianmu-video-task.js?v=1.59.69'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.68'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.69'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.68'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.69'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.68'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.69'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.68'),
+    load: () => import('./qianmu-video-store.js?v=1.59.69'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.68'),
+    load: () => import('./qianmu-video-result.js?v=1.59.69'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.68'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.69'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.68'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.69'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.68'),
+    load: () => import('./qianmu-video-media.js?v=1.59.69'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.68'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.69'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.68'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.69'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.68'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.69'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.68'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.69'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.68'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.69'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.68'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.69'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.68'),
-        import('./qianmu-theaters.js?v=1.59.68'),
+        import('./builtin-theaters.js?v=1.59.69'),
+        import('./qianmu-theaters.js?v=1.59.69'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -13497,7 +13501,7 @@ function renderStoryboardAutomationCard(state) {
     <div class="sd-storyboard-automation-options">
       <label class="sd-option-chip"><input type="checkbox" class="sd-storyboard-auto-capture" ${state.automation.autoCapture ? 'checked' : ''} ${!state.enabled ? 'disabled' : ''}><span>自动提取生成词</span></label>
       <label class="sd-option-chip"><input type="checkbox" class="sd-storyboard-auto-generate" ${state.automation.autoGenerate ? 'checked' : ''} ${!state.enabled || !state.automation.autoCapture ? 'disabled' : ''}><span>自动生图</span></label>
-      <label class="sd-option-chip"><input type="checkbox" class="sd-storyboard-world-side" ${state.directorBridge.worldSideShotsEnabled ? 'checked' : ''} ${!state.enabled ? 'disabled' : ''}><span>世界侧镜头</span></label>
+      <label class="sd-option-chip"><input type="checkbox" class="sd-storyboard-world-side" ${state.directorBridge.worldSideShotsEnabled ? 'checked' : ''} ${!state.enabled ? 'disabled' : ''}><span>造物之眼</span></label>
     </div>
   </section>`;
 }
@@ -13592,14 +13596,14 @@ function renderStoryboardProductionSources(state) {
     return `<article class="sd-storyboard-production-item ${active ? 'active' : ''}">
       <span class="sd-storyboard-production-label ${packet.track === 'second_camera' ? 'second-camera' : ''}">${htmlEscape(label)}</span>
       <div><b>${htmlEscape(title)}</b><p>${htmlEscape(snip(description, 150))}</p></div>
-      <button type="button" class="sd-icon-btn sd-storyboard-load-production" data-storyboard-production-packet="${htmlEscape(packet.packetId)}" title="载入镜头台" aria-label="载入${htmlEscape(title)}"><i class="fa-solid fa-clapperboard"></i></button>
+      <button type="button" class="sd-icon-btn sd-storyboard-load-production" data-storyboard-production-packet="${htmlEscape(packet.packetId)}" title="核对并创作" aria-label="核对并创作：${htmlEscape(title)}"><i data-qm-icon="qm-regular-aperture"></i></button>
     </article>`;
   }).join('');
   const body = directorProductionPacketState.error
     ? `<div class="sd-storyboard-empty-inline">${htmlEscape(directorProductionPacketState.error)}</div>`
     : rows;
   return `<details class="sd-card sd-storyboard-production-card" data-storyboard-card="production" ${state.collapsedCards.production ? '' : 'open'}>
-    <summary><span><b>导演素材</b><small>${packets.length} 个候选</small></span></summary>
+    <summary><span><b>造物之眼</b><small>${packets.length} 个候选</small></span></summary>
     <div class="sd-storyboard-card-body"><div class="sd-storyboard-production-list">${body}</div></div>
   </details>`;
 }
@@ -16780,6 +16784,7 @@ function storyboardLogText(log) {
 const STORYBOARD_PIPELINE_STAGE_LABELS = Object.freeze({
   context: '上下文',
   prompt_compiler: '镜头规划',
+  world_confirmation: '造物之眼确认',
   safety_adaptation: '安全适配',
   prompt_compilation: '生图编译',
   provider_request: '模型请求',
@@ -17764,7 +17769,7 @@ async function storyboardCompilerWorldText(state) {
   return { text: resolved.join('\n\n').slice(0, 18000), rows: selected, fallback: false };
 }
 
-function storyboardCreatePreparationGuard(state, { plan = null, includeDraft = true } = {}) {
+function storyboardCreatePreparationGuard(state, { plan = null, includeDraft = true, upstreamGuard = null } = {}) {
   const chatKey = String(getChatKey() || '');
   const copy = (value) => Array.isArray(value) ? value.map(copy)
     : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, copy(item)])) : value;
@@ -17812,7 +17817,7 @@ function storyboardCreatePreparationGuard(state, { plan = null, includeDraft = t
     document.addEventListener('input', onInput, true);
     document.addEventListener('change', onInput, true);
   }
-  const isCurrent = () => !invalidated && baseline !== null && state === storyboardState()
+  const isCurrent = () => !invalidated && baseline !== null && (!upstreamGuard || upstreamGuard.isCurrent()) && state === storyboardState()
     && chatKey === String(getChatKey() || '') && plan?.status !== 'cancelled' && ctx().chat?.[floor] === message && equal(baseline, read());
   return {
     isCurrent,
@@ -17832,7 +17837,7 @@ function storyboardCreatePreparationGuard(state, { plan = null, includeDraft = t
   };
 }
 
-async function storyboardCompilerCharacterCasting(text, inputGuard, includeReferences = false, includeComfy = false) {
+async function storyboardCompilerCharacterCasting(text, inputGuard, includeReferences = false, includeComfy = false, visibleCharacters) {
   const [module, identity] = await Promise.all([featureRuntime.load('characterCasting'), featureRuntime.load('imageAdmission')]);
   inputGuard?.assertCurrent();
   const namespace = await identity.resolveImageAccountNamespace();
@@ -17845,7 +17850,7 @@ async function storyboardCompilerCharacterCasting(text, inputGuard, includeRefer
     inputGuard?.assertCurrent();
   };
   await guard();
-  const prepared = await module.readCharacterCasting({namespace,...current,text,includeReferences,includeComfy,guard:async () => {
+  const prepared = await module.readCharacterCasting({namespace,...current,text,visibleCharacters,includeReferences,includeComfy,guard:async () => {
     inputGuard?.assertCurrent();
     if (String(getChatKey() || '') !== current.chatKey) throw Object.assign(new Error('聊天已切换，请重新提取'), {code:'storyboard_input_changed'});
   }});
@@ -18878,7 +18883,7 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
 
 async function storyboardGenerateProductionPacket(root, packetId) {
   const state = storyboardState();
-  if (!state.directorBridge?.worldSideShotsEnabled) return toast('请先启用世界侧镜头。', 'warning');
+  if (!state.directorBridge?.worldSideShotsEnabled) return toast('请先启用造物之眼。', 'warning');
   const currentChatKey = String(getChatKey() || '');
   if (!currentChatKey || directorProductionPacketState.chatKey !== currentChatKey || directorCandidatePoolState.chatKey !== currentChatKey) return toast('这条导演素材不属于当前聊天。', 'warning');
   const packet = (directorProductionPacketState.packets || []).find((item) => item.packetId === packetId);
@@ -18887,15 +18892,35 @@ async function storyboardGenerateProductionPacket(root, packetId) {
   const candidate = directorCandidatePoolState.pool?.candidates?.find((item) => item.entryId === ledgerEntry?.entryId);
   if (!candidate || candidate.recommendation === 'reject') return toast('这条导演素材未通过连续性与差异检查。', 'warning');
   const actionEpoch = directorNarrativeBridgeEpoch;
-  let decision;
-  let workOrder;
-  let workOrderRuntime;
+  const startedAt = Date.now();
+  const admissionEpoch = storyboardAdmissionEpoch;
+  const preparationKey = JSON.stringify([currentChatKey, 'world-creation']);
+  if (storyboardGenerationPreparing.has(preparationKey)) return toast('正在核对造物之眼画面，请勿重复操作', 'info');
+  storyboardGenerationPreparing.add(preparationKey);
+  const sourceValue = () => JSON.stringify([
+    directorProductionPacketState.packets?.find(item=>item.packetId===packetId),
+    directorCandidatePoolState.ledger?.entries?.find(item=>item.entryId===ledgerEntry.entryId),
+    directorCandidatePoolState.pool?.candidates?.find(item=>item.candidateId===candidate.candidateId),
+  ]);
+  const sourceSnapshot = sourceValue();
+  const productionGuard = {
+    isCurrent: () => state === storyboardState() && state.enabled && state.directorBridge?.worldSideShotsEnabled
+      && currentChatKey === String(getChatKey() || '') && actionEpoch === directorNarrativeBridgeEpoch
+      && admissionEpoch === storyboardAdmissionEpoch && sourceSnapshot === sourceValue(),
+    assertCurrent() { if (!this.isCurrent()) throw Object.assign(new Error('导演素材、聊天或配置已变化，请重新确认'), {code:'storyboard_input_changed'}); },
+  };
+  let preparationGuard;
   try {
-    const [decisionRuntime, loadedWorkOrderRuntime] = await Promise.all([
+    productionGuard.assertCurrent();
+    storyboardCaptureWorkbench(root);
+    preparationGuard = storyboardCreatePreparationGuard(state, {upstreamGuard:productionGuard});
+    const assertCurrent = () => { preparationGuard.assertCurrent(); if (root?.isConnected === false) throw Object.assign(new Error('镜头台已关闭，请重新确认'), {code:'storyboard_input_changed'}); };
+    const [decisionRuntime, workOrderRuntime, worldRuntime] = await Promise.all([
       featureRuntime.load('directorDecision'),
       featureRuntime.load('directorWorkOrders'),
+      featureRuntime.load('worldShot'),
     ]);
-    workOrderRuntime = loadedWorkOrderRuntime;
+    assertCurrent();
     const currentState = storyboardState();
     if (actionEpoch !== directorNarrativeBridgeEpoch
       || currentChatKey !== String(getChatKey() || '')
@@ -18905,66 +18930,100 @@ async function storyboardGenerateProductionPacket(root, packetId) {
     }
     const result = decisionRuntime.createDirectorDecision(candidate, packet, {
       chatKey: currentChatKey, ledgerEntryId: ledgerEntry.entryId, explicitApproval: true,
-      approvedAt: Date.now(), outputs: { storyboard: true, voice: true, subtitle: true, film: true },
+      approvedAt: Date.now(), outputs: { storyboard: true },
     });
     if (!result.ok || !decisionRuntime.canConsumeDirectorDecision(result.decision, 'storyboard', currentChatKey)) return toast('这条导演素材尚未形成有效决策。', 'warning');
-    decision = result.decision;
+    const decision = result.decision;
     const dispatch = workOrderRuntime.createDirectorWorkOrder(decision, 'storyboard', currentChatKey, { createdAt: Date.now() });
     if (!dispatch.ok || !workOrderRuntime.canConsumeDirectorWorkOrder(dispatch.workOrder, 'storyboard', currentChatKey)) return toast('这条导演素材尚未形成有效工作单。', 'warning');
-    workOrder = dispatch.workOrder;
-  } catch (error) {
-    console.warn('[千幕] 导演决策单暂不可用。', error);
-    return toast('这条导演素材暂时无法确认。', 'warning');
-  }
-  const profile = storyboardProviderProfile(state);
-  const shotInput = workOrderRuntime.directorWorkOrderToStoryboardShot(workOrder, currentChatKey);
-  if (profile.modelBindingError) return toast(profile.modelBindingError, 'warning');
-  if (!shotInput) return toast('导演工作单无法映射为分镜。', 'warning');
-  shotInput.directorDecision = decision;
-  const shotSpec = normalizeStoryboardShotSpec(shotInput);
-  const compiled = compileStoryboardPrompt({ providerId: state.source, remoteModelId: profile.model, capabilityModelId: profile.capabilityModelId, shot: shotSpec });
-  const prompt = String(compiled.prompt || workOrder.payload.visual.description || workOrder.payload.visual.subject || '').trim();
-  if (!prompt) return toast('这条导演素材暂时没有可生成的画面信息。', 'warning');
-  const title = String(workOrder.payload.visual.subject || '世界侧镜头').trim();
-  state.prompt = prompt;
-  state.negative = String(compiled.negative || '');
-  state.promptMode = 'manual';
-  state.pendingParagraphSelection = null;
-  state.manualParagraphIndex = null;
-  Object.assign(state.promptDraft, {
-    compiled: prompt,
-    negative: state.negative,
-    compiledAt: Date.now(),
-    compiledBy: 'director-work-order',
-    userEditedCompiled: false,
-    userEditedNegative: false,
-    artistPositiveBaked: false,
-    artistNegativeBaked: false,
-    sourceSummary: ['导演工作单', title],
-    shots: [{
-      id: shotSpec.id || uid('shotdraft'),
-      title,
-      purpose: shotSpec.narrativePurpose || workOrder.payload.visual.description || workOrder.payload.visual.subject,
-      role: shotSpec.shotRole || 'custom',
-      shotType: shotSpec.subjectKind === 'character' ? 'portrait' : shotSpec.subjectKind === 'environment' ? 'environment' : 'custom',
-      prompt,
+    const workOrder = dispatch.workOrder;
+    const profile = storyboardProviderProfile(state);
+    const shotInput = workOrderRuntime.directorWorkOrderToStoryboardShot(workOrder, currentChatKey);
+    if (!shotInput) return toast('导演工作单无法映射为分镜。', 'warning');
+    shotInput.directorDecision = decision;
+    shotInput.sensitive = state.contentRating === 'nsfw';
+    const title = String(workOrder.payload.visual.subject || '造物之眼').trim();
+    const draft = {id:shotInput.id,title,role:shotInput.shotRole || 'custom',shotSpec:shotInput,
+      shotType:shotInput.subjectKind === 'character' ? 'portrait' : shotInput.subjectKind === 'environment' ? 'environment' : 'custom'};
+    const route = state.routing.enabled ? routeStoryboardShot(draft,state.routing)
+      : {providerId:state.source,modelId:profile.model,capabilityModelId:profile.capabilityModelId};
+    const finalProfile = storyboardResolveRoutingProfile(state,route,route.providerId===state.source ? profile : null);
+    const sourceId = route.providerId, connectionGroup = storyboardConnectionState(state,sourceId);
+    const connection = route.connectionPresetId ? connectionGroup.group.presets.find(item=>item.id===route.connectionPresetId) : connectionGroup.draft;
+    const useReference = sourceId === 'novel' && finalProfile.characterReferenceEnabled === true;
+    const casting = await storyboardCompilerCharacterCasting('',{assertCurrent},useReference,
+      sourceId === 'comfy' && finalProfile.comfyCharacterEnabled === true,shotInput.characters);
+    assertCurrent();
+    const identityRuntime = await featureRuntime.load('imageAdmission');
+    assertCurrent();
+    productionGuard.verify = async () => {
+      productionGuard.assertCurrent();
+      if (casting.namespace !== await identityRuntime.resolveImageAccountNamespace()) throw Object.assign(new Error('ST 账户已变化，请重新确认造物之眼画面'), {code:'storyboard_input_changed'});
+      productionGuard.assertCurrent();
+    };
+    const prepared = worldRuntime.prepareWorldCharacterShot(shotInput,casting.prepared);
+    const context = ctx();
+    if (!context.Popup || !context.POPUP_TYPE) throw new Error('当前 ST 不支持画面确认面板，请更新 ST 后重试');
+    const shotSpec = await worldRuntime.openWorldShotConfirmation({shot:prepared.shot,warnings:prepared.warnings,title,
+      model:finalProfile.model,useReference,context,guard:async()=>{assertCurrent();await casting.assertCurrent();assertCurrent();}});
+    if (!shotSpec) return false;
+    await casting.assertCurrent();assertCurrent();
+    const compiled = compileStoryboardPrompt({providerId:sourceId,remoteModelId:finalProfile.model,
+      capabilityModelId:finalProfile.capabilityModelId,connection,workflow:sourceId==='comfy'?finalProfile.comfyWorkflow:undefined,shot:shotSpec});
+    const prompt = String(compiled.prompt || '').trim();
+    if (!prompt) return toast('这条导演素材暂时没有可生成的画面信息。', 'warning');
+    preparationGuard.dispose();preparationGuard=null;
+    state.prompt = prompt;
+    state.negative = String(compiled.negative || '');
+    state.promptMode = 'manual';
+    state.pendingParagraphSelection = null;
+    state.manualParagraphIndex = null;
+    Object.assign(state.promptDraft, {
+      compiled: prompt,
       negative: state.negative,
-      safePrompt: '',
-      sensitive: false,
-      shotSpec,
-      userEdited: false,
-      promptLocked: false,
-    }],
-  });
-  saveSettings();
-  return storyboardGenerate(root, { automatic: false });
+      compiledAt: Date.now(),
+      compiledBy: 'director-work-order',
+      userEditedCompiled: false,
+      userEditedNegative: false,
+      artistPositiveBaked: false,
+      artistNegativeBaked: false,
+      sourceSummary: ['导演工作单', title],
+      shots: [{
+        id: shotSpec.id || uid('shotdraft'),
+        title,
+        purpose: shotSpec.narrativePurpose || workOrder.payload.visual.description || workOrder.payload.visual.subject,
+        role: shotSpec.shotRole || 'custom',
+        shotType: shotSpec.subjectKind === 'character' ? 'portrait' : shotSpec.subjectKind === 'environment' ? 'environment' : 'custom',
+        prompt,
+        negative: state.negative,
+        safePrompt: '',
+        sensitive: Boolean(shotSpec.sensitive),
+        shotSpec,
+        userEdited: false,
+        promptLocked: false,
+      }],
+    });
+    state.pendingCompilerStages = [sanitizeStoryboardDiagnosticData({
+      id:uid('stage-world'),type:'world_confirmation',status:'success',startedAt,finishedAt:Date.now(),
+      input:{packetId:packet.packetId,eventId:packet.eventId,provider:sourceId,model:finalProfile.model},
+      output:{characters:shotSpec.characters.map(row=>({id:row.id,archiveId:row.archiveSnapshot?.archiveId || '',archiveVersion:row.archiveSnapshot?.archiveVersion || null})),characterCastingWarnings:prepared.warnings},
+      decisions:['用户明确确认创作；未调用取词 LLM','档案形象与当前状态分别核对，不更新永久档案'],error:'',
+    })];
+    saveSettings();
+    // The form was captured before confirmation; old rendered shot rows must not overwrite this draft.
+    return await storyboardGenerate(null, { automatic: false, productionGuard });
+  } catch (error) {
+    if (state === storyboardState() && currentChatKey === String(getChatKey() || '')) toast(error.message || '造物之眼画面暂时无法确认', 'warning');
+    return false;
+  } finally {preparationGuard?.dispose();storyboardGenerationPreparing.delete(preparationKey);}
 }
 
-async function storyboardGenerate(root, { plan = null, automatic = false } = {}) {
+async function storyboardGenerate(root, { plan = null, automatic = false, productionGuard = null } = {}) {
   const preparationKey = JSON.stringify([String(getChatKey() || ''), storyboardTargetFloor(storyboardState())]);
   if (storyboardGenerationPreparing.has(preparationKey)) return toast('本层画面正在准备，请勿重复生成', 'info');
   storyboardGenerationPreparing.add(preparationKey);
   try {
+    productionGuard?.assertCurrent();
     const { state, profile, workflowResult } = storyboardCaptureWorkbench(root);
     const generationChatKey = String(getChatKey() || '');
     if (!state.enabled) return toast('请先启用分镜。', 'warning');
@@ -18983,17 +19042,18 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
       return toast(profile.comfyWorkflowNotice || storyboardWorkflowIssue(workflowResult), 'warning');
     }
     const productionDraft = state.promptDraft?.shots?.find((item) => storyboardProductionContext(item).packetId) || null;
-    if (productionDraft && storyboardProductionContext(productionDraft).decisionStatus !== 'approved') return toast('世界侧镜头缺少已确认的导演决策。', 'warning');
+    if (productionDraft && (automatic || state.promptDraft.shots.length !== 1)) return toast('造物之眼须单独手动确认创作，不能混入正文自动批次', 'warning');
+    if (productionDraft && storyboardProductionContext(productionDraft).decisionStatus !== 'approved') return toast('造物之眼缺少已确认的导演决策。', 'warning');
     let deliveryPolicy, targetFloor;
     // Extraction owns its draft writes; this outer guard keeps the surrounding configuration/context stable.
-    const preparationGuard = storyboardCreatePreparationGuard(state, { plan, includeDraft: false });
+    const preparationGuard = storyboardCreatePreparationGuard(state, { plan, includeDraft: false, upstreamGuard:productionGuard });
     try {
       if (productionDraft) {
         const currentChatKey = String(getChatKey() || '');
         const decision = storyboardDirectorDecisionSnapshot(productionDraft);
         const decisionRuntime = await featureRuntime.load('directorDecision');
         preparationGuard.assertCurrent();
-        if (!decision || !decisionRuntime.canConsumeDirectorDecision(decision, 'storyboard', currentChatKey)) return toast('世界侧镜头的导演决策已失效。', 'warning');
+        if (!decision || !decisionRuntime.canConsumeDirectorDecision(decision, 'storyboard', currentChatKey)) return toast('造物之眼的导演决策已失效。', 'warning');
       }
       deliveryPolicy = storyboardProductionDeliveryPolicy(productionDraft || {}, { target: state.target, inlineByDefault: state.inlineByDefault });
       targetFloor = deliveryPolicy.target === 'gallery' ? null : storyboardTargetFloor(state);
@@ -19034,7 +19094,9 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
     const manualSupplement = plan?.origin === 'manual_supplement';
     const coverage = prepareStoryboardShotGroup({
       shots: plannedSource.map((shot) => ({ ...shot.shotSpec, id: shot.id, subject: shot.shotSpec?.subject || shot.title || shot.prompt, narrativePurpose: shot.shotSpec?.narrativePurpose || shot.purpose || shot.prompt, shotRole: shot.shotSpec?.shotRole || shot.role })),
-      policy: state.compositionPolicy, maxShots: generationPolicy.maxImages, manual: manualSupplement,
+      // A single explicitly approved director possibility is not evidence from a prose paragraph.
+      // Candidate distinctness and decision validity were checked above; never invent a prose anchor.
+      policy: state.compositionPolicy, maxShots: generationPolicy.maxImages, manual: manualSupplement || Boolean(productionDraft),
     });
     const allowedShotIds = new Set(coverage.shots.map((shot) => shot.id));
     const preparedSpecs = new Map(coverage.shots.map((shot) => [shot.id, shot]));
@@ -19062,7 +19124,7 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
       }));
       plan.updatedAt = Date.now();
     }
-    const inputGuard = storyboardCreatePreparationGuard(state, { plan });
+    const inputGuard = storyboardCreatePreparationGuard(state, { plan, upstreamGuard:productionGuard });
     try {
       const jobs = [];
       const resolvedArtistIds = [];
@@ -19121,7 +19183,11 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
       }
       let queued = 0;
       inputGuard.assertCurrent();
-      for (const job of jobs) if (await storyboardQueueJob(job, inputGuard.isCurrent)) queued++;
+      for (const job of jobs) {
+        if (productionGuard?.verify) await productionGuard.verify();
+        inputGuard.assertCurrent();
+        if (await storyboardQueueJob(job, inputGuard.isCurrent)) queued++;
+      }
       if (queued > 0 && !automatic && plan?.manualReviewRequired) {
         plan.manualReviewRequired = false;
         for (const shot of plan.shots || []) shot.requiresManualConfirmation = false;

@@ -10252,6 +10252,20 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-character-main-fields { min-width: 0; }
 #story-director-modal .sd-character-full { grid-column: 1 / -1; min-width: 0; }
 .sd-character-shot-dialog { width: min(720px, calc(100vw - 64px)); max-width: 100%; max-height: min(72vh,760px); overflow-y: auto; overscroll-behavior: contain; min-width: 0; text-align: left; font-size: 12px; padding: 2px; box-sizing: border-box; }
+.sd-world-shot-dialog { width: min(660px, calc(100vw - 64px)); max-width: 100%; max-height: min(72vh,760px); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; min-width: 0; text-align: left; font-size: 12px; padding: 2px; overflow-wrap: anywhere; }
+.sd-world-shot-dialog h3 { font-size: 16px; margin: 0 0 10px; }
+.sd-world-shot-dialog small { display: block; font-size: 11px; color: var(--sd-muted,#aaa); line-height: 1.5; }
+.sd-world-shot-people { display: grid; gap: 8px; margin: 12px 0; }
+.sd-world-shot-people details { border: 1px solid var(--sd-border,#8886); border-radius: 10px; min-width: 0; }
+.sd-world-shot-people summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px; cursor: pointer; list-style: none; }
+.sd-world-shot-people summary::-webkit-details-marker { display: none; }
+.sd-world-shot-fields { display: grid; gap: 10px; padding: 10px; min-width: 0; }
+.sd-world-shot-dialog label { display: grid; gap: 5px; text-align: left; min-width: 0; }
+.sd-world-shot-fields textarea { box-sizing: border-box; width: 100%; min-width: 0; min-height: 80px; max-height: 240px; resize: vertical; font-size: 12px; border-radius: 8px; }
+.sd-world-shot-dialog select { box-sizing: border-box; height: 40px; min-height: 40px; font-size: 12px; width: 100%; min-width: 0; border-radius: 8px; }
+.sd-world-shot-dialog .sd-world-shot-sensitive { display: flex; align-items: center; min-height: 40px; gap: 8px; margin-top: 8px; }
+.sd-world-shot-sensitive input { flex: 0 0 auto; }
+@media (min-width: 700px) { .sd-world-shot-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 .sd-character-shot-dialog fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 10px; }
 .sd-character-shot-person { border: 1px solid var(--sd-border,#8886); border-radius: 10px; min-width: 0; }
 .sd-character-shot-person summary { display: flex; gap: 8px; padding: 10px; cursor: pointer; list-style: none; }

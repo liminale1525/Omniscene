@@ -28,7 +28,7 @@ function normalizeCharacters(value) {
   return (Array.isArray(value) ? value : []).slice(0, 24).map((item, index) => {
     const raw = plain(item) ? item : {};
     const id = text(raw.id, 160) || `character-${index + 1}`;
-    return { id, name: text(raw.name || id, 160), state: text(raw.state, 1000) };
+    return { id, name: text(raw.name || id, 160), state: text(raw.state, 1000), ...(raw.visible === false ? {visible:false} : {}) };
   });
 }
 
@@ -156,6 +156,7 @@ export function directorWorkOrderToStoryboardShot(value = {}, chatKey = '') {
   const role = ({ space: 'establishing', relationship: 'relationship', action: 'action', reaction: 'reaction', detail: 'detail', atmosphere: 'establishing', motif: 'detail', transition: 'turn' })[duty] || 'action';
   const scale = ({ master: 'wide_shot', two_shot: 'medium_shot', over_shoulder: 'medium_close_up', single_reaction: 'close_up', action: 'medium_full', insert: 'insert', atmosphere: 'extreme_wide_shot', montage: 'wide_shot' })[pattern] || 'medium_shot';
   const environment = [visual.scene.location, visual.scene.time, visual.scene.weather, ...visual.scene.environment].filter(Boolean);
+  const visibleCharacters = visual.characters.filter(character=>character.visible!==false);
   return {
     id: order.workOrderId,
     sourceParagraphIds: visual.evidenceRefs,
@@ -163,10 +164,10 @@ export function directorWorkOrderToStoryboardShot(value = {}, chatKey = '') {
     narrativePurpose: visual.description || visual.subject,
     shotPattern: pattern, visualDuty: duty, shotRole: role, shotScale: scale,
     subject: visual.subject,
-    subjectKind: visual.characters.length ? 'character' : (['atmosphere', 'space'].includes(duty) ? 'environment' : duty === 'motif' ? 'symbolic' : 'mixed'),
+    subjectKind: visibleCharacters.length ? 'character' : (['atmosphere', 'space'].includes(duty) ? 'environment' : duty === 'motif' ? 'symbolic' : 'mixed'),
     location: visual.scene.location,
     scene: environment.join(', '),
-    characters: visual.characters.map((character) => ({ id: character.id, name: character.name, temporaryState: [character.state].filter(Boolean) })),
+    characters: visibleCharacters.map((character) => ({ id: character.id, name: character.name, temporaryState: [character.state].filter(Boolean) })),
     promptAtoms: { global: [visual.description, visual.subject].filter(Boolean), environment },
     continuityUpdates: {
       time: visual.scene.time, weather: visual.scene.weather,

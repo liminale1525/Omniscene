@@ -54,7 +54,7 @@ test('slow decision confirmation rechecks source epoch, chat and explicit switch
 
 test('the workbench exposes one compact switch and hides stale director material while disabled', () => {
   const card = source.slice(source.indexOf('function renderStoryboardAutomationCard'), source.indexOf('function renderStoryboardCompilerContextPanel'));
-  assert.match(card, /class="sd-storyboard-world-side"[\s\S]*<span>世界侧镜头<\/span>/);
+  assert.match(card, /class="sd-storyboard-world-side"[\s\S]*<span>造物之眼<\/span>/);
   const production = source.slice(source.indexOf('function renderStoryboardProductionSources'), source.indexOf('function renderStoryboardCreate'));
   assert.match(production, /if \(!state\.directorBridge\?\.worldSideShotsEnabled\) return ''/);
   assert.match(styles, /sd-storyboard-automation-options[^\n]*repeat\(3, minmax\(0, 1fr\)\)/);

@@ -70,23 +70,31 @@ export async function readCharacterCasting(options) {
   finally { store.close(); }
 }
 
-export async function prepareCharacterCasting({store,namespace,subjects=[],chatKey='',text='',includeReferences=false,includeComfy=false,guard=async()=>{}}) {
+export async function prepareCharacterCasting({store,namespace,subjects=[],chatKey='',text='',visibleCharacters,includeReferences=false,includeComfy=false,guard=async()=>{}}) {
+  if (visibleCharacters !== undefined && (!Array.isArray(visibleCharacters) || visibleCharacters.length > 24
+    || visibleCharacters.some(row => !object(row) || typeof row.id !== 'string' || typeof row.name !== 'string'))) fail('casting','出镜人物名单无效');
+  const visible = visibleCharacters?.filter(row => row.visible !== false);
+  const requested = (row, archiveId = '') => visible === undefined || visible.some(character =>
+    archiveId && character.id === `archive:${archiveId}` || names(row).some(name => name === nameKey(character.name) || name === nameKey(character.id)));
   await guard();
+  if (visible?.length === 0) return freeze({schema:CHARACTER_CASTING_SCHEMA,entries:[],unboundNames:[],...(includeReferences ? {referenceMode:'novel-primary'} : {})});
   const [heads, bindings] = await Promise.all([store.list(namespace),store.bindings(namespace)]);
   await guard();
   const headById = new Map(heads.map(head => [head.id,head])), selected = new Set(), active = [];
   for (const subject of subjects) {
     const binding = subject.subjectKey ? selectCharacterBinding(bindings,subject,chatKey) : null;
     const archiveId = binding?.archiveId || '';
+    const head = headById.get(archiveId);
+    if (!requested({name:subject.name,aliases:head ? names(head) : []},archiveId)) continue;
     if (archiveId) {
-      const head = headById.get(archiveId);
       if (!head || head.category !== subject.category) fail('binding','当前人物绑定的档案缺失，请先核对角色库');
       selected.add(archiveId);
     }
     active.push({name:subject.name,archiveId});
   }
   const source = nameKey(text);
-  for (const head of heads) if (head.category === 'other' && names(head).some(name => mentioned(name,source))) selected.add(head.id);
+  for (const head of heads) if (head.category === 'other' && (visible === undefined
+    ? names(head).some(name => mentioned(name,source)) : requested(head,head.id))) selected.add(head.id);
   if (selected.size > 64) fail('casting_size','本次相关人物超过 64 份，请缩小取景范围');
   const entries = [];
   for (const archiveId of selected) {

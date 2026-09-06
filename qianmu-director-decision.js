@@ -30,7 +30,7 @@ function normalizeDecisionCharacters(value) {
   return (Array.isArray(value) ? value : []).slice(0, 24).map((item, index) => {
     const raw = plain(item) ? item : {};
     const id = text(raw.id || raw.name || `character-${index + 1}`, 160);
-    return { id, name: text(raw.name || id, 160), state: text(raw.state, 1000) };
+    return { id, name: text(raw.name || id, 160), state: text(raw.state, 1000), ...(raw.visible === false ? {visible:false} : {}) };
   }).filter((item) => item.id);
 }
 
