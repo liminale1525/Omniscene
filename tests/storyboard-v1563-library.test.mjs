@@ -34,7 +34,7 @@ assert.match(source, /<details class="sd-card sd-storyboard-worldbook-card" data
 assert.match(source, /sd-storyboard-worldbook-card[\s\S]*sd-storyboard-refresh-worldbooks[\s\S]*sd-storyboard-card-body/);
 assert.match(source, /sd-storyboard-prompt sd-storyboard-prompt-textarea/);
 assert.match(source, /sd-storyboard-negative sd-storyboard-prompt-textarea/);
-assert.match(style, /\.sd-storyboard-root \{ --qm-control-height: 40px; --qm-control-radius: 9px; \}/);
+assert.match(style, /\.sd-storyboard-root \{ --qm-control-height: 40px; --qm-control-radius: 9px; text-align: left; \}/);
 assert.match(style, /\.sd-storyboard-root input\.text_pole:not\(\[type="file"\]\),[\s\S]*min-height: var\(--qm-control-height\) !important; height: var\(--qm-control-height\)/);
 assert.match(style, /\.sd-storyboard-prompt-textarea \{ min-height: 96px !important/);
 assert.match(style, /\.sd-storyboard-root \{ --sd-storyboard-gap: 6px; gap: 6px; \}/);
