@@ -22,10 +22,11 @@ function environment({ typed = 'typed-test-key', check = async () => ({ ok:true,
   const keys = new Map([['key-a','preset-a-key'],['key-b','preset-b-key']]);
   const input = {value:typed,type:'password'}, attrs = {}, icon = {};
   const button = {setAttribute:(name,value)=>{attrs[name]=value;},querySelector:()=>icon};
-  const root = {querySelector:selector=>selector.includes('visibility') ? button : input};
+  const root = {isConnected:true, querySelectorAll:()=>[input], querySelector:selector=>selector.includes('visibility') ? button : input};
   const notices = [], persisted = [], icons = [];
   const context = vm.createContext({ ...storyboard, clone:structuredClone, URL,
     storyboardState:()=>state, storyboardConnectionLoadRevision:0, storyboardKeyInputRevision:0,
+    storyboardConnectionCheckRevision:0, getChatKey:()=> 'chat-a',
     storyboardDraftApiKeys:new Map(), storyboardConnectionStatus:new Map(),
     storyboardCaptureWorkbench:()=>({profile:state.profiles.novel,workflowResult:{ok:true,removedFields:[]}}),
     storyboardProviderProfile:()=>({...state.profiles.novel,baseUrl:group.draft.baseUrl}),
@@ -37,7 +38,7 @@ function environment({ typed = 'typed-test-key', check = async () => ({ ok:true,
     toast:message=>notices.push(message), directImageRuntime:async()=>({checkDirectImageConnection:check,isDirectImageTransportError:()=>false}),
     refreshQianmuIcon:(_icon,value)=>icons.push(value),
   });
-  vm.runInContext(['storyboardSaveConnection','storyboardCheckConnection','storyboardSaveConnectionPreset','storyboardLoadConnectionPreset','storyboardToggleKeyVisibility'].map(section).join('\n'),context);
+  vm.runInContext(['storyboardConnectionState','storyboardSaveConnection','storyboardCheckConnection','storyboardSaveConnectionPreset','storyboardLoadConnectionPreset','storyboardToggleKeyVisibility'].map(section).join('\n'),context);
   return {state,group,input,root,context,keys,attrs,notices,persisted,icons};
 }
 

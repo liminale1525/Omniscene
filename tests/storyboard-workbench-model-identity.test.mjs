@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import * as storyboard from '../qianmu-storyboard.js';
-import { parseOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } from '../qianmu-openai-image-compat.js';
+import { parseOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility, serializeOpenAICompatibleHeaders } from '../qianmu-openai-image-compat.js';
 
 const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
 const V3 = 'nai-diffusion-3', V45 = 'nai-diffusion-4-5-full', V5 = 'nai-diffusion-5-full';
@@ -21,7 +21,7 @@ function environment(capability = V3, model = alias, extra = {}) {
   state.connections.novel.draft = { id: 'draft-a', credentialId: 'key-ref', baseUrl: 'https://relay.example', model: V5 };
   const notices = [], saved = [];
   const context = vm.createContext({
-    ...storyboard, clone: structuredClone, parseOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility,
+    ...storyboard, clone: structuredClone, parseOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility, serializeOpenAICompatibleHeaders,
     settings: { apiProfiles: [] }, storyboardState: () => state, getChatKey: () => 'chat-a', ctx: () => ({ chat: [] }),
     storyboardTargetFloor: () => -1, storyboardCredentialRevision: 0, getCharacterDescription: () => '', getPersonaDescription: () => '',
     storyboardSelectedArtistPreset: () => null, storyboardGalleryRecords: () => [],
@@ -32,6 +32,7 @@ function environment(capability = V3, model = alias, extra = {}) {
     STORYBOARD_NAI_NEGATIVE_DEFAULTS: { [V3]: 'negative v3', [V45]: 'negative v45', [V5]: 'negative v5' },
     STORYBOARD_GENERIC_PROMPT_DEFAULTS: { positive: 'quality', negative: 'exclusions' },
     storyboardConnectionStatus: new Map(), storyboardDraftApiKeys: new Map(),
+    storyboardConnectionLoadRevision: 0,
     storyboardProductionDeliveryPolicy: (_shot, policy) => policy,
     storyboardAnchorForMessage: () => null, storyboardCredentialId: () => 'key-ref',
     sanitizeStoryboardDiagnosticData: (value) => value,
@@ -43,8 +44,8 @@ function environment(capability = V3, model = alias, extra = {}) {
     'storyboardCompilerProfileOptions', 'renderStoryboardModelCard', 'storyboardPromptDefaultsKey',
     'storyboardProviderPromptDefaults', 'storyboardPromptLayerForArtist', 'storyboardRememberPromptLayer',
     'storyboardPromptsForArtist', 'storyboardJoinPrompt', 'storyboardParameterPresets',
-    'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCreate',
-    'storyboardProfileSnapshot', 'storyboardCaptureWorkbench', 'storyboardGenerationPayload',
+    'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCreate', 'renderStoryboardConnectionCompatibility', 'renderStoryboardOpenAICompatibility', 'renderStoryboardImageOutputFields',
+    'storyboardProfileSnapshot', 'storyboardCaptureWorkbench', 'storyboardGenerationPayload', 'storyboardRestoreSnapshotConnection',
     'storyboardCreatePreparationGuard', 'storyboardResolveRoutingProfile', 'storyboardRoutingTargetOptions', 'storyboardCreateJob', 'storyboardGatewayRequest', 'storyboardLoadLogToWorkbench', 'storyboardSafeShotSpecFromPrompt', 'storyboardAdaptShotForModel'];
   for (const call of section('renderStoryboardCreate').matchAll(/\b(renderStoryboard\w+)\(/g)) {
     if (!names.includes(call[1])) context[call[1]] = () => '';
@@ -99,7 +100,7 @@ test('invalid bindings show a repairable model card instead of crashing the enti
   const { state, context } = environment('', 'unknown-alias');
   const before = structuredClone(state.profiles.novel);
   const html = context.renderStoryboardCreate(state);
-  assert.match(html, /请重新选择模型/);
+  assert.match(html, /请检查模型或连接/);
   assert.match(html, /value="unknown-alias"/);
   assert.doesNotMatch(html, /sd-storyboard-params/);
   assert.deepEqual(state.profiles.novel, before);

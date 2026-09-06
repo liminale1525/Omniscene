@@ -12,9 +12,10 @@ export function storyboardFunctionSource(name) {
   return next < 0 ? tail : tail.slice(0, next + 1);
 }
 
-export function createStoryboardFormFixture({ family = 'novel', enabled = true, workflow = '' } = {}) {
+export function createStoryboardFormFixture({ family = 'novel', enabled = true, workflow = '', connection = {} } = {}) {
   const state = storyboard.createStoryboardDefaults();
   state.source = family; state.enabled = enabled;
+  Object.assign(state.connections[family].draft, connection);
   if (family === 'comfy') state.profiles.comfy.comfyWorkflow = typeof workflow === 'string' ? workflow : JSON.stringify(workflow);
   for (const key of ['model', 'context', 'params', 'prompt', 'composition']) state.collapsedCards[key] = false;
   const globals = {
@@ -33,7 +34,7 @@ export function createStoryboardFormFixture({ family = 'novel', enabled = true, 
     'renderStoryboardModelCard', 'renderStoryboardAutomationCard', 'renderStoryboardContextCard', 'renderStoryboardCompilerContextPanel',
     'storyboardPromptDefaultsKey', 'storyboardProviderPromptDefaults', 'storyboardPromptLayerForArtist', 'storyboardParameterPresets',
     'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCompositionCard', 'renderStoryboardOpenAICompatibility',
-    'renderStoryboardCreate', 'renderStoryboardNav'];
+    'renderStoryboardConnectionCompatibility', 'renderStoryboardImageOutputFields', 'renderStoryboardCreate', 'renderStoryboardNav'];
   vm.runInContext(names.map(storyboardFunctionSource).join('\n'), context);
   return { state, content: context.renderStoryboardCreate(state), nav: context.renderStoryboardNav(state) };
 }

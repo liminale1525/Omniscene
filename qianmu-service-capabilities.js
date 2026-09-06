@@ -109,7 +109,7 @@ export function checkQianmuImageModelBinding(capabilities, identity) {
   return { ok: true, bindingVersion: IMAGE_MODEL_BINDING_VERSION };
 }
 
-// C2d connects this check to the workbench's fresh fallback probe before exposing protocol selection.
+// Workbench catalog, checks and generation invoke this only before an actual gateway fallback.
 export function checkQianmuImageProtocolBinding(capabilities, identity) {
   const fail = (code, message) => ({ ok: false, code, message });
   try { resolveImageProtocolBinding(identity?.modelFamily, identity || {}, { allowCompatible: true }); }

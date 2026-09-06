@@ -19,13 +19,13 @@ const generation = {direct:generateDirectImage,gateway:generateImage};
 const checks = {direct:checkDirectImageConnection,gateway:checkImageConnection};
 const catalogs = {direct:listDirectImageModels,gateway:listImageModels};
 
-test('cross-family support is explicit, versioned and still blocked by unfinished front-end plan/snapshot callers', () => {
+test('cross-family support remains explicit and versioned after connection-aware front-end integration', () => {
   for (const provider of ['banana','seedream']) {
     const input=request(provider);
     assert.deepEqual(resolveImageProtocolBinding(provider,input,{allowCompatible:true}),{modelFamily:provider,protocol:'openai-images'});
     assert.throws(()=>resolveImageProtocolBinding(provider,input),{code:'model_protocol_mismatch'});
-    assert.throws(()=>resolveStoryboardModelBinding(provider,input),{code:'model_protocol_mismatch'});
-    assert.throws(()=>buildStoryboardProviderPlan({providerId:provider,prompt:'garden',connection:input}),{code:'model_protocol_mismatch'});
+    assert.equal(resolveStoryboardModelBinding(provider,{...input, model:''}).imageProtocolVersion,1);
+    assert.equal(buildStoryboardProviderPlan({providerId:provider,prompt:'garden',connection:input}).gatewayRequest.protocol,'openai-images');
   }
   for (const provider of ['novel','comfy']) assert.throws(()=>resolveImageProtocolBinding(provider,request(provider),{allowCompatible:true}),{code:'model_protocol_mismatch'});
 });

@@ -5828,14 +5828,16 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
   min-width: 0;
   margin: 0;
 }
-#story-director-modal .sd-storyboard-openai-compat {
+#story-director-modal .sd-storyboard-openai-compat,
+#story-director-modal .sd-storyboard-connection-compat {
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--sd-border) 82%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--sd-glass-weak) 74%, transparent);
   overflow: hidden;
 }
-#story-director-modal .sd-storyboard-openai-compat > summary {
+#story-director-modal .sd-storyboard-openai-compat > summary,
+#story-director-modal .sd-storyboard-connection-compat > summary {
   min-height: 38px;
   display: flex;
   align-items: center;
@@ -5845,7 +5847,8 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
   color: var(--sd-muted);
   cursor: pointer;
 }
-#story-director-modal .sd-storyboard-openai-compat > summary > span { font-size: 12px; font-weight: 650; }
+#story-director-modal .sd-storyboard-openai-compat > summary > span,
+#story-director-modal .sd-storyboard-connection-compat > summary > span { font-size: 12px; font-weight: 650; }
 #story-director-modal .sd-storyboard-openai-compat > summary > small { font-size: 10px; font-weight: 500; }
 #story-director-modal .sd-storyboard-openai-compat-body {
   display: flex;

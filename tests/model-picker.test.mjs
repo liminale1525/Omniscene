@@ -103,7 +103,7 @@ async function bindingEnvironment({ route = false, direct = null } = {}) {
     featureRuntime: { load: async (id) => { assert.equal(id, 'modelPicker'); return { attachModelPicker: (_host, value) => { options = value; return { open() {}, fetch() {}, isCurrent: value.isCurrent, dispose() {} }; } }; } },
     toast: () => {},
   });
-  vm.runInContext([section('storyboardConnectionState'), section('bindStoryboardModelPicker')].join('\n'), context);
+  vm.runInContext([section('storyboardConnectionState'), section('storyboardConfirmGatewayProtocolBinding'), section('bindStoryboardModelPicker')].join('\n'), context);
   const root = { isConnected: true, querySelectorAll: () => fields };
   context.bindStoryboardModelPicker(root, host, state);
   handlers.focusin({ target: { matches: () => true } });

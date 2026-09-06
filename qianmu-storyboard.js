@@ -1,5 +1,5 @@
 import { normalizeOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } from './qianmu-openai-image-compat.js';
-import { resolveImageProtocolBinding } from './qianmu-image-models.js';
+import { resolveImageProtocolBinding, IMAGE_NATIVE_PROTOCOLS, IMAGE_PROTOCOL_BINDING_VERSION } from './qianmu-image-models.js';
 import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 
 // 千幕·分镜数据契约。这里只描述数据与请求计划，不持有密钥，也不发起网络请求。
@@ -164,8 +164,23 @@ export const STORYBOARD_EVIDENCE_TYPES = Object.freeze(['explicit', 'inferred', 
 export const getStoryboardProvider = (id) => Object.hasOwn(STORYBOARD_PROVIDER_REGISTRY, id) ? STORYBOARD_PROVIDER_REGISTRY[id] : null;
 export const getStoryboardModel = (providerId, modelId) => (Object.hasOwn(STORYBOARD_MODEL_REGISTRY, providerId) ? STORYBOARD_MODEL_REGISTRY[providerId] : []).find((item) => item.id === modelId) || null;
 const storyboardCapabilityCache = new WeakMap(); // Only static registry objects, never remote model IDs or credentials.
-export function getStoryboardCapabilities(providerId, modelId = '', workflow) {
+export function getStoryboardCapabilities(providerId, modelId = '', workflow, connection = {}) {
   const base = getStoryboardModel(providerId, modelId)?.capabilities || getStoryboardProvider(providerId)?.capabilities || caps();
+  if (connection.protocol && connection.protocol !== IMAGE_NATIVE_PROTOCOLS[providerId]) {
+    let binding;
+    try { binding = resolveStoryboardConnectionBinding(providerId, connection); }
+    catch (error) { return Object.freeze({ ...caps({ size: false, ratio: false }), protocolIssue: error.message }); }
+    const compatibility = normalizeOpenAIImageCompatibility(connection.compatibility);
+    const allows = key => compatibility.allowedParameters.includes(key);
+    return Object.freeze({ ...base, negative: false, seed: false, steps: false, cfg: false, sampler: false, scheduler: false,
+      size: Boolean(base.size && allows('size')), ratio: Boolean(base.ratio && allows('size')), count: allows('n'),
+      quality: allows('quality'), background: allows('background'), outputFormat: allows('output_format'),
+      multipleReferences: Boolean(base.multipleReferences && compatibility.referenceField === 'image[]'),
+      mask: false, vibe: false, preciseReference: false, multiCharacter: false,
+      supportsNativeNegative: false, supportsExclusionText: true, supportsArtistSyntax: false, supportsVibe: false,
+      referenceMode: base.reference ? 'image' : 'none', referenceExclusions: Object.freeze([]), protocol: binding.protocol,
+    });
+  }
   // A concrete workflow overrides catalog possibilities. Never cache mutable workflow contents.
   if (providerId === 'comfy' && workflow !== undefined) {
     const actual = inspectComfyWorkflow(workflow);
@@ -196,7 +211,7 @@ export function resolveStoryboardModelBinding(providerId, input = {}) {
   const provider = getStoryboardProvider(providerId);
   const fail = (code, message) => { const error = new Error(message); error.code = code; throw error; };
   if (!provider) fail('invalid_model_family', '请选择有效的生图系列');
-  const transport = resolveImageProtocolBinding(provider.id, input);
+  const transport = resolveStoryboardConnectionBinding(provider.id, input);
   const id = (value) => {
     if (typeof value !== 'string') fail('invalid_model_id', '模型名称必须是文本');
     const result = value.trim();
@@ -219,6 +234,27 @@ export function resolveStoryboardModelBinding(providerId, input = {}) {
     connectionPresetId: cleanId(input.connectionPresetId), customModel: !getStoryboardModel(providerId, remoteModelId) };
 }
 
+export function resolveStoryboardConnectionBinding(providerId, connection = {}) {
+  const binding = resolveImageProtocolBinding(providerId, connection, { allowCompatible: true });
+  return { ...binding, ...(binding.protocol !== IMAGE_NATIVE_PROTOCOLS[providerId] ? { imageProtocolVersion: IMAGE_PROTOCOL_BINDING_VERSION } : {}) };
+}
+
+// Only project controls supported by the selected wire format. The saved model profile is untouched.
+export function projectStoryboardProtocolParameters(providerId, parameters, connection = {}) {
+  const binding = resolveStoryboardConnectionBinding(providerId, connection);
+  if (binding.protocol === IMAGE_NATIVE_PROTOCOLS[providerId]) return parameters;
+  const compatibility = normalizeOpenAIImageCompatibility(connection.compatibility);
+  const allows = key => compatibility.allowedParameters.includes(key), p = obj(parameters) ? parameters : {};
+  const result = { count: allows('n') ? (p.count === '' || p.count == null ? 1 : p.count) : 1, providerOptions: safeRecord(p.providerOptions, { reserved: true }) };
+  if (allows('size')) for (const key of ['width', 'height', 'size']) if (p[key] !== '' && p[key] != null) result[key] = p[key];
+  for (const [wire, keys] of [['quality', ['quality', 'openaiQuality']], ['background', ['background', 'openaiBackground']], ['output_format', ['outputFormat', 'openaiOutputFormat']]]) {
+    if (!allows(wire)) continue;
+    const key = keys.find(key => Object.hasOwn(p, key));
+    if (key && p[key] !== '' && p[key] != null) result[keys[0]] = p[key];
+  }
+  return result;
+}
+
 export function resolveStoryboardProfileBinding(providerId, profile = {}) {
   return resolveStoryboardModelBinding(providerId, {
     remoteModelId: profile.model == null || profile.model === '' ? getStoryboardProvider(providerId)?.defaultModel : profile.model,
@@ -233,6 +269,7 @@ export function resolveStoryboardJobModelIdentity(job = {}) {
   const model = job.profile?.model || (provider.id === 'comfy' ? provider.defaultModel : '');
   if (typeof model !== 'string' || !model.trim()) fail('missing_model_snapshot', '记录缺少模型快照，请载入镜头台确认');
   const presetId = cleanId(job.connection?.id);
+  const connectionBinding = resolveStoryboardConnectionBinding(provider.id, job.connection || {});
   const saved = job.modelIdentity;
   let binding;
   if (saved != null) {
@@ -242,15 +279,17 @@ export function resolveStoryboardJobModelIdentity(job = {}) {
     binding = resolveStoryboardModelBinding(provider.id, saved);
     if (model.trim() !== binding.remoteModelId) fail('model_snapshot_mismatch', '任务型号与原模型快照不一致，未发起生图');
     if (presetId !== binding.connectionPresetId) fail('connection_snapshot_mismatch', '任务连接与原模型快照不一致，未发起生图');
+    if (connectionBinding.protocol !== binding.protocol) fail('connection_protocol_mismatch', '任务接口与原协议快照不一致，未发起生图');
   } else {
     // Use the historical request itself, never today's provider default for an unknown alias.
     binding = resolveStoryboardModelBinding(provider.id, {
-      remoteModelId: model, capabilityModelId: job.profile?.capabilityModelId || '', connectionPresetId: presetId,
+      ...connectionBinding, remoteModelId: model, capabilityModelId: job.profile?.capabilityModelId || '', connectionPresetId: presetId,
     });
   }
   if (job.profile?.capabilityModelId && job.profile.capabilityModelId !== binding.capabilityModelId) fail('model_snapshot_mismatch', '任务能力档与原模型快照不一致，未发起生图');
   return Object.freeze({ version: 1, modelFamily: binding.modelFamily, capabilityModelId: binding.capabilityModelId,
-    remoteModelId: binding.remoteModelId, protocol: binding.protocol, connectionPresetId: binding.connectionPresetId });
+    remoteModelId: binding.remoteModelId, protocol: binding.protocol, connectionPresetId: binding.connectionPresetId,
+    ...(binding.imageProtocolVersion ? { imageProtocolVersion: binding.imageProtocolVersion } : {}) });
 }
 
 const legacyProfile = () => ({ loaded: false, model: '', sampler: '', scheduler: '', width: '', height: '', ratio: '1:1', count: '', steps: '', cfg: '', seed: '', comfyUrl: '', comfyWorkflow: '', comfyWorkflowNotice: '', openaiStyle: '', openaiQuality: '', openaiBackground: '', openaiOutputFormat: '', imageSize: '', watermark: false, seedreamGuidanceScale: '', seedreamSequential: false, googleEnhance: false, novelCfgRescale: '', novelSm: false, novelSmDyn: false, novelDecrisper: false, novelVarietyBoost: false });
@@ -368,12 +407,17 @@ export function normalizeStoryboardConnectionProfile(value, providerId) {
   const r = obj(value) ? value : {}, requestedModel = str(r.model || provider.defaultModel, 240);
   const knownModel = getStoryboardModel(providerId, requestedModel);
   const modelId = resolveStoryboardModelId(providerId, requestedModel);
-  const compatibility = providerId === 'openai' ? normalizeOpenAIImageCompatibility(r.compatibility) : null;
+  // Preserve invalid explicit declarations so later validation cannot turn them into native requests.
+  const protocol = Object.hasOwn(r, 'protocol') ? (typeof r.protocol === 'string' && r.protocol.length <= 40 && !/[\u0000-\u001f\u007f]/.test(r.protocol) ? r.protocol : '[invalid-protocol]') : undefined;
+  const protocolFields = { ...(protocol !== undefined ? { protocol } : {}),
+    ...(Object.hasOwn(r, 'imageProtocolVersion') ? { imageProtocolVersion: r.imageProtocolVersion === IMAGE_PROTOCOL_BINDING_VERSION ? IMAGE_PROTOCOL_BINDING_VERSION : 0 } : {}),
+    ...(r.modelFamily !== undefined ? { modelFamily: r.modelFamily === providerId ? providerId : '[invalid-family]' } : {}) };
+  const compatibility = providerId === 'openai' || protocol === 'openai-images' || r.compatibility ? normalizeOpenAIImageCompatibility(r.compatibility) : null;
   return {
-    id: cleanId(r.id), name: str(r.name || '默认连接', 80) || '默认连接', providerId,
-    baseUrl: str(r.baseUrl || provider.defaultBaseUrl, 2048), model: modelId,
+    id: cleanId(r.id), name: str(r.name || '默认连接', 80) || '默认连接', providerId, ...protocolFields,
+    baseUrl: str(protocol && protocol !== provider.protocol ? (r.baseUrl || '') : (r.baseUrl || provider.defaultBaseUrl), 2048), model: modelId,
     customModel: Boolean(provider.customModelId && !knownModel), credentialId: cleanId(r.credentialId),
-    headers: providerId === 'openai' ? normalizeOpenAICompatibleHeaders(r.headers, compatibility) : {},
+    headers: compatibility ? normalizeOpenAICompatibleHeaders(r.headers, compatibility) : {},
     ...(compatibility ? { compatibility } : {}), options: safeRecord(r.options),
     createdAt: pos(r.createdAt || r.updatedAt), updatedAt: pos(r.updatedAt),
   };
@@ -1288,6 +1332,11 @@ export function buildStoryboardSceneCoverageMap(value = []) {
 
 export function resolveStoryboardComposition(value = {}) {
   const policy = normalizeStoryboardCompositionPolicy(value.policy), shot = normalizeStoryboardShotSpec(value.shot);
+  if (value.connection?.protocol && value.connection.protocol !== IMAGE_NATIVE_PROTOCOLS[value.providerId]
+    && !getStoryboardCapabilities(value.providerId, value.capabilityModelId, undefined, value.connection).ratio) {
+    return { ratioId: '', ratioLocked: true, source: 'protocol', dimensions: { width: 0, height: 0, size: '', aspectRatio: '' },
+      rationale: '画幅由当前接口决定', policyVersion: policy.systemRuleVersion };
+  }
   if (value.providerId === 'comfy' && value.workflow !== undefined) {
     const actual = getStoryboardCapabilities('comfy', '', value.workflow);
     if (!actual.ratio) return { ratioId: '', ratioLocked: true, source: 'workflow',
@@ -1351,13 +1400,14 @@ export function validateStoryboardShotSpec(value = {}, options = {}) {
 
 export function compileStoryboardPrompt(input = {}) {
   const modelBinding = resolveStoryboardModelBinding(input.providerId, {
+    ...resolveStoryboardConnectionBinding(input.providerId, input.connection || {}),
     model: input.modelId,
     capabilityModelId: input.capabilityModelId,
     ...(Object.hasOwn(input, 'remoteModelId') ? { remoteModelId: input.remoteModelId } : {}),
   });
   const shotInput = input.productionPacket ? adaptProductionPacketToStoryboardShotSpec(input.productionPacket, input.shotOverrides) : input.shot;
   const validation = validateStoryboardShotSpec(shotInput, { providerId: input.providerId, modelId: modelBinding.capabilityModelId });
-  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId, input.workflow);
+  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId, input.workflow, input.connection);
   const shot = validation.shot, common = [
     capability.supportsArtistSyntax ? str(input.artistString, 6000) : '',
     capability.supportsArtistSyntax ? str(input.artistPositive, 12000) : '', str(input.modelPositive, 12000),
@@ -1640,10 +1690,17 @@ function legacyPipelineLogs(value) {
 
 export function buildStoryboardProviderPlan(input = {}) {
   const provider = getStoryboardProvider(input.providerId); if (!provider) throw new Error('请选择有效的生图模型');
-  resolveImageProtocolBinding(provider.id, input.connection || {});
+  const connectionBinding = resolveStoryboardConnectionBinding(provider.id, input.connection || {});
+  if (input.modelFamily !== undefined && input.modelFamily !== '' && input.modelFamily !== provider.id) {
+    const error = new Error('模型系列与连接不匹配'); error.code = 'model_family_mismatch'; throw error;
+  }
+  if (input.protocol !== undefined || input.imageProtocolVersion !== undefined) {
+    const declared = resolveStoryboardConnectionBinding(provider.id, input);
+    if (declared.protocol !== connectionBinding.protocol) { const error = new Error('计划接口与连接声明不一致'); error.code = 'connection_protocol_mismatch'; throw error; }
+  }
   const conn = normalizeStoryboardConnectionProfile(input.connection || {}, provider.id);
-  const binding = resolveStoryboardModelBinding(provider.id, { ...input, model: input.model || input.capabilityModelId || conn.model || provider.defaultModel, connectionPresetId: conn.id });
-  const modelId = binding.remoteModelId, capability = getStoryboardCapabilities(provider.id, binding.capabilityModelId, provider.id === 'comfy' ? (input.params?.workflow || '') : undefined), prompt = str(input.prompt, 24000);
+  const binding = resolveStoryboardModelBinding(provider.id, { ...input, ...connectionBinding, model: input.model || input.capabilityModelId || conn.model || provider.defaultModel, connectionPresetId: conn.id });
+  const modelId = binding.remoteModelId, capability = getStoryboardCapabilities(provider.id, binding.capabilityModelId, provider.id === 'comfy' ? (input.params?.workflow || '') : undefined, conn), prompt = str(input.prompt, 24000);
   if (!prompt) throw new Error('提示词不能为空');
   const p = obj(input.params) ? input.params : {}, request = { prompt }, dropped = [];
   const own = (...keys) => { for (const key of keys) if (Object.hasOwn(p, key)) return p[key]; return undefined; };
@@ -1675,6 +1732,9 @@ export function buildStoryboardProviderPlan(input = {}) {
   }
   const allReferences = Array.isArray(input.references) ? input.references.filter(obj).map(reference).filter((item) => item.type !== 'none') : [], referenceSupported = capability.reference || capability.preciseReference;
   const referenceLimit = capability.multipleReferences ? 16 : 1, references = allReferences.slice(0, referenceLimit);
+  if (binding.imageProtocolVersion && allReferences.length > referenceLimit) {
+    const error = new Error('当前兼容接口的参考图数量不匹配'); error.code = 'image_protocol_references'; throw error;
+  }
   if (allReferences.length > referenceLimit && referenceSupported) dropped.push('extraReferences');
   if (allReferences.length && !referenceSupported) dropped.push('references');
   request.references = referenceSupported ? references : [];
@@ -1726,7 +1786,13 @@ export function buildStoryboardProviderPlan(input = {}) {
     workflow: request.workflow, providerOptions: request.providerOptions,
   };
   for (const key of Object.keys(gatewayParameters)) if (gatewayParameters[key] === undefined || gatewayParameters[key] === '') delete gatewayParameters[key];
-  const gatewayRequest = { provider: provider.id, modelFamily: binding.modelFamily, protocol: binding.protocol, baseUrl: conn.baseUrl, model: modelId, capabilityModelId: binding.capabilityModelId, prompt, negativePrompt: request.negative || '', references: request.references, vibes: request.vibes, parameters: gatewayParameters };
+  const projected = projectStoryboardProtocolParameters(provider.id, { ...p, ...gatewayParameters }, conn);
+  if (binding.imageProtocolVersion) {
+    for (const [key, value] of Object.entries(gatewayParameters)) if (value !== '' && value != null && !Object.hasOwn(projected, key)) dropped.push(key);
+  }
+  const gatewayRequest = { provider: provider.id, ...connectionBinding, baseUrl: conn.baseUrl, model: modelId, capabilityModelId: binding.capabilityModelId, prompt, negativePrompt: request.negative || '', references: request.references, vibes: request.vibes,
+    parameters: binding.imageProtocolVersion ? projected : gatewayParameters,
+    ...(binding.imageProtocolVersion ? { compatibility: clone(conn.compatibility), customHeaders: clone(conn.headers) } : {}) };
   return { version: 1, providerId: provider.id, ...binding, baseUrl: conn.baseUrl, credentialId: conn.credentialId, model: modelId, capabilities: capability, request, gatewayRequest, droppedParameters: [...new Set(dropped)] };
 }
 
@@ -2047,7 +2113,20 @@ function snapshot(value, fallback = {}) {
   if (obj(payload)) delete payload.characters;
   return { ...(obj(safe) ? safe : {}), source, prompt: str(raw.prompt ?? fallback.prompt, 24000), negative: str(raw.negative ?? fallback.negative, 12000), target: ['latest', 'floor', 'gallery'].includes(raw.target) ? raw.target : (['latest', 'floor', 'gallery'].includes(fallback.target) ? fallback.target : 'gallery'), floor: Number.isInteger(raw.floor) ? raw.floor : (Number.isInteger(fallback.floor) ? fallback.floor : null), inlineByDefault: raw.inlineByDefault !== false, referenceUrl: str(raw.referenceUrl, 4096), chatKey: str(raw.chatKey, 512), messageRef: raw.messageRef ? normalizeStoryboardMessageReference(raw.messageRef) : null, messageHash: str(raw.messageHash, 160), swipeId: Number.isInteger(raw.swipeId) ? raw.swipeId : 0, paragraphAnchor: raw.paragraphAnchor ? normalizeStoryboardParagraphAnchor(raw.paragraphAnchor) : null, shotType: str(raw.shotType || 'custom', 60), profile, connection: snapshotConnection(raw.connection, source), payload };
 }
-function snapshotConnection(value, providerId) { const raw = obj(value) ? value : {}, safe = safeData(raw, 5); return { ...(obj(safe) ? safe : {}), id: cleanId(raw.id), credentialId: cleanId(raw.credentialId), baseUrl: str(raw.baseUrl || getStoryboardProvider(providerId)?.defaultBaseUrl, 2048), model: str(raw.model, 240), allowPrivateNetwork: providerId === 'comfy' && Boolean(raw.allowPrivateNetwork) }; }
+function snapshotConnection(value, providerId) {
+  const raw = obj(value) ? value : {}, safe = safeData(raw, 5);
+  const explicitProtocol = raw.protocol && raw.protocol !== IMAGE_NATIVE_PROTOCOLS[providerId];
+  // Restore only declared, non-credential routing headers after the generic secret scrub.
+  // Authorization/Cookie/API keys remain excluded by the connection's public-header contract.
+  const compatibility = providerId === 'openai' || raw.protocol === 'openai-images'
+    ? normalizeOpenAIImageCompatibility(raw.compatibility) : null;
+  const headers = compatibility ? normalizeOpenAICompatibleHeaders(raw.headers, compatibility) : {};
+  return { ...(obj(safe) ? safe : {}), id: cleanId(raw.id), credentialId: cleanId(raw.credentialId),
+    ...(compatibility ? { compatibility } : {}),
+    ...(Object.keys(headers).length ? { headers } : {}),
+    baseUrl: str(explicitProtocol ? (raw.baseUrl || '') : (raw.baseUrl || getStoryboardProvider(providerId)?.defaultBaseUrl), 2048),
+    model: str(raw.model, 240), allowPrivateNetwork: providerId === 'comfy' && Boolean(raw.allowPrivateNetwork) };
+}
 
 function providers(value) { return Array.isArray(value) ? [...new Set(value.filter(getStoryboardProvider))].slice(0, 10) : []; }
 function providerSupports(providerId, capability) { return (STORYBOARD_MODEL_REGISTRY[providerId] || []).some((model) => Boolean(model.capabilities[capability])); }
@@ -2110,7 +2189,7 @@ function isSensitiveField(value) {
   if (/^(?:credential|secret)[-_.]?id$/.test(key)) return false;
   return key === 'key' || key === 'token' || /(^|[-_.])(api[-_.]?key|access[-_.]?key|secret[-_.]?key|access[-_.]?token|refresh[-_.]?token|bearer[-_.]?token|secret|authorization|auth|headers?|cookies?|password|passphrase|credential|credentials)(?:$|[-_.])/.test(key);
 }
-function isReservedProviderField(value) { return ['model', 'prompt', 'input', 'apikey', 'authorization', 'url', 'baseurl', 'modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion'].includes(String(value || '').replace(/[-_]/g, '').toLowerCase()); }
+function isReservedProviderField(value) { return ['model', 'prompt', 'input', 'apikey', 'authorization', 'url', 'baseurl', 'modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion', 'imageprotocolversion'].includes(String(value || '').replace(/[-_]/g, '').toLowerCase()); }
 function isBinaryField(value) { return /^(?:data|base64|b64|b64_json|imageData|image_data|bytes)$/i.test(String(value || '')); }
 function looksLikeBase64(value) { const text = String(value || '').replace(/\s+/g, ''); return /^data:image\/[^;]+;base64,/i.test(text) || text.length >= 256 && text.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(text); }
 function status(value) { if (value === 'generating') return 'running'; return ['queued', 'running', 'success', 'failed', 'cancelled', 'skipped'].includes(value) ? value : 'failed'; }
