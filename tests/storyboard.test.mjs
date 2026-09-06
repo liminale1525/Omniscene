@@ -93,7 +93,7 @@ assert.match(source, /function storyboardChooseCaptureMode[\s\S]*智能提取[\s
 assert.match(source, /storyboardParameterPresets[\s\S]*保存分镜样式[\s\S]*parameterPresetSelection/, '分镜参数样式必须可按模型保存和切换');
 assert.match(source, /rememberStoryboardModelProfile\(state\.modelProfiles, providerId, \{ \.\.\.captured, model: previousModel \}\)[\s\S]*getStoryboardRememberedProfile\(state\.modelProfiles, providerId, binding\.remoteModelId, binding\.capabilityModelId\)/, '每个具体模型必须通过隔离读写入口记住最后一次参数修改');
 assert.doesNotMatch(source, /sd-storyboard-reuse-record|sd-storyboard-lightbox-reuse/, '阅片室不得保留复用或重新生成入口');
-assert.match(source, /getStoryboardCapabilities\(state\.source, profile\.capabilityModelId\)[\s\S]*capabilities\.supportsNativeNegative[\s\S]*capabilities\.steps/, '绘制参数必须按供应商与具体模型能力档裁剪');
+assert.match(source, /getStoryboardCapabilities\(state\.source, profile\.capabilityModelId,[^\n]+[\s\S]*capabilities\.supportsNativeNegative[\s\S]*capabilities\.steps/, '绘制参数必须按供应商、具体模型及工作流能力裁剪');
 assert.match(source, /openaiBackground[\s\S]*openaiOutputFormat[\s\S]*seedreamGuidanceScale[\s\S]*seedreamSequential[\s\S]*novelSm[\s\S]*novelVarietyBoost/, '各模型的官方参数必须在前端可调且进入真实请求');
 assert.match(source, /storyboardParseWorkflow[\s\S]*storyboardGatewayRequest/, 'ComfyUI 必须把有效 API Workflow 交给千幕网关');
 assert.match(source, /storyboardCaptureComfyWorkflow[\s\S]*sanitizeStoryboardWorkflow[\s\S]*comfyWorkflowNotice/, 'ComfyUI Workflow 必须在进入持久化设置前结构化清理凭据字段');
@@ -102,7 +102,7 @@ assert.match(source, /storyboardPipelineStage[\s\S]*sanitizeStoryboardDiagnostic
 assert.match(source, /storyboardExportPackage[\s\S]*sanitizeStoryboardSnapshot[\s\S]*credentialsIncluded: false/, '分镜数据包必须再次净化历史成片快照');
 assert.match(source, /async function exportConfig[\s\S]*snapshot\.imagegen[\s\S]*normalizeStoryboardState/, '千幕全量配置导出也必须净化旧版分镜工作流');
 assert.match(source, /async function importConfig[\s\S]*merged\.imagegen[\s\S]*normalizeStoryboardState/, '千幕全量配置导入不得把工作流凭据重新写回设置');
-assert.match(gateway, /qianmu_prompt[\s\S]*qianmu_negative[\s\S]*qianmu_reference/, 'ComfyUI Workflow 占位符必须在服务端安全替换');
+assert.match(gateway, /prepareComfyWorkflow[\s\S]*template\.bind\(referenceNames\)/, 'ComfyUI Workflow 必须复用共享槽位准备与替换器');
 assert.doesNotMatch(source, /source !== 'comfy'[\s\S]{0,120}consistencyMode = 'reference'/, '非 ComfyUI 后端不得伪装参考图一致性');
 assert.match(source, /storyboardFilteredGalleryRecords[\s\S]*storyboardGalleryVisibleCount[\s\S]*storyboardOpenLightbox/, '成片必须支持检索、渐进渲染与独立看图层');
 assert.match(source, /storyboardGallerySelection[\s\S]*删除选中图片/, '阅片室必须具备批量管理');

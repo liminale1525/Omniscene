@@ -8,6 +8,7 @@ import {
   openAICompatibilityAllows,
 } from './qianmu-openai-image-compat.js';
 import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField, resolveImageProtocolBinding } from './qianmu-image-models.js';
+import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
 
 const MAX_IMAGES = 8;
 const NAI_IMAGE_RE = /\.(?:png|jpe?g|webp)$/i;
@@ -538,46 +539,44 @@ async function generateSeedreamDirect(input, fetchImpl) {
   return directResult(normalizeJsonImages(data), response, started, { upstreamId: data.id || data.request_id || '' });
 }
 
-function replaceWorkflowValues(value, replacements) {
-  if (typeof value === 'string') {
-    for (const [key, replacement] of Object.entries(replacements)) if (value === `%${key}%`) return replacement;
-    let output = value;
-    for (const [key, replacement] of Object.entries(replacements)) output = output.split(`%${key}%`).join(String(replacement ?? ''));
-    return output;
-  }
-  if (Array.isArray(value)) return value.map((item) => replaceWorkflowValues(item, replacements));
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceWorkflowValues(item, replacements)]));
-  return value;
-}
-
 function directRequestId() {
   return globalThis.crypto?.randomUUID?.() || `qianmu-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 async function generateComfyDirect(input, fetchImpl, waitImpl) {
   const started = Date.now(), parameters = directParameters(input), references = directReferences(input);
-  const workflowSource = plainObject(parameters.workflow || input.workflow);
-  if (!Object.keys(workflowSource).length) throw new DirectImageError('请导入 ComfyUI API Workflow', { code: 'missing_workflow' });
+  let template, referenceBytes;
+  try {
+    const rawReferences = input.referenceImages || input.references || [];
+    if (!Array.isArray(rawReferences) || references.length !== rawReferences.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
+    template = prepareComfyWorkflow(parameters.workflow || input.workflow, { ...input, parameters, referenceCount: references.length });
+    let total = 0;
+    referenceBytes = references.map(reference => {
+      const encoded = reference.data.replace(/^data:[^;,]+;base64,/, '').replace(/\s+/g, '');
+      if (!encoded || !/^[a-z0-9+/]*={0,2}$/i.test(encoded) || encoded.length % 4 === 1) throw Object.assign(new Error('参考图 Base64 数据无效'), { code: 'invalid_reference' });
+      let bytes;
+      try { bytes = base64ToBytes(encoded); }
+      catch (_) { throw Object.assign(new Error('参考图 Base64 数据无效'), { code: 'invalid_reference' }); }
+      total += bytes.byteLength;
+      if (!bytes.byteLength || bytes.byteLength > 16 * 1024 * 1024 || total > 48 * 1024 * 1024) throw Object.assign(new Error('参考图单张须小于 16 MB，总计须小于 48 MB'), { code: 'references_too_large' });
+      return bytes;
+    });
+  } catch (error) { throw new DirectImageError(error.message, { code: error.code }); }
   const headers = text(input.apiKey, 2048) ? { Authorization: `Bearer ${text(input.apiKey, 2048)}` } : {};
   const referenceNames = [];
   for (const [index, reference] of references.entries()) {
     const form = new FormData();
     const extension = reference.mime.includes('jpeg') ? 'jpg' : reference.mime.includes('webp') ? 'webp' : 'png';
     const name = `qianmu-${directRequestId()}-reference-${index + 1}.${extension}`;
-    form.append('image', new Blob([base64ToBytes(reference.data)], { type: reference.mime }), name);
+    form.append('image', new Blob([referenceBytes[index]], { type: reference.mime }), name);
     form.append('overwrite', 'false');
     const response = await directFetch(providerEndpoint(input.baseUrl, 'upload/image', 'comfy'), { method: 'POST', headers, body: form, signal: input.signal }, fetchImpl);
     const uploaded = await responseJson(response, 'ComfyUI 参考图上传失败');
     referenceNames.push(uploaded.subfolder ? `${String(uploaded.subfolder).replace(/^\/+|\/+$/g, '')}/${uploaded.name || name}` : uploaded.name || name);
   }
-  const workflow = replaceWorkflowValues(workflowSource, {
-    qianmu_prompt: input.prompt, qianmu_negative: input.negativePrompt || '', qianmu_model: input.model || '',
-    qianmu_seed: parameters.seed ?? -1, qianmu_width: parameters.width ?? 1024, qianmu_height: parameters.height ?? 1024,
-    qianmu_steps: parameters.steps ?? 28, qianmu_scale: parameters.scale ?? 5, qianmu_cfg: parameters.scale ?? 5,
-    qianmu_sampler: parameters.sampler || '', qianmu_scheduler: parameters.scheduler || '', qianmu_count: parameters.count,
-    qianmu_reference: referenceNames[0] || '', qianmu_references: referenceNames,
-    ...Object.fromEntries(referenceNames.map((name, index) => [`qianmu_reference_${index + 1}`, name])),
-  });
+  let workflow;
+  try { workflow = template.bind(referenceNames); }
+  catch (error) { throw new DirectImageError(error.message, { code: error.code }); }
   const promptResponse = await directFetch(providerEndpoint(input.baseUrl, 'prompt', 'comfy'), {
     method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: workflow, client_id: directRequestId() }), signal: input.signal,

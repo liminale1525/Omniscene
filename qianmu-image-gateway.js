@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField, resolveImageProtocolBinding } from './qianmu-image-models.js';
 import { randomUUID } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
@@ -656,20 +657,6 @@ async function generateNovel(request, base, fetchImpl) {
   return { images, text: '', upstreamId: asString(response.headers.get('x-request-id'), 240) };
 }
 
-function replaceWorkflowValues(value, replacements) {
-  if (typeof value === 'string') {
-    for (const [key, replacement] of Object.entries(replacements)) {
-      if (value === `%${key}%`) return replacement;
-    }
-    let output = value;
-    for (const [key, replacement] of Object.entries(replacements)) output = output.split(`%${key}%`).join(String(replacement ?? ''));
-    return output;
-  }
-  if (Array.isArray(value)) return value.map((item) => replaceWorkflowValues(item, replacements));
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceWorkflowValues(item, replacements)]));
-  return value;
-}
-
 async function uploadComfyReference(base, reference, index, request, fetchImpl) {
   const url = endpoint(base, 'upload/image');
   const body = new FormData();
@@ -691,32 +678,16 @@ function requestWithinDeadline(request, deadline) {
   return { ...request, parameters: { ...request.parameters, timeoutMs: Math.max(1, Math.min(request.parameters.timeoutMs, remaining)) } };
 }
 
-async function generateComfy(request, base, fetchImpl) {
-  const original = request.parameters.workflow;
-  if (!Object.keys(original).length) throw new ImageGatewayError(400, 'missing_workflow', '请导入 ComfyUI API Workflow');
+async function generateComfy(request, base, fetchImpl, template) {
   const deadline = Date.now() + request.parameters.timeoutMs;
   const comfyClientId = randomUUID();
   const referenceNames = [];
   for (const [index, reference] of request.references.entries()) {
     referenceNames.push(await uploadComfyReference(base, reference, index, requestWithinDeadline(request, deadline), fetchImpl));
   }
-  const workflow = replaceWorkflowValues(original, {
-    qianmu_prompt: request.prompt,
-    qianmu_negative: request.negativePrompt,
-    qianmu_model: request.model,
-    qianmu_seed: request.parameters.seed ?? -1,
-    qianmu_width: request.parameters.width ?? 1024,
-    qianmu_height: request.parameters.height ?? 1024,
-    qianmu_steps: request.parameters.steps ?? 28,
-    qianmu_scale: request.parameters.scale ?? 5,
-    qianmu_cfg: request.parameters.scale ?? 5,
-    qianmu_sampler: request.parameters.sampler,
-    qianmu_scheduler: request.parameters.scheduler,
-    qianmu_count: request.parameters.count,
-    qianmu_reference: referenceNames[0] || '',
-    qianmu_references: referenceNames,
-    ...Object.fromEntries(referenceNames.map((name, index) => [`qianmu_reference_${index + 1}`, name])),
-  });
+  let workflow;
+  try { workflow = template.bind(referenceNames); }
+  catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
   const promptResponse = await fetchUpstream(endpoint(base, 'prompt'), {
     method: 'POST', headers: { 'Content-Type': 'application/json', ...(request.apiKey ? authHeaders(request) : {}) }, body: JSON.stringify({ prompt: workflow, client_id: comfyClientId }),
   }, requestWithinDeadline(request, deadline), fetchImpl);
@@ -756,6 +727,14 @@ async function generateComfy(request, base, fetchImpl) {
 
 export async function generateImage(input, options = {}) {
   const request = sanitizeImageRequest(input);
+  let comfyTemplate;
+  if (request.provider === 'comfy') {
+    try {
+      const references = input.referenceImages || input.references || [];
+      if (!Array.isArray(references) || references.length !== request.references.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
+      comfyTemplate = prepareComfyWorkflow(request.parameters.workflow, { ...request, referenceCount: request.references.length });
+    } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
+  }
   const validatedBase = await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
   const base = normalizeProviderBase(validatedBase, request.provider);
   const fetchImpl = options.fetchImpl || fetch;
@@ -765,7 +744,7 @@ export async function generateImage(input, options = {}) {
   else if (request.provider === 'banana') result = await generateGemini(request, base, fetchImpl);
   else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
   else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
-  else result = await generateComfy(request, base, fetchImpl);
+  else result = await generateComfy(request, base, fetchImpl, comfyTemplate);
   if (!result.images?.length) throw new ImageGatewayError(502, 'empty_image_response', '生图服务没有返回可用图片');
   return {
     ok: true,

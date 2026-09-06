@@ -26,8 +26,8 @@ test('all registered models retain their native protocol, name and capabilities'
       assert.equal(plan.remoteModelId, model.id);
       assert.equal(plan.capabilityModelId, model.id);
       assert.equal(plan.protocol, STORYBOARD_PROVIDER_REGISTRY[family].protocol);
-      for (const [key, value] of Object.entries(model.capabilities)) assert.deepEqual(plan.capabilities[key], value);
-      assert.deepEqual(plan.capabilities, getStoryboardCapabilities(family, model.id));
+      if (family !== 'comfy') for (const [key, value] of Object.entries(model.capabilities)) assert.deepEqual(plan.capabilities[key], value);
+      assert.deepEqual(plan.capabilities, getStoryboardCapabilities(family, model.id, family === 'comfy' ? '' : undefined));
       assert.equal(plan.customModel, false);
       assert.equal(plan.gatewayRequest.capabilityModelId, model.id);
     }
@@ -53,7 +53,7 @@ test('explicit aliases preserve prefixes and use only the specified family capab
     assert.equal(plan.capabilityModelId, capability);
     assert.equal(plan.connectionPresetId, 'connection-a');
     assert.equal(plan.customModel, true);
-    assert.deepEqual(plan.capabilities, getStoryboardCapabilities(family, capability));
+    assert.deepEqual(plan.capabilities, getStoryboardCapabilities(family, capability, family === 'comfy' ? '' : undefined));
   }
 });
 

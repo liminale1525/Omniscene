@@ -12,9 +12,10 @@ export function storyboardFunctionSource(name) {
   return next < 0 ? tail : tail.slice(0, next + 1);
 }
 
-export function createStoryboardFormFixture({ family = 'novel', enabled = true } = {}) {
+export function createStoryboardFormFixture({ family = 'novel', enabled = true, workflow = '' } = {}) {
   const state = storyboard.createStoryboardDefaults();
   state.source = family; state.enabled = enabled;
+  if (family === 'comfy') state.profiles.comfy.comfyWorkflow = typeof workflow === 'string' ? workflow : JSON.stringify(workflow);
   for (const key of ['model', 'context', 'params', 'prompt', 'composition']) state.collapsedCards[key] = false;
   const globals = {
     ...storyboard, normalizeOpenAIImageCompatibility, serializeOpenAICompatibleHeaders,

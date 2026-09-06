@@ -1,5 +1,6 @@
 import { normalizeOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } from './qianmu-openai-image-compat.js';
 import { resolveImageProtocolBinding } from './qianmu-image-models.js';
+import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 
 // 千幕·分镜数据契约。这里只描述数据与请求计划，不持有密钥，也不发起网络请求。
 export const STORYBOARD_SCHEMA_VERSION = 24;
@@ -163,8 +164,13 @@ export const STORYBOARD_EVIDENCE_TYPES = Object.freeze(['explicit', 'inferred', 
 export const getStoryboardProvider = (id) => Object.hasOwn(STORYBOARD_PROVIDER_REGISTRY, id) ? STORYBOARD_PROVIDER_REGISTRY[id] : null;
 export const getStoryboardModel = (providerId, modelId) => (Object.hasOwn(STORYBOARD_MODEL_REGISTRY, providerId) ? STORYBOARD_MODEL_REGISTRY[providerId] : []).find((item) => item.id === modelId) || null;
 const storyboardCapabilityCache = new WeakMap(); // Only static registry objects, never remote model IDs or credentials.
-export function getStoryboardCapabilities(providerId, modelId = '') {
+export function getStoryboardCapabilities(providerId, modelId = '', workflow) {
   const base = getStoryboardModel(providerId, modelId)?.capabilities || getStoryboardProvider(providerId)?.capabilities || caps();
+  // A concrete workflow overrides catalog possibilities. Never cache mutable workflow contents.
+  if (providerId === 'comfy' && workflow !== undefined) {
+    const actual = inspectComfyWorkflow(workflow);
+    return Object.freeze({ ...base, ...actual.capabilities, referenceExclusions: Object.freeze([]), workflowIssue: actual.message });
+  }
   if (storyboardCapabilityCache.has(base)) return storyboardCapabilityCache.get(base);
   const naturalLanguage = ['banana', 'openai', 'seedream'].includes(providerId);
   const effective = Object.freeze({ ...base,
@@ -1282,6 +1288,12 @@ export function buildStoryboardSceneCoverageMap(value = []) {
 
 export function resolveStoryboardComposition(value = {}) {
   const policy = normalizeStoryboardCompositionPolicy(value.policy), shot = normalizeStoryboardShotSpec(value.shot);
+  if (value.providerId === 'comfy' && value.workflow !== undefined) {
+    const actual = getStoryboardCapabilities('comfy', '', value.workflow);
+    if (!actual.ratio) return { ratioId: '', ratioLocked: true, source: 'workflow',
+      dimensions: { width: actual.width ? numeric(value.width) : 0, height: actual.height ? numeric(value.height) : 0, size: '', aspectRatio: '' },
+      rationale: '画幅由工作流决定', policyVersion: policy.systemRuleVersion };
+  }
   const requested = shot.composition.ratioId;
   let ratioId = policy.preferredRatioId, source = 'preferred';
   if (shot.composition.ratioLocked && requested) { ratioId = requested; source = 'manual_locked'; }
@@ -1345,13 +1357,13 @@ export function compileStoryboardPrompt(input = {}) {
   });
   const shotInput = input.productionPacket ? adaptProductionPacketToStoryboardShotSpec(input.productionPacket, input.shotOverrides) : input.shot;
   const validation = validateStoryboardShotSpec(shotInput, { providerId: input.providerId, modelId: modelBinding.capabilityModelId });
-  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId);
+  const capability = getStoryboardCapabilities(input.providerId, modelBinding.capabilityModelId, input.workflow);
   const shot = validation.shot, common = [
     capability.supportsArtistSyntax ? str(input.artistString, 6000) : '',
     capability.supportsArtistSyntax ? str(input.artistPositive, 12000) : '', str(input.modelPositive, 12000),
     promptPart(shot.promptAtoms.global), shot.scene,
     promptPart(shot.promptAtoms.camera), shot.shotScale, promptPart(shot.composition.framing),
-    shot.composition.ratioId, shot.composition.negativeSpace, promptPart(shot.sharedRelations),
+    capability.ratio ? shot.composition.ratioId : '', shot.composition.negativeSpace, promptPart(shot.sharedRelations),
   ].filter(Boolean).join(', ');
   const characterBlocks = shot.characters.map(characterPrompt).filter(Boolean);
   const environment = promptPart(shot.promptAtoms.environment), quality = promptPart(shot.promptAtoms.quality);
@@ -1631,7 +1643,7 @@ export function buildStoryboardProviderPlan(input = {}) {
   resolveImageProtocolBinding(provider.id, input.connection || {});
   const conn = normalizeStoryboardConnectionProfile(input.connection || {}, provider.id);
   const binding = resolveStoryboardModelBinding(provider.id, { ...input, model: input.model || input.capabilityModelId || conn.model || provider.defaultModel, connectionPresetId: conn.id });
-  const modelId = binding.remoteModelId, capability = getStoryboardCapabilities(provider.id, binding.capabilityModelId), prompt = str(input.prompt, 24000);
+  const modelId = binding.remoteModelId, capability = getStoryboardCapabilities(provider.id, binding.capabilityModelId, provider.id === 'comfy' ? (input.params?.workflow || '') : undefined), prompt = str(input.prompt, 24000);
   if (!prompt) throw new Error('提示词不能为空');
   const p = obj(input.params) ? input.params : {}, request = { prompt }, dropped = [];
   const own = (...keys) => { for (const key of keys) if (Object.hasOwn(p, key)) return p[key]; return undefined; };
@@ -1655,7 +1667,7 @@ export function buildStoryboardProviderPlan(input = {}) {
     accept(request, dropped, capability, 'scheduler', requestedScheduler);
   }
   const width = bounded(p.width, 64, 8192, true), height = bounded(p.height, 64, 8192, true);
-  accept(request, dropped, capability, 'size', width === '' ? '' : width, 'width'); accept(request, dropped, capability, 'size', height === '' ? '' : height, 'height');
+  accept(request, dropped, capability, provider.id === 'comfy' ? 'width' : 'size', width === '' ? '' : width, 'width'); accept(request, dropped, capability, provider.id === 'comfy' ? 'height' : 'size', height === '' ? '' : height, 'height');
   const requestedRatio = p.ratio || p.aspectRatio;
   if (requestedRatio) {
     const ratio = STORYBOARD_RATIOS.some((item) => item.id === requestedRatio && item.id) ? requestedRatio : '';
@@ -1670,7 +1682,9 @@ export function buildStoryboardProviderPlan(input = {}) {
   if (allVibes.length && !capability.vibe) dropped.push('vibes');
   request.vibes = capability.vibe ? allVibes.slice(0, 16) : [];
   request.providerOptions = safeRecord(p.providerOptions, { reserved: true });
-  const count = bounded(p.count, 1, 4, true); if (count !== '') request.count = count;
+  const count = bounded(p.count, 1, 4, true);
+  if (provider.id === 'comfy' && !capability.count) { request.count = 1; if (Number(count) > 1) dropped.push('count'); }
+  else if (count !== '') request.count = count;
   const explicitSize = str(p.size, 40); if (explicitSize) request.size = explicitSize;
   providerValue('banana', 'imageSize', str(p.imageSize, 20));
   providerValue('openai', 'quality', str(own('quality', 'openaiQuality'), 40));
