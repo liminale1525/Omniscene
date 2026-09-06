@@ -7,14 +7,15 @@ import {
   normalizeOpenAIImageCompatibility,
   openAICompatibilityAllows,
 } from './qianmu-openai-image-compat.js';
-import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField, resolveImageProtocolBinding } from './qianmu-image-models.js';
+import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
+import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
 
 const MAX_IMAGES = 8;
 const NAI_IMAGE_RE = /\.(?:png|jpe?g|webp)$/i;
 
 function validateDirectProtocol(provider, input) {
-  try { resolveImageProtocolBinding(provider, input); }
+  try { return resolveImageTransportBinding(provider, input); }
   catch (error) { throw new DirectImageError(error.message, { code: error.code }); }
 }
 
@@ -184,19 +185,19 @@ async function readDirectModelJson(response, limit = 4 * 1024 * 1024) {
 export async function listDirectImageModels(input = {}, { fetchImpl = globalThis.fetch, timeoutMs = 20_000 } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('不支持的模型列表渠道', { code: 'direct_unsupported' });
-  validateDirectProtocol(provider, input);
-  const base = new URL(providerEndpoint(input.baseUrl, '', provider));
+  const transportProvider = imageTransportProvider(provider, validateDirectProtocol(provider, input));
+  const base = new URL(providerEndpoint(input.baseUrl, '', transportProvider));
   if (!['https:', 'http:'].includes(base.protocol) || base.username || base.password) throw new DirectImageError('API 地址需使用 HTTP(S)，且不能嵌入账号密码', { code: 'invalid_base_url' });
   if (input.signal?.aborted) throw new DOMException('已取消模型列表读取', 'AbortError');
   if (provider === 'novel' && base.hostname.toLowerCase() === 'image.novelai.net') {
     return finalizeModelList(provider, NOVEL_STATIC_MODELS.map(([id, label]) => ({ id, label })), { source: 'builtin' });
   }
   const compatibility = normalizeOpenAIImageCompatibility(input.compatibility);
-  if (provider === 'openai' && compatibility.modelDiscovery === 'off') return finalizeModelList(provider, [], { source: 'disabled' });
+  if (transportProvider === 'openai' && compatibility.modelDiscovery === 'off') return finalizeModelList(provider, [], { source: 'disabled' });
   const apiKey = text(input.apiKey, 2048);
   if (provider !== 'comfy' && !apiKey) throw new DirectImageError('请先填写 API Key', { code: 'missing_api_key' });
-  const headers = provider === 'banana' ? { 'x-goog-api-key': apiKey }
-    : { ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}), ...(provider === 'openai' ? normalizeOpenAICompatibleHeaders(input.customHeaders, compatibility) : {}) };
+  const headers = transportProvider === 'banana' ? { 'x-goog-api-key': apiKey }
+    : { ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}), ...(transportProvider === 'openai' ? normalizeOpenAICompatibleHeaders(input.customHeaders, compatibility) : {}) };
   const controller = new AbortController();
   let timedOut = false;
   const cancel = () => controller.abort();
@@ -221,13 +222,13 @@ export async function listDirectImageModels(input = {}, { fetchImpl = globalThis
       return modelsFromComfyObjectInfo(json);
     }
     return await collectImageModelPages(provider, (nextPageToken) => {
-      const url = new URL(providerEndpoint(input.baseUrl, provider === 'openai' ? compatibility.endpoints.models : 'models', provider));
-      if (provider === 'banana') {
+      const url = new URL(providerEndpoint(input.baseUrl, transportProvider === 'openai' ? compatibility.endpoints.models : 'models', transportProvider));
+      if (transportProvider === 'banana') {
         url.searchParams.set('pageSize', '1000');
         if (nextPageToken) url.searchParams.set('pageToken', nextPageToken);
       }
       return fetchJson(url.toString());
-    }, { signal: controller.signal });
+    }, { signal: controller.signal, transportProvider });
   } catch (error) {
     if (timedOut) throw new DirectImageError('模型列表读取超时，请稍后重试', { code: 'model_list_timeout' });
     throw error;
@@ -240,26 +241,26 @@ export async function listDirectImageModels(input = {}, { fetchImpl = globalThis
 export async function checkDirectImageConnection(input = {}, { fetchImpl = globalThis.fetch } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('当前渠道尚未接入浏览器直连检查', { code: 'direct_unsupported' });
-  validateDirectProtocol(provider, input);
+  const transportProvider = imageTransportProvider(provider, validateDirectProtocol(provider, input));
   const apiKey = text(input.apiKey, 2048);
   if (provider !== 'comfy' && !apiKey) throw new DirectImageError('请先填写 API Key', { code: 'missing_api_key' });
   let url, headers = {};
   if (provider === 'novel') { url = novelDirectEndpoint(input.baseUrl, 'user/subscription'); headers.Authorization = `Bearer ${apiKey}`; }
-  else if (provider === 'banana') { url = providerEndpoint(input.baseUrl, input.model ? `models/${encodeURIComponent(input.model)}` : 'models', provider); headers['x-goog-api-key'] = apiKey; }
+  else if (transportProvider === 'banana') { url = providerEndpoint(input.baseUrl, input.model ? `models/${encodeURIComponent(input.model)}` : 'models', provider); headers['x-goog-api-key'] = apiKey; }
   else if (provider === 'comfy') { url = providerEndpoint(input.baseUrl, 'system_stats', provider); if (apiKey) headers.Authorization = `Bearer ${apiKey}`; }
   else {
     const compatibility = normalizeOpenAIImageCompatibility(input.compatibility);
     if (compatibility.modelDiscovery === 'off') {
-      providerEndpoint(input.baseUrl, compatibility.endpoints.generation, provider);
+      providerEndpoint(input.baseUrl, compatibility.endpoints.generation, transportProvider);
       return { ok: true, verified: false, transport: 'configured', message: '未执行连接探测，请以生图验证' };
     }
-    url = providerEndpoint(input.baseUrl, compatibility.endpoints.models, provider);
+    url = providerEndpoint(input.baseUrl, compatibility.endpoints.models, transportProvider);
     headers = { Authorization: `Bearer ${apiKey}`, ...normalizeOpenAICompatibleHeaders(input.customHeaders, compatibility) };
   }
   const response = await directFetch(url, { method: 'GET', headers, signal: input.signal }, fetchImpl);
   // 第三方兼容站常常只实现生图端点；探测端点 404 代表地址可达，不再误报成连接失败。
   if (provider === 'novel' && response.status === 404) return { ok: true, verified: false, transport: 'direct', message: '地址可达，请以生图验证' };
-  if (provider === 'openai' && response.status === 404 && normalizeOpenAIImageCompatibility(input.compatibility).modelDiscovery !== 'required') return { ok: true, verified: false, transport: 'direct', message: '地址可达，请以生图验证' };
+  if (transportProvider === 'openai' && response.status === 404 && normalizeOpenAIImageCompatibility(input.compatibility).modelDiscovery !== 'required') return { ok: true, verified: false, transport: 'direct', message: '地址可达，请以生图验证' };
   if (!response.ok) await responseError(response, `${provider} 连接失败`);
   if (provider !== 'novel') return { ok: true, verified: true, transport: 'direct', message: `连接通过 · ${input.model || provider}` };
   const data = await response.json().catch(() => ({}));
@@ -615,12 +616,14 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
 export async function generateDirectImage(input = {}, { fetchImpl = globalThis.fetch, unzipImpl, waitImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
   const provider = text(input.provider, 40).toLowerCase();
   if (!['novel', 'openai', 'banana', 'seedream', 'comfy'].includes(provider)) throw new DirectImageError('当前渠道尚未接入浏览器直连生图', { code: 'direct_unsupported' });
-  validateDirectProtocol(provider, input);
+  const transportProvider = imageTransportProvider(provider, validateDirectProtocol(provider, input));
+  try { input = prepareImageTransportRequest(input); }
+  catch (error) { throw new DirectImageError(error.message, { code: error.code }); }
   const apiKey = text(input.apiKey, 2048), prompt = text(input.prompt, 48000), model = text(input.model, 240);
   if (provider !== 'comfy' && !apiKey) throw new DirectImageError('请先填写 API Key', { code: 'missing_api_key' });
   if (!prompt) throw new DirectImageError('提示词不能为空', { code: 'empty_prompt' });
   if (provider !== 'comfy' && !model) throw new DirectImageError('请选择生图模型', { code: 'missing_model' });
-  if (provider === 'openai') return generateOpenAIDirect(input, fetchImpl);
+  if (transportProvider === 'openai') return generateOpenAIDirect(input, fetchImpl);
   if (provider === 'banana') return generateBananaDirect(input, fetchImpl);
   if (provider === 'seedream') return generateSeedreamDirect(input, fetchImpl);
   if (provider === 'comfy') return generateComfyDirect(input, fetchImpl, waitImpl);

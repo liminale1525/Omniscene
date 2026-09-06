@@ -1,4 +1,4 @@
-import { IMAGE_MODEL_BINDING_VERSION } from './qianmu-image-models.js';
+import { IMAGE_MODEL_BINDING_VERSION, IMAGE_PROTOCOL_BINDING_VERSION, IMAGE_COMPATIBLE_PROTOCOLS, resolveImageProtocolBinding } from './qianmu-image-models.js';
 
 export const QIANMU_OPTIONAL_SERVICE_ENDPOINT = '/api/plugins/qianmu-tts/health';
 export const QIANMU_IMAGE_CAPABILITIES_ENDPOINT = '/api/plugins/qianmu-tts/image/capabilities';
@@ -52,11 +52,19 @@ function imageCapabilityResult(status, body = {}) {
   const novel = body.modelBinding?.providers?.novel;
   const ids = Array.isArray(novel?.capabilityModelIds)
     ? [...new Set(novel.capabilityModelIds.slice(0, 128).filter((id) => typeof id === 'string' && id.length > 0 && id.length <= 240 && id.trim() === id && !/[\u0000-\u001f\u007f]/.test(id)))].slice(0, 64) : [];
+  const protocolProviders = {};
+  if (status === 'ready' && body.protocolBinding?.version === IMAGE_PROTOCOL_BINDING_VERSION) {
+    for (const [provider, protocols] of Object.entries(IMAGE_COMPATIBLE_PROTOCOLS)) {
+      const supported = body.protocolBinding?.providers?.[provider];
+      if (Array.isArray(supported)) protocolProviders[provider] = protocols.filter(protocol => supported.includes(protocol));
+    }
+  }
   return {
     status, checkedAt: Date.now(),
     serviceVersion: typeof body.serviceVersion === 'string' ? body.serviceVersion.slice(0, 80) : '',
     bindingVersion: status === 'ready' ? IMAGE_MODEL_BINDING_VERSION : 0,
     novel: status === 'ready' && novel?.protocol === 'novelai' ? { protocol: 'novelai', capabilityModelIds: ids } : null,
+    protocolBinding: { version: status === 'ready' && body.protocolBinding?.version === IMAGE_PROTOCOL_BINDING_VERSION ? IMAGE_PROTOCOL_BINDING_VERSION : 0, providers: protocolProviders },
   };
 }
 
@@ -99,4 +107,20 @@ export function checkQianmuImageModelBinding(capabilities, identity) {
     return fail('image_capability_unsupported', '增强服务尚未支持所选模型能力档，请更新服务或改用可直连的连接');
   }
   return { ok: true, bindingVersion: IMAGE_MODEL_BINDING_VERSION };
+}
+
+// C2d connects this check to the workbench's fresh fallback probe before exposing protocol selection.
+export function checkQianmuImageProtocolBinding(capabilities, identity) {
+  const fail = (code, message) => ({ ok: false, code, message });
+  try { resolveImageProtocolBinding(identity?.modelFamily, identity || {}, { allowCompatible: true }); }
+  catch (_) { return fail('image_protocol_unsupported', '此模型系列的连接协议声明无效，未转发生图'); }
+  if (capabilities?.status === 'missing') return fail('image_gateway_missing', '未检测到兼容接口增强服务，请安装或更新后重启 ST');
+  if (capabilities?.status === 'unauthorized') return fail('image_gateway_unauthorized', '无法读取增强服务能力，请检查 ST 登录或访问权限');
+  if (['error', 'timeout', 'unsupported'].includes(capabilities?.status)) return fail('image_gateway_unavailable', '增强服务能力检测失败，未转发生图；请稍后重试');
+  const contract = capabilities?.protocolBinding;
+  if (capabilities?.status !== 'ready' || contract?.version !== IMAGE_PROTOCOL_BINDING_VERSION
+    || identity.imageProtocolVersion !== IMAGE_PROTOCOL_BINDING_VERSION || !contract.providers?.[identity.modelFamily]?.includes(identity.protocol)) {
+    return fail('image_protocol_incompatible', '增强服务尚未确认支持此兼容接口，请同步更新千幕与增强服务并重启 ST');
+  }
+  return { ok: true, imageProtocolVersion: IMAGE_PROTOCOL_BINDING_VERSION };
 }

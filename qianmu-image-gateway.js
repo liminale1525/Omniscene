@@ -1,6 +1,8 @@
 import { Buffer } from 'node:buffer';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
-import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField, resolveImageProtocolBinding } from './qianmu-image-models.js';
+import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
+import { IMAGE_PROTOCOL_BINDING_VERSION, IMAGE_COMPATIBLE_PROTOCOLS } from './qianmu-image-models.js';
+import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 import { randomUUID } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -60,6 +62,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
       version: IMAGE_MODEL_BINDING_VERSION,
       providers: { novel: { protocol: 'novelai', capabilityModelIds: NOVEL_STATIC_MODELS.map(([id]) => id) } },
     },
+    protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
   };
 }
 
@@ -79,7 +82,7 @@ function plainObject(value) {
 }
 
 function validateGatewayProtocol(provider, input) {
-  try { resolveImageProtocolBinding(provider, input); }
+  try { return resolveImageTransportBinding(provider, input); }
   catch (error) {
     if (error.code === 'invalid_model_family') throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
     throw new ImageGatewayError(400, error.code, error.message);
@@ -166,8 +169,10 @@ function normalizeReferences(value, budget) {
 }
 
 export function sanitizeImageRequest(input) {
-  const source = plainObject(input);
-  validateGatewayProtocol(asString(source.provider, 40).toLowerCase(), source);
+  let source = plainObject(input);
+  const binding = validateGatewayProtocol(asString(source.provider, 40).toLowerCase(), source);
+  try { source = prepareImageTransportRequest(source); }
+  catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
   if (Object.hasOwn(source, 'modelBindingVersion')) {
     if (source.modelBindingVersion !== IMAGE_MODEL_BINDING_VERSION) throw new ImageGatewayError(409, 'model_binding_version_mismatch', '生图模型绑定协议不兼容，请同步更新千幕前端与增强服务并重启 ST');
     if (source.provider !== 'novel' || typeof source.capabilityModelId !== 'string' || !source.capabilityModelId.trim()) {
@@ -192,9 +197,10 @@ export function sanitizeImageRequest(input) {
   const references = normalizeReferences(source.referenceImages || source.references, referenceBudget);
   const vibes = normalizeReferences(source.vibes, referenceBudget);
   const workflow = plainObject(parameters.workflow || source.workflow);
-  const compatibility = provider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
+  const compatibility = imageTransportProvider(provider, binding) === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
   return {
     provider,
+    ...(provider !== imageTransportProvider(provider, binding) ? { ...binding, imageProtocolVersion: IMAGE_PROTOCOL_BINDING_VERSION } : {}),
     apiKey,
     baseUrl: asString(source.baseUrl || definition.defaultBaseUrl, 2048),
     allowPrivateNetwork: provider === 'comfy' && source.allowPrivateNetwork === true,
@@ -736,11 +742,12 @@ export async function generateImage(input, options = {}) {
     } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }
   }
   const validatedBase = await validateGatewayBaseUrl(request.baseUrl, { allowPrivateNetwork: request.allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
-  const base = normalizeProviderBase(validatedBase, request.provider);
+  const transportProvider = imageTransportProvider(request.provider, { protocol: request.protocol });
+  const base = normalizeProviderBase(validatedBase, transportProvider);
   const fetchImpl = options.fetchImpl || fetch;
   const startedAt = Date.now();
   let result;
-  if (request.provider === 'openai') result = await generateOpenAI(request, base, fetchImpl);
+  if (transportProvider === 'openai') result = await generateOpenAI(request, base, fetchImpl);
   else if (request.provider === 'banana') result = await generateGemini(request, base, fetchImpl);
   else if (request.provider === 'seedream') result = await generateSeedream(request, base, fetchImpl);
   else if (request.provider === 'novel') result = await generateNovel(request, base, fetchImpl);
@@ -760,17 +767,17 @@ export async function generateImage(input, options = {}) {
 export async function checkImageConnection(input, options = {}) {
   const source = plainObject(input);
   const provider = asString(source.provider, 40).toLowerCase();
-  validateGatewayProtocol(provider, source);
+  const transportProvider = imageTransportProvider(provider, validateGatewayProtocol(provider, source));
   const definition = IMAGE_GATEWAY_PROVIDERS[provider];
   if (!definition) throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
   const apiKey = asString(source.apiKey, 2048);
   if (definition.requiresKey && !apiKey) throw new ImageGatewayError(400, 'missing_api_key', '请先填写 API Key');
   const allowPrivateNetwork = provider === 'comfy' && source.allowPrivateNetwork === true;
   const validatedBase = await validateGatewayBaseUrl(source.baseUrl || definition.defaultBaseUrl, { allowPrivateNetwork, resolveHost: options.resolveHost || dnsLookup });
-  const base = normalizeProviderBase(validatedBase, provider);
+  const base = normalizeProviderBase(validatedBase, transportProvider);
   const model = asString(source.model, 240);
-  const compatibility = provider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
-  if (provider === 'openai' && compatibility.modelDiscovery === 'off') {
+  const compatibility = transportProvider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
+  if (transportProvider === 'openai' && compatibility.modelDiscovery === 'off') {
     return { ok: true, provider, model, verified: false, transport: 'configured', message: '未执行连接探测，请以生图验证' };
   }
   let url;
@@ -782,7 +789,7 @@ export async function checkImageConnection(input, options = {}) {
       : endpoint(base, 'models');
     headers = authHeaders({ apiKey });
   }
-  else if (provider === 'banana') {
+  else if (transportProvider === 'banana') {
     const isOfficialGemini = base.hostname.toLowerCase() === 'generativelanguage.googleapis.com';
     url = endpoint(base, isOfficialGemini && model ? `models/${encodeURIComponent(model)}` : 'models');
     headers = { 'x-goog-api-key': apiKey };
@@ -802,7 +809,7 @@ export async function checkImageConnection(input, options = {}) {
     if (provider === 'novel' && Number(error?.upstreamStatus) === 404) {
       return { ok: true, provider, model, verified: false, message: '地址可达，请以生图验证' };
     }
-    if (provider === 'openai' && Number(error?.upstreamStatus) === 404 && compatibility.modelDiscovery !== 'required') {
+    if (transportProvider === 'openai' && Number(error?.upstreamStatus) === 404 && compatibility.modelDiscovery !== 'required') {
       return { ok: true, provider, model, verified: false, message: '地址可达，请以生图验证' };
     }
     throw error;
@@ -812,7 +819,7 @@ export async function checkImageConnection(input, options = {}) {
 export async function listImageModels(input, options = {}) {
   const source = plainObject(input);
   const provider = asString(source.provider, 40).toLowerCase();
-  validateGatewayProtocol(provider, source);
+  const transportProvider = imageTransportProvider(provider, validateGatewayProtocol(provider, source));
   const definition = IMAGE_GATEWAY_PROVIDERS[provider];
   if (!definition) throw new ImageGatewayError(400, 'unsupported_provider', '不支持的图像供应商');
   const apiKey = asString(source.apiKey, 2048);
@@ -822,9 +829,9 @@ export async function listImageModels(input, options = {}) {
     allowPrivateNetwork,
     resolveHost: options.resolveHost || dnsLookup,
   });
-  const base = normalizeProviderBase(validatedBase, provider);
-  const compatibility = provider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
-  if (provider === 'openai' && compatibility.modelDiscovery === 'off') {
+  const base = normalizeProviderBase(validatedBase, transportProvider);
+  const compatibility = transportProvider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
+  if (transportProvider === 'openai' && compatibility.modelDiscovery === 'off') {
     return finalizeModelList(provider, [], { source: 'disabled' });
   }
   const request = { apiKey, parameters: { timeoutMs: 20_000 } };
@@ -842,18 +849,18 @@ export async function listImageModels(input, options = {}) {
     return modelsFromComfyObjectInfo(json);
   }
 
-  const headers = provider === 'banana'
+  const headers = transportProvider === 'banana'
     ? { 'x-goog-api-key': apiKey }
-    : authHeaders({ apiKey }, provider === 'openai' ? normalizeOpenAICompatibleHeaders(source.customHeaders, compatibility) : {});
+    : authHeaders({ apiKey }, transportProvider === 'openai' ? normalizeOpenAICompatibleHeaders(source.customHeaders, compatibility) : {});
   return collectImageModelPages(provider, async (nextPageToken) => {
-    const url = endpoint(base, provider === 'openai' ? compatibility.endpoints.models : 'models');
-    if (provider === 'banana') {
+    const url = endpoint(base, transportProvider === 'openai' ? compatibility.endpoints.models : 'models');
+    if (transportProvider === 'banana') {
       url.searchParams.set('pageSize', '1000');
       if (nextPageToken) url.searchParams.set('pageToken', nextPageToken);
     }
     const response = await fetchUpstream(url, { method: 'GET', headers }, request, fetchImpl);
     return parseUpstreamJson(await readLimited(response, 4 * 1024 * 1024));
-  });
+  }, { transportProvider });
 }
 
 export function imageGatewayErrorPayload(error) {

@@ -24,6 +24,7 @@
     "qianmu-image-direct.js",
     "qianmu-image-gateway.js",
     "qianmu-image-models.js",
+    "qianmu-image-transport.js",
     "qianmu-llm-output.js",
     "qianmu-model-picker.js",
     "qianmu-narrative-ledger.js",

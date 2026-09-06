@@ -3,13 +3,18 @@ export const IMAGE_MODEL_LIST_LIMIT = 4000;
 export const IMAGE_MODEL_PAGE_LIMIT = 10;
 export const IMAGE_MODEL_ID_LIMIT = 240;
 export const IMAGE_MODEL_BINDING_VERSION = 1;
+// Independent of NovelAI's remote-model alias contract.
+export const IMAGE_PROTOCOL_BINDING_VERSION = 1;
+export const IMAGE_COMPATIBLE_PROTOCOLS = Object.freeze({
+  banana: Object.freeze(['openai-images']), seedream: Object.freeze(['openai-images']),
+});
 export const IMAGE_NATIVE_PROTOCOLS = Object.freeze({
   novel: 'novelai', banana: 'gemini-images', openai: 'openai-images', seedream: 'ark-images', comfy: 'comfy-workflow',
 });
 
 // Explicit transport declarations fail closed. Never infer a protocol from a URL or remote model name.
-// Cross-family adapters will extend this contract only after their parameter mapping is supported.
-export function resolveImageProtocolBinding(provider, input = {}) {
+// Callers without snapshot/parameter support remain native-only until they explicitly opt in.
+export function resolveImageProtocolBinding(provider, input = {}, { allowCompatible = false } = {}) {
   const fail = (code, message) => { const error = new Error(message); error.code = code; throw error; };
   if (typeof provider !== 'string' || !Object.hasOwn(IMAGE_NATIVE_PROTOCOLS, provider)) fail('invalid_model_family', '请选择有效的生图系列');
   if (input.modelFamily !== undefined && input.modelFamily !== '' && input.modelFamily !== provider) fail('model_family_mismatch', '模型系列与连接不匹配，未发起请求');
@@ -22,7 +27,13 @@ export function resolveImageProtocolBinding(provider, input = {}) {
     // Names used by the existing gateway's native capability declaration.
     if (protocol === 'gemini') protocol = 'gemini-images';
     if (protocol === 'comfyui') protocol = 'comfy-workflow';
-    if (protocol !== native) fail('model_protocol_mismatch', '此系列尚不支持所选连接协议，未发起请求');
+    if (protocol !== native && !(allowCompatible && input.imageProtocolVersion === IMAGE_PROTOCOL_BINDING_VERSION
+      && Object.hasOwn(IMAGE_COMPATIBLE_PROTOCOLS, provider) && IMAGE_COMPATIBLE_PROTOCOLS[provider].includes(protocol))) {
+      fail('model_protocol_mismatch', '此系列尚不支持所选连接协议或缺少兼容声明，未发起请求');
+    }
+  }
+  if (Object.hasOwn(input, 'imageProtocolVersion') && input.imageProtocolVersion !== IMAGE_PROTOCOL_BINDING_VERSION) {
+    fail('image_protocol_version_mismatch', '生图接口协议版本不兼容，请同步更新千幕与增强服务');
   }
   return Object.freeze({ modelFamily: provider, protocol });
 }
@@ -46,7 +57,7 @@ const object = (value) => value && typeof value === 'object' && !Array.isArray(v
 const firstText = (...values) => values.find((value) => typeof value === 'string' && value.trim())?.trim() || '';
 
 export function isImageModelMetadataField(value) {
-  return ['modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion'].includes(String(value).replace(/[-_]/g, '').toLowerCase());
+  return ['modelfamily', 'capabilitymodelid', 'remotemodelid', 'connectionpresetid', 'protocol', 'modelbindingversion', 'imageprotocolversion'].includes(String(value).replace(/[-_]/g, '').toLowerCase());
 }
 
 export function novelModelCapabilities(model, capabilityModelId = '') {
@@ -159,7 +170,7 @@ export function modelsFromComfyObjectInfo(json) {
   return finalizeModelList('comfy', models, { truncated });
 }
 
-export async function collectImageModelPages(provider, fetchPage, { signal } = {}) {
+export async function collectImageModelPages(provider, fetchPage, { signal, transportProvider = provider } = {}) {
   const models = [];
   const seenTokens = new Set();
   let nextPageToken = '', truncated = false;
@@ -169,8 +180,9 @@ export async function collectImageModelPages(provider, fetchPage, { signal } = {
     signal?.throwIfAborted();
     const rows = modelArrayFromJson(json);
     const room = IMAGE_MODEL_LIST_LIMIT - models.length;
-    models.push(...rows.slice(0, room));
-    nextPageToken = provider === 'banana' ? firstText(json?.nextPageToken, json?.next_page_token) : '';
+    // A relay name is opaque; only native Gemini names have a models/ resource prefix.
+    models.push(...rows.slice(0, room).map((row) => transportProvider === provider ? row : normalizeModelEntry(row, transportProvider)));
+    nextPageToken = transportProvider === 'banana' ? firstText(json?.nextPageToken, json?.next_page_token) : '';
     if (rows.length > room || (models.length === IMAGE_MODEL_LIST_LIMIT && nextPageToken)) { truncated = true; break; }
     if (!nextPageToken) break;
     if (seenTokens.has(nextPageToken) || nextPageToken.length > 2000 || page + 1 === IMAGE_MODEL_PAGE_LIMIT) { truncated = true; break; }
