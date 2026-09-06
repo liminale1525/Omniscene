@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createStoryboardFormFixture } from './helpers/storyboard-form-fixture.mjs';
 
 import { createStoryboardDefaults, normalizeStoryboardState } from '../qianmu-storyboard.js';
 
@@ -53,7 +54,8 @@ assert.doesNotMatch(source, /class="sd-storyboard-compiler-toggle/);
 assert.doesNotMatch(source, /data-storyboard-content-rating=/);
 assert.doesNotMatch(source, />纯手写</);
 assert.doesNotMatch(source, />手动触发</);
-assert.match(source, /<b>API 设置<\/b>/);
+assert.match(createStoryboardFormFixture({family:'novel'}).content, /<b>API 设置<\/b>/);
+assert.match(createStoryboardFormFixture({family:'comfy'}).content, /<b>连接<\/b>/);
 assert.match(source, /<span>取景整理 API<\/span>/);
 assert.doesNotMatch(source, /<span>提示词预处理<\/span>/);
 

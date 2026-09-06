@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createStoryboardFormFixture } from './helpers/storyboard-form-fixture.mjs';
 import {
   STORYBOARD_CAPABILITIES,
   STORYBOARD_SOURCES,
@@ -81,7 +82,8 @@ assert.match(source, /storyboardLoadLogToWorkbench[\s\S]*storyboardRetryLog[\s\S
 assert.match(source, /storyboardCheckConnection[\s\S]*\/api\/plugins\/qianmu-tts\/image\/check/, '所有供应商必须走千幕同源网关实测连接');
 assert.match(source, /storyboardHandleChatChanged[\s\S]*storyboardDrainPendingDeliveries/, '跨聊天队列必须先进入原聊天收片箱，不能写入当前聊天');
 assert.match(source, /原正文楼层已删除，未发起生图请求[\s\S]*正文已更改，未发起生图请求/, '请求送出前若正文删除或改写，必须停止而非继续消耗额度');
-assert.match(source, /<b>API 设置<\/b>/, '镜头台接口卡应使用清楚的 API 设置标题');
+assert.match(createStoryboardFormFixture({family:'novel'}).content, /<b>API 设置<\/b>/, '模型接口卡保持 API 设置标题');
+assert.match(createStoryboardFormFixture({family:'comfy'}).content, /<b>连接<\/b>/, 'Comfy 工作台独立连接卡');
 assert.doesNotMatch(source, /将此瞬，妥为留存/, '镜头台不得继续显示已移除的装饰文案');
 assert.doesNotMatch(source, /自定义兼容模型|输入兼容模型 ID|查看接口全部模型/, '模型工作台不得暴露低概率的任意模型入口');
 assert.match(source, /function renderStoryboardModelCard[\s\S]*sd-storyboard-compiler-api[\s\S]*function renderStoryboardParameterVibes/, '画面整理模型必须与生图连接合并在同一工作台');

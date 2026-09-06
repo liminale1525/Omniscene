@@ -24,14 +24,17 @@ test('actual automation renderer keeps an accessible native switch for both save
   }
 });
 
-test('real model forms keep one family selector and a complete model/pull row for every family', () => {
-  for (const family of ['novel','openai','banana','seedream','comfy']) {
+test('model-interface forms keep one family selector and a complete model/pull row', () => {
+  for (const family of ['novel','openai','banana','seedream']) {
     const {content} = createStoryboardFormFixture({family});
     assert.equal((content.match(/class="text_pole sd-storyboard-provider"/g) || []).length, 1);
     assert.match(content, /sd-storyboard-model-field"><span>模型<\/span>/);
     assert.match(content, /sd-model-picker-input-row/); assert.match(content, /aria-label="拉取模型"/);
     assert.match(content, /sd-storyboard-key-field/);
   }
+  const {content}=createStoryboardFormFixture({family:'comfy'});
+  assert.doesNotMatch(content,/sd-storyboard-provider|sd-storyboard-model-field|sd-model-picker-input-row/);
+  assert.match(content,/sd-storyboard-key-field/);assert.match(content,/sd-comfy-workbench/);
 });
 
 test('switch has one non-shrinking compact track and isolates the hidden input from modal checkbox rules', () => {

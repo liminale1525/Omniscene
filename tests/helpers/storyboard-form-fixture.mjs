@@ -2,6 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import * as storyboard from '../../qianmu-storyboard.js';
+import * as comfyView from '../../qianmu-comfy-workbench.js';
 import { normalizeOpenAIImageCompatibility, serializeOpenAICompatibleHeaders } from '../../qianmu-openai-image-compat.js';
 
 const source = await readFile(new URL('../../index.js', import.meta.url), 'utf8');
@@ -23,6 +24,7 @@ export function createStoryboardFormFixture({ family = 'novel', enabled = true, 
     settings: { apiProfiles: [] }, clone: structuredClone, uid: (() => { let id = 0; return () => `fixture-${++id}`; })(),
     htmlEscape: value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'),
     storyboardState: () => state, storyboardConnectionStatus: new Map(), storyboardDraftApiKeys: new Map(),
+    storyboardComfyViewRuntime: comfyView, storyboardComfyViewError: '',
     storyboardSelectedArtistPreset: () => null, storyboardGalleryRecords: () => [], storyboardSafeUrl: () => '',
     STORYBOARD_NAI_QUALITY_DEFAULTS: {}, STORYBOARD_NAI_NEGATIVE_DEFAULTS: {}, STORYBOARD_GENERIC_PROMPT_DEFAULTS: { positive: '', negative: '' },
     storyboardCompilerTagRules: () => [{ name: 'think', action: 'remove' }, { name: 'thinking', action: 'remove' }],
@@ -34,7 +36,7 @@ export function createStoryboardFormFixture({ family = 'novel', enabled = true, 
     'storyboardParseWorkflow', 'storyboardComfyOutputOptions', 'renderStoryboardModelCard', 'renderStoryboardAutomationCard', 'renderStoryboardContextCard', 'renderStoryboardCompilerContextPanel',
     'storyboardPromptDefaultsKey', 'storyboardProviderPromptDefaults', 'storyboardPromptLayerForArtist', 'storyboardParameterPresets',
     'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCompositionCard', 'renderStoryboardOpenAICompatibility',
-    'renderStoryboardConnectionCompatibility', 'renderStoryboardImageOutputFields', 'renderStoryboardGenerationCard', 'renderStoryboardCreate', 'renderStoryboardNav'];
+    'renderStoryboardConnectionCompatibility', 'renderStoryboardImageOutputFields', 'renderStoryboardGenerationCard', 'renderStoryboardEngineModes', 'renderStoryboardComfyCreate', 'renderStoryboardCreate', 'renderStoryboardNav'];
   vm.runInContext(names.map(storyboardFunctionSource).join('\n'), context);
   return { state, content: context.renderStoryboardCreate(state), nav: context.renderStoryboardNav(state) };
 }

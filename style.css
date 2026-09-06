@@ -10086,3 +10086,23 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-storyboard-service-inbox .sd-storyboard-log-actions small { display: block; color: var(--sd-text-muted); font-size: inherit; }
 #story-director-modal .sd-service-inbox-history { margin-top: .6rem; font-size: var(--sd-type-caption, 12px); }
 #story-director-modal .sd-service-inbox-history > div { display: flex; justify-content: space-between; gap: .4rem; padding-block: .3rem; }
+
+/* Independent engine workbenches share the storyboard control baseline and spacing. */
+#story-director-modal .sd-storyboard-engine-modes {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
+  padding: 4px; border-radius: 9px; background: var(--sd-folder-head); min-width: 0;
+}
+#story-director-modal .sd-storyboard-engine-modes > button {
+  min-width: 0; min-height: 40px; margin: 0; padding: 6px 8px;
+  border: 0; border-radius: 7px; font: inherit; font-size: 12px; line-height: 1.4;
+  background: transparent; color: var(--sd-muted); cursor: pointer;
+}
+#story-director-modal .sd-storyboard-engine-modes > button.active { color: var(--sd-accent); background: var(--sd-card); }
+#story-director-modal .sd-storyboard-engine-modes > button:focus-visible { outline: 2px solid var(--sd-accent); outline-offset: -2px; }
+#story-director-modal .sd-comfy-workflow-card > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#story-director-modal .sd-comfy-workflow-card > summary > span { min-width: 0; }
+#story-director-modal .sd-comfy-workflow-card > summary small { color: var(--sd-muted); font-size: 11px; margin-left: 8px; }
+#story-director-modal .sd-comfy-workflow-card > summary > .sd-icon-btn { width: 40px; height: 40px; min-width: 40px; margin: 0; }
+#story-director-modal .sd-comfy-workbench .sd-storyboard-workflow { min-height: 144px; max-height: 45vh; resize: vertical; font-family: monospace; }
+#story-director-modal .sd-comfy-workbench-loading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+#story-director-modal .sd-comfy-workflow-card .sd-storyboard-workflow-warning[hidden] { display: none !important; }

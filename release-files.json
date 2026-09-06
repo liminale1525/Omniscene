@@ -17,6 +17,7 @@
     "qianmu-comfy-workflow.js",
     "qianmu-comfy-results.js",
     "qianmu-comfy-audit.js",
+    "qianmu-comfy-workbench.js",
     "qianmu-data-migrations.js",
     "qianmu-director-candidate.js",
     "qianmu-director-decision.js",
