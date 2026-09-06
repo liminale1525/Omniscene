@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.66';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.66';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.66';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.67';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.67';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.67';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.66';
+} from './qianmu-llm-output.js?v=1.59.67';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -175,207 +175,215 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.66';
+} from './qianmu-storyboard.js?v=1.59.67';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.66';
+const VERSION = '1.59.67';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.66'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.67'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.66'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.67'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.66'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.67'),
   },
   imageChannel: {
     label: 'NAI 跨页顺序生成',
-    load: () => import('./qianmu-image-channel.js?v=1.59.66'),
+    load: () => import('./qianmu-image-channel.js?v=1.59.67'),
   },
   imageServiceClient: {
     label: '增强生图任务',
-    load: () => import('./qianmu-image-service-client.js?v=1.59.66'),
+    load: () => import('./qianmu-image-service-client.js?v=1.59.67'),
   },
   comfySubmission: {
     label: 'Comfy 实例排队',
-    load: () => import('./qianmu-comfy-submission.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-submission.js?v=1.59.67'),
   },
   comfyRecovery: {
     label: 'Comfy 原图领取',
-    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.67'),
   },
   comfyInbox: {
     label: 'Comfy 收片管理',
-    load: () => import('./qianmu-comfy-inbox-view.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-inbox-view.js?v=1.59.67'),
   },
   comfyReferences: {
     label: 'Comfy 参考图',
-    load: () => import('./qianmu-comfy-references.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-references.js?v=1.59.67'),
   },
   characterArchive: {
     label: '角色档案',
-    load: () => import('./qianmu-character-archive-view.js?v=1.59.66'),
+    load: () => import('./qianmu-character-archive-view.js?v=1.59.67'),
   },
   characterCasting: {
     label: '角色取景绑定',
-    load: () => import('./qianmu-character-casting.js?v=1.59.66'),
+    load: () => import('./qianmu-character-casting.js?v=1.59.67'),
   },
   characterReference: {
     label: '角色参考图',
-    load: () => import('./qianmu-character-reference.js?v=1.59.66'),
+    load: () => import('./qianmu-character-reference.js?v=1.59.67'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.66').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.67').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.66'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.67'),
   },
   comfyWorkbench: {
     label: 'Comfy 镜头台',
-    load: () => import('./qianmu-comfy-workbench.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-workbench.js?v=1.59.67'),
+  },
+  comfyCharacters: {
+    label: 'Comfy 角色实现',
+    load: () => import('./qianmu-comfy-character-plan.js?v=1.59.67'),
+  },
+  comfyCharacterReadiness: {
+    label: '角色节点检查',
+    load: () => import('./qianmu-comfy-character-readiness.js?v=1.59.67'),
   },
   comfyLibrary: {
     label: 'Comfy 工作流库',
-    load: () => import('./qianmu-comfy-library-view.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-library-view.js?v=1.59.67'),
   },
   comfyPreflight: {
     label: 'Comfy 配置检查',
-    load: () => import('./qianmu-comfy-preflight.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-preflight.js?v=1.59.67'),
   },
   comfyReadiness: {
     label: 'Comfy 节点检查',
-    load: () => import('./qianmu-comfy-readiness.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-readiness.js?v=1.59.67'),
   },
   comfyTargets: {
     label: 'Comfy 可信连接',
-    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.66'),
+    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.67'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.66'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.67'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.66'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.67'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.66'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.67'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.66'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.67'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.66'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.67'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.66'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.67'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.66'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.67'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.66'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.67'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.66'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.67'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.66'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.67'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.66'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.67'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.66'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.67'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.66'),
+    load: () => import('./qianmu-video-task.js?v=1.59.67'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.66'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.67'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.66'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.67'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.66'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.67'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.66'),
+    load: () => import('./qianmu-video-store.js?v=1.59.67'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.66'),
+    load: () => import('./qianmu-video-result.js?v=1.59.67'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.66'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.67'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.66'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.67'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.66'),
+    load: () => import('./qianmu-video-media.js?v=1.59.67'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.66'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.67'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.66'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.67'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.66'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.67'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.66'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.67'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.66'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.67'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.66'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.67'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.66'),
-        import('./qianmu-theaters.js?v=1.59.66'),
+        import('./builtin-theaters.js?v=1.59.67'),
+        import('./qianmu-theaters.js?v=1.59.67'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -13750,6 +13758,29 @@ async function storyboardCharacterArchiveContext() {
   return {chatKey:context.chatId ? String(getChatKey() || '') : '',subjects};
 }
 
+async function storyboardLoadCharacterComfyRecipe(binding, namespace, guard) {
+  const state=storyboardState(),profile=state.profiles.comfy;
+  const selection=binding||clone(state.comfyLibrarySelection),workflow=profile.comfyWorkflow,output=profile.comfyOutputNodeId;
+  const runtime=await featureRuntime.load('comfyCharacters');await guard();
+  const current=async()=>{await guard();if(storyboardState()!==state||!binding&&(profile!==state.profiles.comfy||profile.comfyWorkflow!==workflow||profile.comfyOutputNodeId!==output||JSON.stringify(state.comfyLibrarySelection)!==JSON.stringify(selection)))throw new Error('当前工作流已切换，请重新选择');};
+  return runtime.readComfyCharacterRecipe({namespace,binding:selection,...(!binding?{expectedWorkflow:workflow,expectedOutput:output}:{}),guard:current});
+}
+
+async function storyboardToggleComfyCharacters(root, rebind=false) {
+  const state=storyboardState(),profile=state.profiles.comfy,epoch=storyboardAdmissionEpoch;
+  if(state.source!=='comfy'||state.view!=='create'||root._sdComfyCharacterLoading)return;
+  if(!rebind&&profile.comfyCharacterEnabled===true){profile.comfyCharacterEnabled=false;rememberStoryboardModelProfile(state.modelProfiles,'comfy',profile);saveSettings();renderModal();return;}
+  const initial=JSON.stringify([profile.comfyCharacterEnabled,profile.comfyCharacterActivation]);root._sdComfyCharacterLoading=true;
+  try {
+    const identity=await featureRuntime.load('imageAdmission'),namespace=await identity.resolveImageAccountNamespace();
+    const guard=async()=>{if(!root.isConnected||storyboardState()!==state||state.source!=='comfy'||state.view!=='create'||profile!==state.profiles.comfy||initial!==JSON.stringify([profile.comfyCharacterEnabled,profile.comfyCharacterActivation])||epoch!==storyboardAdmissionEpoch||namespace!==await identity.resolveImageAccountNamespace())throw new Error('页面或账户已变化，角色实现未启用');};
+    const recipe=await storyboardLoadCharacterComfyRecipe(null,namespace,guard);await guard();
+    if(!recipe.document.outputNodeId)throw new Error('请先在工作流方案中选择最终输出节点');
+    profile.comfyCharacterActivation={namespace,workflow:recipe.workflow};profile.comfyCharacterEnabled=true;
+    rememberStoryboardModelProfile(state.modelProfiles,'comfy',profile);saveSettings();renderModal();toast('角色实现已启用；仅影响新取景，未开始生成','success');
+  } catch(error){toast(error.message||'角色实现未启用','warning');}finally{root._sdComfyCharacterLoading=false;}
+}
+
 async function storyboardMountCharacterArchive(root) {
   const state = storyboardState(), host = root.querySelector('.sd-character-archive-host');
   if (!host || !host.isConnected || state.view !== 'characters') return;
@@ -13760,6 +13791,7 @@ async function storyboardMountCharacterArchive(root) {
       storyboardCharacterArchiveController?.dispose();
       const controller = module.createCharacterArchiveController({
         resolveNamespace: () => identity.resolveImageAccountNamespace(), getContext: storyboardCharacterArchiveContext,
+        loadComfyRecipe: storyboardLoadCharacterComfyRecipe,
         isCurrent: () => activeTab === 'imagegen' && storyboardState() === state && state.view === 'characters',
         identity: renderCoreadIdentity, notify: toast, confirm: message => confirmDialog('角色档案', htmlEscape(message)),
         onIcons: applyQianmuIcons, download: ttsDownloadBlob, collapsed: state.characterArchive?.collapsed || {},
@@ -16328,6 +16360,7 @@ function storyboardProfileSnapshot(profile, sourceId) {
   const keys = Object.keys(fallback);
   if (profile?.capabilityModelId != null && Object.hasOwn(profile, 'capabilityModelId')) keys.push('capabilityModelId');
   if (sourceId === 'comfy' && profile?.comfyReferences != null) keys.push('comfyReferences');
+  if (sourceId === 'comfy') for (const key of ['comfyCharacterEnabled','comfyCharacterActivation']) if(Object.hasOwn(profile||{},key))keys.push(key);
   if (sourceId === 'novel' && Object.hasOwn(profile || {},'characterReferenceEnabled')) keys.push('characterReferenceEnabled');
   return Object.fromEntries(keys.map((key) => [key, clone(profile?.[key] ?? fallback[key])]));
 }
@@ -17359,7 +17392,7 @@ async function storyboardCheckComfyReadiness(root) {
   const snapshot = fields();
   // Daily controls have no workflow textarea. Compare immutable recipe strings directly;
   // do not serialize a multi-MB API graph for every node definition response.
-  const savedProfile = Object.fromEntries(['comfyWorkflow','comfyWorkflowNotice','comfyOutputNodeId','comfyReferences','model','capabilityModelId',
+  const savedProfile = Object.fromEntries(['comfyWorkflow','comfyWorkflowNotice','comfyOutputNodeId','comfyReferences','comfyCharacterEnabled','comfyCharacterActivation','model','capabilityModelId',
     'width','height','count','steps','cfg','seed','sampler','scheduler'].map(key => [key, state.profiles.comfy[key]]));
   const connectionFields = () => {
     const draft = storyboardConnectionState(state).draft;
@@ -17382,9 +17415,16 @@ async function storyboardCheckComfyReadiness(root) {
     if (!isCurrent()) return;
     const sanitized = sanitizeStoryboardWorkflow(profile.comfyWorkflow);
     if (!sanitized.ok || sanitized.removedFields.length || profile.comfyWorkflowNotice) throw new Error('工作流需先在工作流库内核对并保存');
-    const references = await storyboardComfyReferenceMetadata(profile.comfyWorkflow, profile.comfyReferences, () => { if (!isCurrent()) throw new Error('参考图配置已变化'); });
+    const assertCurrent = () => { if (!isCurrent() || controller.signal.aborted) throw new Error('检查页面已变化'); };
+    let referenceCount;
+    if (profile.comfyCharacterEnabled === true) {
+      const casting = await storyboardCompilerCharacterCasting(String(ctx().chat?.[storyboardTargetFloor(state)]?.mes || ''), {assertCurrent}, false, true);
+      const roles = await featureRuntime.load('comfyCharacters'); assertCurrent();
+      referenceCount = (await roles.checkComfyCharacterCandidates({profile,prepared:casting.prepared,namespace:casting.namespace,
+        guard:async()=>{assertCurrent();await casting.assertCurrent();}})).referenceCount;
+    } else referenceCount = (await storyboardComfyReferenceMetadata(profile.comfyWorkflow, profile.comfyReferences, assertCurrent)).length;
     const request = { baseUrl: connection.baseUrl || profile.baseUrl, workflow: profile.comfyWorkflow,
-      model: profile.model, outputNodeId: profile.comfyOutputNodeId || '', referenceCount: references.length,
+      model: profile.model, outputNodeId: profile.comfyOutputNodeId || '', referenceCount,
       parameters: Object.fromEntries(['width','height','count','steps','cfg','seed','sampler','scheduler'].map(key => [key, profile[key]])),
       allowPrivateNetwork: Boolean(connection.options?.allowPrivateNetwork),
     };
@@ -17421,6 +17461,11 @@ async function storyboardCheckComfyReadiness(root) {
     const boundary = document.createElement('small');
     boundary.textContent = `已检查 ${result.nodeCount} 个节点；未运行工作流。自定义运行校验、资源兼容与实际出图仍需验证。${requester === 'ST 主机' ? '本机地址指 ST 所在主机，不是浏览器设备；转发不提供内网穿透。' : '本机地址指当前浏览器设备。'}`;
     output.append(boundary);
+    if (profile.comfyCharacterEnabled === true) {
+      const roleBoundary = document.createElement('small');
+      roleBoundary.textContent = '角色参考槽已按当前候选档案核对；具体人物、LoRA 与人物词会在每镜生成前单独检查。';
+      output.append(roleBoundary);
+    }
     if (Array.isArray(result.issues) && result.issues.length) {
       const list = document.createElement('ul');
       for (const issue of result.issues.slice(0, 64)) { const item = document.createElement('li'); item.textContent = String(issue.message || '').slice(0, 400); list.append(item); }
@@ -17783,7 +17828,7 @@ function storyboardCreatePreparationGuard(state, { plan = null, includeDraft = t
   };
 }
 
-async function storyboardCompilerCharacterCasting(text, inputGuard, includeReferences = false) {
+async function storyboardCompilerCharacterCasting(text, inputGuard, includeReferences = false, includeComfy = false) {
   const [module, identity] = await Promise.all([featureRuntime.load('characterCasting'), featureRuntime.load('imageAdmission')]);
   inputGuard?.assertCurrent();
   const namespace = await identity.resolveImageAccountNamespace();
@@ -17796,12 +17841,12 @@ async function storyboardCompilerCharacterCasting(text, inputGuard, includeRefer
     inputGuard?.assertCurrent();
   };
   await guard();
-  const prepared = await module.readCharacterCasting({namespace,...current,text,includeReferences,guard:async () => {
+  const prepared = await module.readCharacterCasting({namespace,...current,text,includeReferences,includeComfy,guard:async () => {
     inputGuard?.assertCurrent();
     if (String(getChatKey() || '') !== current.chatKey) throw Object.assign(new Error('聊天已切换，请重新提取'), {code:'storyboard_input_changed'});
   }});
   await guard();
-  return {prepared,assertCurrent:guard,apply:module.applyCharacterCasting};
+  return {prepared,namespace,assertCurrent:guard,apply:module.applyCharacterCasting};
 }
 
 async function storyboardCompilerContext(state, inputGuard) {
@@ -17835,7 +17880,8 @@ async function storyboardCompilerContext(state, inputGuard) {
   inputGuard?.assertCurrent();
   const includeReferences = state.profiles?.novel?.characterReferenceEnabled === true
     && (state.source === 'novel' || state.routing?.enabled && state.routing.rules.some(rule => rule.enabled !== false && rule.target?.providerId === 'novel'));
-  const casting = await storyboardCompilerCharacterCasting(paragraphs.join('\n'), inputGuard, includeReferences);
+  const includeComfy = storyboardUsesComfyCharacters(state);
+  const casting = await storyboardCompilerCharacterCasting(paragraphs.join('\n'), inputGuard, includeReferences, includeComfy);
   return {
     floor, messages, currentCharacter, persona, world: worldResult.text,
     worldRows: worldResult.rows, worldFallback: worldResult.fallback,
@@ -18046,7 +18092,21 @@ function storyboardCertainCompilerRoute(state, profile) {
   return routes.size === 1 ? [...routes.values()][0] : null;
 }
 
-async function storyboardPreflightComfyForCompiler(state, profile, plan, inputGuard, automatic = false) {
+function storyboardUsesComfyCharacters(state) {
+  if (state.source !== 'comfy' && (!state.routing?.enabled || !state.routing.rules.some(rule=>rule.enabled!==false && rule.target?.providerId==='comfy'))) return false;
+  const profile=state.profiles[state.source],fallback={providerId:state.source,modelId:profile.model,capabilityModelId:profile.capabilityModelId,connectionPresetId:'',parameterPresetId:''};
+  const routing={...state.routing,single:fallback},visited=new Set();
+  for(const shotType of Object.keys(STORYBOARD_SHOT_TYPE_LABELS)) {
+    const route=state.routing?.enabled?routeStoryboardShot({shotType},routing):fallback;
+    if(route.providerId!=='comfy')continue;
+    const key=JSON.stringify([route.modelId,route.capabilityModelId,route.connectionPresetId,route.parameterPresetId]);
+    if(visited.has(key))continue;visited.add(key);
+    if(storyboardResolveRoutingProfile(state,route,state.source==='comfy'?profile:null).comfyCharacterEnabled===true)return true;
+  }
+  return false;
+}
+
+async function storyboardPreflightComfyForCompiler(state, profile, plan, inputGuard, automatic = false, context = null) {
   const route = storyboardCertainCompilerRoute(state, profile);
   if (!route || route.providerId !== 'comfy') return;
   try {
@@ -18059,10 +18119,15 @@ async function storyboardPreflightComfyForCompiler(state, profile, plan, inputGu
     const parameters = Object.fromEntries(['width','height','count','steps','cfg','seed','sampler','scheduler'].map(key => [key, selected[key]]));
     if (automatic || plan?.origin === 'manual_supplement' || getStoryboardGenerationPolicy(state).maxImages > 1) parameters.count = '1';
     const runtime = await featureRuntime.load('comfyPreflight');
-    const references = await storyboardComfyReferenceMetadata(selected.comfyWorkflow, selected.comfyReferences, () => inputGuard.assertCurrent());
+    let referenceCount;
+    if(selected.comfyCharacterEnabled===true){
+      const roles=await featureRuntime.load('comfyCharacters');inputGuard.assertCurrent();
+      const checked=await roles.checkComfyCharacterCandidates({profile:selected,prepared:context?.characterCasting,namespace:context?.casting?.namespace,guard:async()=>{inputGuard.assertCurrent();await context?.casting?.assertCurrent();}});
+      referenceCount=checked.referenceCount;
+    }else referenceCount=(await storyboardComfyReferenceMetadata(selected.comfyWorkflow, selected.comfyReferences, () => inputGuard.assertCurrent())).length;
     inputGuard.assertCurrent();
     const report = runtime.checkComfyConfiguration({workflow:raw.serialized,parameters,model:selected.model,outputNodeId:selected.comfyOutputNodeId,
-      automatic,referenceCount:references.length});
+      automatic,referenceCount});
     if (transport === 'gateway') {
       const targets = await featureRuntime.load('comfyTargets'); inputGuard.assertCurrent();
       await targets.requireTrustedComfyConnection(connection, { headers: storyboardRequestHeaders, assertCurrent: () => inputGuard.assertCurrent() });
@@ -18086,8 +18151,10 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false, autom
   const startedAt = Date.now();
   let resultAccepted = false;
   try {
+    const comfyRoles=storyboardUsesComfyCharacters(state);
+    let context=comfyRoles?await storyboardCompilerContext(state,inputGuard):null;
     if (state.source === 'comfy' || state.routing.enabled && state.routing.rules.some(rule => rule.enabled !== false && rule.target?.providerId === 'comfy')) {
-      await storyboardPreflightComfyForCompiler(state, profile, plan, inputGuard, automatic);
+      await storyboardPreflightComfyForCompiler(state, profile, plan, inputGuard, automatic, context);
       inputGuard.assertCurrent();
     }
     if (state.source === 'novel' && profile.characterReferenceEnabled === true) {
@@ -18095,7 +18162,7 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false, autom
       if (!capabilities.preciseReference) throw new Error('当前模型不支持角色精确参考，请关闭角色参考或切换至 NAI V4.5');
       if (state.selectedVibeIds?.length) throw new Error('角色精确参考与 Vibe 不能同时启用，请选择一种后提取');
     }
-    const context = await storyboardCompilerContext(state, inputGuard);
+    context ||= await storyboardCompilerContext(state, inputGuard);
     inputGuard.assertCurrent();
     const contract = await featureRuntime.load('storyboardContract');
     inputGuard.assertCurrent();
@@ -18499,12 +18566,14 @@ async function storyboardSettleImageAdmission(job, outcome) {
 }
 
 async function storyboardConfirmComfyExecution(job, valid) {
+  const rolePlan = job.profile?.comfyCharacterEnabled===true||job.payload?.comfyCharacterPlan ? await storyboardPrepareComfyCharacterJob(job,{prepare:true,readiness:true,valid}) : null;
+  if(!valid())return false;
   const fingerprint = () => JSON.stringify([job.payload, job.profile, job.connection, Boolean(job.automatic)]);
   const before = fingerprint();
   const current = () => valid() && before === fingerprint();
   const runtime = await directImageRuntime();
   if (!current()) return false;
-  const references = await storyboardComfyReferenceMetadata(job.payload?.parameters?.workflow, job.profile?.comfyReferences, () => {
+  const references = rolePlan ? (rolePlan.references?.items||[]) : await storyboardComfyReferenceMetadata(job.payload?.parameters?.workflow, job.profile?.comfyReferences, () => {
     if (!current()) throw new Error('工作流配置已变化，未提交生成');
   });
   if (!current()) return false;
@@ -18513,12 +18582,15 @@ async function storyboardConfirmComfyExecution(job, valid) {
   const report = runtime.inspectComfyImageExecution({ ...storyboardGatewayRequest(job, '', { references, vibes: [] }), comfyExecution: execution });
   try { runtime.requireComfyExecution(report, execution); }
   catch (error) { if (error.code !== 'comfy_manual_confirmation_required') throw error; }
-  const needsConfirmation = !job.automatic && (!report.verified || report.selectedImages !== Math.max(1, Number(job.payload?.parameters?.count) || 1)
+  const roleReview = Boolean(rolePlan?.participants?.length && (job.payload?.shotSpec?.characters||[]).filter(row=>row.visible!==false).length>1);
+  const needsConfirmation = !job.automatic && (roleReview || rolePlan?.definitionWarnings>0 || !report.verified || report.selectedImages !== Math.max(1, Number(job.payload?.parameters?.count) || 1)
     || report.savedImages !== report.selectedImages || report.maxIntermediateBatch > 1 || !report.singleSamplingChain);
   if (needsConfirmation) {
     const number = value => value === null ? '未确定' : String(value);
     const accepted = await confirmDialog('确认本次 Comfy 工作流',
       `保存 ${number(report.savedImages)} 张，接收 ${number(report.selectedImages)} 张；内部最大批量 ${number(report.maxIntermediateBatch)}。\n`
+      + (roleReview ? '此多人工作流尚未验证人物分区；多个 LoRA 或参考槽不保证互不影响。\n' : '')
+      + (rolePlan?.definitionWarnings ? '部分自定义节点仅能在实际运行时确认。\n' : '')
       + (report.singleSamplingChain ? '' : '包含多条采样分支。\n')
       + (!report.verified ? '自定义节点或动态输入尚不能核定数量。\n' : '')
       + '选择最终输出不会减少工作流内部计算，实际费用以渠道为准。仅确认这一次手动生成？');
@@ -18531,6 +18603,37 @@ async function storyboardConfirmComfyExecution(job, valid) {
     maxSamplerBatch: report.maxSamplerBatch, maxIntermediateBatch: report.maxIntermediateBatch, samplingStages: report.samplingStages, singleSamplingChain: report.singleSamplingChain,
     unknownNodeCount: report.unknownNodes.length, uncertainInputCount: report.uncertainInputs.length };
   return true;
+}
+
+async function storyboardPrepareComfyCharacterJob(job,{prepare=false,readiness=false,valid=()=>true}={}) {
+  if(job.profile?.comfyCharacterEnabled!==true&&!job.payload?.comfyCharacterPlan)return null;
+  const [runtime,identity]=await Promise.all([featureRuntime.load('comfyCharacters'),featureRuntime.load('imageAdmission')]);
+  const namespace=await identity.resolveImageAccountNamespace(),epoch=storyboardAdmissionEpoch;
+  const fingerprint=()=>JSON.stringify([job.payload,job.shotSpec,job.profile,job.connection,job.automatic,job.sensitive,job.safetyAdapted]);let expected=fingerprint();
+  const guard=async()=>{if(!valid()||job.discardRequested||epoch!==storyboardAdmissionEpoch||fingerprint()!==expected
+    ||job.imageAdmission?.namespace&&job.imageAdmission.namespace!==namespace||namespace!==await identity.resolveImageAccountNamespace())throw new Error('本镜角色配置或账户已变化，未提交生成');};
+  await guard();
+  const plan=await runtime.prepareComfyCharacterJob(job,{namespace,guard});await guard();
+  if(!plan)throw new Error('Comfy 角色实现未启用');
+  if(job.payload.comfyCharacterPlan)await runtime.assertComfyCharacterPlan(plan,job.payload);
+  else {
+    if(!prepare)throw new Error('本镜缺少 Comfy 角色准备记录');
+    const references=await featureRuntime.load('comfyReferences');await guard();
+    if(await references.comfyWorkflowReferenceHash(job.payload.parameters.workflow)!==plan.originalHash)throw new Error('本镜原工作流不匹配，请重新准备');
+    await guard();job.payload.parameters.workflow=JSON.parse(plan.workflow);job.payload.comfyCharacterPlan=runtime.comfyCharacterPlanReceipt(plan);expected=fingerprint();
+  }
+  await guard();let definitionWarnings=0;
+  if(readiness&&plan.participants.length){
+    const inspector=await featureRuntime.load('comfyCharacterReadiness');await guard();
+    const apiKey=await storyboardResolveApiKey('comfy',job.connection?.credentialId,{exact:true});await guard();
+    const request={baseUrl:job.connection.baseUrl,apiKey,workflow:plan.workflow,model:job.profile.model,
+      parameters:Object.fromEntries(['width','height','count','steps','scale','cfg','seed','sampler','scheduler'].map(key=>[key,job.payload.parameters[key]])),
+      outputNodeId:job.profile.comfyOutputNodeId,referenceCount:plan.references?.items.length||0,allowPrivateNetwork:Boolean(job.connection.allowPrivateNetwork)};
+    const checked=await inspector.checkComfyCharacterReadiness(request,{transport:requireStoryboardComfyTransport(job.connection),headers:storyboardRequestHeaders(),guard});await guard();
+    definitionWarnings=checked.unverifiedWarnings ?? checked.warnings ?? 0;
+    if(job.automatic&&definitionWarnings)throw new Error('Comfy 角色节点含未验证项，请先手动核对工作流');
+  }
+  return {...plan,definitionWarnings};
 }
 
 async function storyboardQueueJob(job, preparationCurrent = () => true) {
@@ -19113,6 +19216,7 @@ function storyboardCharacterReferencePlan(job) {
 
 async function storyboardPrepareGatewayAssets(job) {
   let references = [];
+  const comfyRole = (job.profile?.comfyCharacterEnabled===true||job.payload?.comfyCharacterPlan) ? await storyboardPrepareComfyCharacterJob(job) : null;
   if (job.profile?.characterReferenceEnabled === true || job.payload?.characterReference) {
     const reference = storyboardCharacterReferencePlan(job);
     if (reference?.status === 'selected') {
@@ -19125,12 +19229,12 @@ async function storyboardPrepareGatewayAssets(job) {
       references = await runtime.readCharacterReferenceImages(reference,{namespace,guard});
     }
   }
-  if (job.source === 'comfy' && job.profile?.comfyReferences) {
+  if (job.source === 'comfy' && (comfyRole||job.profile?.comfyReferences)) {
     const epoch = storyboardAdmissionEpoch;
     const [runtime, identity] = await Promise.all([featureRuntime.load('comfyReferences'), featureRuntime.load('imageAdmission')]);
     const namespace = await identity.resolveImageAccountNamespace();
     const guard = async () => { if (epoch !== storyboardAdmissionEpoch || job.discardRequested || (job.imageAdmission?.namespace && job.imageAdmission.namespace !== namespace) || namespace !== await identity.resolveImageAccountNamespace()) throw new Error('参考图会话已变化，未提交生成'); };
-    references = await runtime.readComfyReferenceImages({ workflow: job.payload?.parameters?.workflow, selection: job.profile.comfyReferences, namespace, guard });
+    references = await runtime.readComfyReferenceImages({ workflow: job.payload?.parameters?.workflow, selection: comfyRole ? comfyRole.references : job.profile.comfyReferences, namespace, guard });
   }
   const vibes = [];
   const state = storyboardState();
@@ -19176,7 +19280,7 @@ async function storyboardConfirmGatewayModelBinding(job) {
       storyboardGatewayCapabilityPromise = runtime.probeQianmuImageCapabilities({ headers: storyboardRequestHeaders() })
         .finally(() => { storyboardGatewayCapabilityPromise = null; });
     }
-    const result = runtime.checkQianmuComfyExecutionBinding(await storyboardGatewayCapabilityPromise, { references: job.profile?.comfyReferences?.enabled === true });
+    const result = runtime.checkQianmuComfyExecutionBinding(await storyboardGatewayCapabilityPromise, { references: job.profile?.comfyReferences?.enabled === true || job.payload?.comfyCharacterPlan?.references?.enabled === true });
     if (!result.ok) throw Object.assign(new Error(result.message), { code: result.code, retryable: false, submissionState: 'not_submitted' });
     return 0;
   }
@@ -19364,6 +19468,7 @@ async function storyboardRunJob(job, log) {
       const reference = storyboardCharacterReferencePlan(job);
       if (reference?.status === 'selected' && reference.namespace !== job.imageAdmission?.namespace) throw new Error('角色参考账户已变化，未提交生成');
     }
+    if(job.profile?.comfyCharacterEnabled===true||job.payload?.comfyCharacterPlan)await storyboardPrepareComfyCharacterJob(job,{valid:()=>!job.discardRequested&&storyboardState().enabled});
     if (job.discardRequested || !state.enabled || (job.automatic && (state.automation?.autoCapture === false || state.automation?.autoGenerate === false))) {
       throw Object.assign(new Error('已停止后续生图提交'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
     }
@@ -20270,8 +20375,10 @@ async function storyboardEditPrompt({ plan = null, record = null } = {}) {
   const referenceProfile = recordSnapshot?.profile || state.profiles[state.source];
   const referenceSource = recordSnapshot?.source || state.source;
   const referenceEnabled = referenceSource === 'novel' && referenceProfile?.characterReferenceEnabled === true;
+  const comfyControl = Boolean(recordSnapshot && referenceSource==='comfy' && (referenceProfile?.comfyCharacterEnabled || referenceProfile?.comfyCharacterActivation));
+  let useComfyCharacters = referenceProfile?.comfyCharacterEnabled === true, comfyResetWorkflow;
   let referenceIdentity,referenceNamespace;
-  if (referenceEnabled) {
+  if (referenceEnabled || comfyControl) {
     try {
       referenceIdentity = await featureRuntime.load('imageAdmission');
       referenceNamespace = await referenceIdentity.resolveImageAccountNamespace();
@@ -20293,6 +20400,7 @@ async function storyboardEditPrompt({ plan = null, record = null } = {}) {
     wrap.querySelector('.sd-storyboard-edit-positive').value = positive;
     wrap.querySelector('.sd-storyboard-edit-negative').value = negative;
     if (referenceEnabled) wrap.insertAdjacentHTML('afterbegin',renderCharacterReferencePicker(referenceShot));
+    if(comfyControl)wrap.insertAdjacentHTML('afterbegin',`<label class="sd-check"><input type="checkbox" class="sd-comfy-character-inline" ${useComfyCharacters?'checked':''}><span>使用本镜 Comfy 角色实现</span></label><small>停用后仍需满足原工作流的参考输入。</small>`);
     try {
       const popup = new context.Popup(wrap, context.POPUP_TYPE.CONFIRM, '', { okButton: '保存并生成', cancelButton: '取消', customButtons: [{ text: '仅保存', result: 2 }] });
       const result = await popup.show();
@@ -20301,6 +20409,7 @@ async function storyboardEditPrompt({ plan = null, record = null } = {}) {
       positive = String(wrap.querySelector('.sd-storyboard-edit-positive').value || '').trim().slice(0, 24000);
       negative = String(wrap.querySelector('.sd-storyboard-edit-negative').value || '').trim().slice(0, 12000);
       if (referenceEnabled) referenceChoice = wrap.querySelector('.sd-character-reference-picker').value;
+      if(comfyControl)useComfyCharacters=wrap.querySelector('.sd-comfy-character-inline').checked;
     } catch (_) { return false; }
   } else {
     const answer = await promptInput('编辑正面提示词', '修改后不会自动生图。', positive);
@@ -20316,6 +20425,12 @@ async function storyboardEditPrompt({ plan = null, record = null } = {}) {
   catch (error) { toast(error.message || '暂未确认参考图账户，未保存修改','warning'); return false; }
   if (state !== storyboardState() || editingChatKey !== String(getChatKey() || '')
     || referenceIdentity && referenceNamespace !== currentReferenceNamespace) return toast('聊天或 ST 账户已变化，未保存修改。','warning');
+  if(comfyControl){
+    try {
+      if(referenceProfile.comfyCharacterActivation?.namespace!==referenceNamespace)throw new Error('Comfy 角色实现属于另一账户，未保存修改');
+      if(!useComfyCharacters)comfyResetWorkflow=storyboardParseWorkflow(referenceProfile.comfyWorkflow);
+    }catch(error){toast(error.message,'warning');return false;}
+  }
   if (referenceEnabled) {
     try {
       referenceShot = applyCharacterReferenceChoice(referenceShot,referenceChoice);
@@ -20345,6 +20460,10 @@ async function storyboardEditPrompt({ plan = null, record = null } = {}) {
           nextSnapshot.shotSpec = clone(referenceShot);
           nextSnapshot.payload.shotSpec = clone(referenceShot);
           nextSnapshot.payload.characterReference = clone(referencePlan);
+        }
+        if(comfyControl){
+          nextSnapshot.profile.comfyCharacterEnabled=useComfyCharacters;
+          if(!useComfyCharacters){nextSnapshot.payload.parameters.workflow=comfyResetWorkflow;delete nextSnapshot.payload.comfyCharacterPlan;}
         }
       }
       await storyboardStoreSnapshotForRecord(record, nextSnapshot);
@@ -20595,6 +20714,7 @@ function bindStoryboardTabEvents(root) {
   root.querySelectorAll('[data-comfy-reference-action]').forEach(button => button.addEventListener('click', event => {
     event.preventDefault(); void storyboardEditComfyReferences(root, button.dataset.comfyReferenceAction, button.dataset.referenceIndex);
   }));
+  root.querySelectorAll('[data-comfy-character-action]').forEach(button=>button.addEventListener('click',()=>void storyboardToggleComfyCharacters(root,button.dataset.comfyCharacterAction==='bind')));
   if (root.querySelector('.sd-comfy-workbench-loading')) void storyboardLoadComfyView(root);
   root.querySelector('.sd-comfy-view-retry')?.addEventListener('click', () => void storyboardLoadComfyView(root, true));
   root.querySelector('.sd-comfy-import-workflow')?.addEventListener('click', event => { event.preventDefault(); root.querySelector('.sd-comfy-workflow-file')?.click(); });

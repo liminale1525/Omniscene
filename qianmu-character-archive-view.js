@@ -1,5 +1,6 @@
 import {CHARACTER_CATEGORIES,newCharacterArchive,normalizeCharacterArchive,selectCharacterBinding,exportCharacterArchive,importCharacterArchive} from './qianmu-character-archive.js';
 import {createCharacterArchiveStore} from './qianmu-character-archive-store.js';
+import {comfyCharacterEditorRecipe,newComfyCharacterImplementation,renderComfyCharacterEditor,captureComfyCharacterEditor,saveComfyCharacterEditor} from './qianmu-comfy-character-view.js';
 const escape=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const clone=value=>JSON.parse(JSON.stringify(value));
 const icon=(action,label,glyph,attrs='')=>`<button type="button" class="sd-icon-btn" data-archive-action="${action}" title="${escape(label)}" aria-label="${escape(label)}" ${attrs}><i data-qm-icon="qm-regular-${({upload:'upload-simple',download:'download-simple'})[glyph]||glyph}"></i></button>`;
@@ -28,6 +29,7 @@ export async function saveCharacterReference(file,{save,guard,createBitmap=globa
 
 export function renderCharacterArchive(view,{identity=()=>''}={}) {
   const disabled=view.busy?'disabled':'';
+  if(view.comfyEditor)return `<div class="sd-character-library sd-character-editor" aria-busy="${Boolean(view.busy)}"><fieldset ${disabled}>${renderComfyCharacterEditor(view.comfyEditor,icon)}${status(view)}</fieldset></div>`;
   if(view.draft){
     const draft=view.draft,doc=draft.document,cover=safeImage(doc.imagegen.reference?.url),bindings=view.bindings.filter(row=>row.archiveId===draft.id);
     return `<div class="sd-character-library sd-character-editor" aria-busy="${Boolean(view.busy)}"><fieldset ${disabled}>
@@ -41,6 +43,10 @@ export function renderCharacterArchive(view,{identity=()=>''}={}) {
         <label><span>强度</span><input class="text_pole" type="number" min="0" max="1" step="0.05" data-archive-field="referenceStrength" value="${escape(doc.imagegen.novelReference?.strength ?? 0.6)}"></label>
         <label><span>保真度</span><input class="text_pole" type="number" min="0" max="1" step="0.05" data-archive-field="referenceFidelity" value="${escape(doc.imagegen.novelReference?.fidelity ?? 1)}"></label>
       </div></div></details>
+      <details class="sd-card"><summary><b>Comfy 实现</b></summary><div class="sd-storyboard-card-body">
+        ${(doc.comfy?.implementations||[]).map((impl,index)=>`<div class="sd-comfy-role-heading"><button type="button" class="sd-btn" data-archive-action="comfy-edit" data-item-index="${index}">${escape(impl.name)} · v${impl.workflow.version}</button>${icon('comfy-remove','移除此实现','x',`data-item-index="${index}"`)}</div>`).join('')}
+        <button type="button" class="sd-btn" data-archive-action="comfy-new" ${(doc.comfy?.implementations?.length||0)>=8?'disabled':''}>绑定当前 Comfy 方案</button>
+      </div></details>
       <details class="sd-card"><summary><b>绑定与识别</b></summary><div class="sd-storyboard-card-body">
         ${field('aliases','别名 / 称呼',doc.aliases.join('，'),1943)}
         <label><span>年龄状态</span><select class="text_pole" data-archive-field="ageStatus">${[['unknown','未确认'],['adult','已确认成年'],['minor','未成年']].map(([id,label])=>`<option value="${id}" ${doc.ageStatus===id?'selected':''}>${label}</option>`).join('')}</select></label>
@@ -75,7 +81,7 @@ export function renderCharacterArchive(view,{identity=()=>''}={}) {
   </fieldset><input type="file" data-archive-file accept=".json,application/json" hidden></div>`;
 }
 
-export function createCharacterArchiveController({resolveNamespace,getContext,isCurrent=()=>true,onIcons=()=>{},identity,notify=()=>{},confirm=async()=>false,download,saveReference,
+export function createCharacterArchiveController({resolveNamespace,getContext,isCurrent=()=>true,onIcons=()=>{},identity,notify=()=>{},confirm=async()=>false,download,saveReference,loadComfyRecipe,
   onCollapse=()=>{},collapsed={},store=createCharacterArchiveStore()}={}) {
   const view={rows:[],bindings:[],subjects:[],chatKey:'',search:'',draft:null,bindingEditor:null,collapsed:{...collapsed},shown:{},bindingShown:24,busy:false,error:''};
   let host=null,namespace='',entry=0,disposed=false,verified=-1;const scrolls={list:0,editor:0};
@@ -92,7 +98,7 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
   async function authorize(expected=entry) {
     const next=await resolveNamespace();
     if(!visible()||expected!==entry)throw Error('页面已切换，操作未继续');
-    if(namespace&&next!==namespace){view.draft=null;view.rows=[];view.bindings=[];view.bindingEditor=null;verified=-1;namespace=next;throw Error('账户已切换，请刷新角色库');}
+    if(namespace&&next!==namespace){view.draft=null;view.comfyEditor=null;view.rows=[];view.bindings=[];view.bindingEditor=null;verified=-1;namespace=next;throw Error('账户已切换，请刷新角色库');}
     namespace=next;
     const context=await getContext();
     if(!visible()||expected!==entry)throw Error('页面已切换，操作未继续');
@@ -112,8 +118,44 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
   const currentBinding=picker=>view.bindings.find(row=>row.category===picker.subject.category&&row.subjectKey===picker.subject.subjectKey&&row.scope===picker.scope&&row.chatKey===(picker.scope==='chat'?view.chatKey:''));
   async function act(action,button) {
     if(action==='import'){if(!view.busy)host.querySelector('[data-archive-file]')?.click();return;}
+    if(view.comfyEditor)captureComfyCharacterEditor(host,view.comfyEditor);
     await run(async(guard,expected)=>{
       const id=button?.dataset.archiveId,category=button?.dataset.category;
+      const itemIndex=Number(button?.dataset.itemIndex),editor=view.comfyEditor;
+      if(action==='comfy-new'||action==='comfy-edit'||action==='comfy-rebind'){
+        if(!view.draft||typeof loadComfyRecipe!=='function')throw Error('请先在 Comfy 镜头台应用已保存的工作流方案');
+        const previous=action==='comfy-edit'?view.draft.document.comfy?.implementations[itemIndex]:null;
+        if(action==='comfy-rebind'&&!await confirm('改绑当前 Comfy 方案会清空此草稿的节点选择，继续？'))return;
+        await guard();const recipe=comfyCharacterEditorRecipe(await loadComfyRecipe(previous?.workflow||null,namespace,guard));await guard();
+        if(!editor){remember();view.comfyReturnScroll=scrolls.editor;scrolls.editor=0;}
+        view.comfyEditor={index:action==='comfy-edit'?itemIndex:editor?.index??-1,recipe,implementation:previous?clone(previous):newComfyCharacterImplementation(recipe)};return;
+      }
+      if(action==='comfy-cancel'){view.comfyEditor=null;scrolls.editor=view.comfyReturnScroll||0;return;}
+      if(action==='comfy-remove'){
+        const rows=view.draft?.document.comfy?.implementations;if(!rows?.[itemIndex])throw Error('角色实现已变化');
+        rows.splice(itemIndex,1);view.draft.dirty=true;return;
+      }
+      if(action==='comfy-save'){
+        const implementation=saveComfyCharacterEditor(editor),doc=view.draft.document;
+        doc.comfy ||= {version:1,implementations:[]};const rows=clone(doc.comfy.implementations);
+        if(rows.some((row,index)=>index!==editor.index&&row.workflow.id===implementation.workflow.id&&row.workflow.revision===implementation.workflow.revision))throw Error('此工作流版本已经绑定，请编辑原实现');
+        if(editor.index<0)rows.push(implementation);else rows[editor.index]=implementation;
+        doc.comfy=normalizeCharacterArchive({...doc,comfy:{version:1,implementations:rows}}).comfy;
+        view.draft.dirty=true;view.comfyEditor=null;scrolls.editor=view.comfyReturnScroll||0;notify('实现已加入草稿，请保存角色档案','info');return;
+      }
+      if(action==='comfy-add-lora'){
+        const row=editor.recipe.targets.loras.find(item=>!editor.implementation.loras.some(lora=>lora.nodeId===item.nodeId));
+        if(!row||editor.implementation.loras.length>=8)throw Error('没有可添加的空闲 LoRA 节点');
+        const graph=JSON.parse(editor.recipe.document.workflow);
+        editor.implementation.loras.push({nodeId:row.nodeId,classType:row.classType,loraName:graph[row.nodeId].inputs.lora_name||'',strengthModel:1,strengthClip:row.classType==='LoraLoader'?1:null});return;
+      }
+      if(action==='comfy-add-text'){
+        const row=editor.recipe.targets.conditioning.find(item=>!editor.implementation.conditioning.some(text=>text.nodeId===item.nodeId));
+        if(!row||editor.implementation.conditioning.length>=8)throw Error('没有可添加的空闲人物词节点');
+        editor.implementation.conditioning.push({nodeId:row.nodeId,kind:'positive',text:''});return;
+      }
+      if(action==='comfy-remove-lora'){editor.implementation.loras.splice(itemIndex,1);return;}
+      if(action==='comfy-remove-text'){editor.implementation.conditioning.splice(itemIndex,1);return;}
       if(action==='refresh'){await loadList(expected);return;}
       if(action==='new'){edit(newCharacterArchive(category));return;}
       if(action==='more'){view.shown[category]=(view.shown[category]||24)+24;return;}
@@ -146,6 +188,8 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
   }
   function bind() {
     host.querySelectorAll('[data-archive-action]').forEach(button=>button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();void act(button.dataset.archiveAction,button);}));
+    host.querySelector('.sd-comfy-role-editor')?.addEventListener('input',()=>{if(view.comfyEditor)captureComfyCharacterEditor(host,view.comfyEditor);});
+    host.querySelectorAll('[data-comfy-lora-node]').forEach(input=>input.addEventListener('change',()=>{if(view.comfyEditor){captureComfyCharacterEditor(host,view.comfyEditor);draw();}}));
     host.querySelectorAll('[data-archive-category]').forEach(details=>details.addEventListener('toggle',()=>{if(!visible()||!host.contains(details))return;const key=details.dataset.archiveCategory,next=!details.open;if(Boolean(view.collapsed[key])===next)return;view.collapsed[key]=next;onCollapse({...view.collapsed});}));
     host.querySelector('[data-archive-search]')?.addEventListener('input',event=>{const start=event.target.selectionStart;view.search=event.target.value;draw();const input=host.querySelector('[data-archive-search]');input?.focus();try{input?.setSelectionRange(start,start);}catch(_){}});
     host.querySelectorAll('[data-archive-field]').forEach(field=>field.addEventListener('input',()=>{
@@ -169,6 +213,6 @@ export function createCharacterArchiveController({resolveNamespace,getContext,is
   return Object.freeze({
     mount(element){if(disposed)return;const changed=host!==element;host=element;if(changed)entry++;draw();if(changed||verified!==entry)void run((_guard,expected)=>loadList(expected));},
     detach(){remember();host=null;entry++;},
-    dispose(){disposed=true;host=null;view.draft=null;entry++;store.close();},
+    dispose(){disposed=true;host=null;view.draft=null;view.comfyEditor=null;entry++;store.close();},
   });
 }

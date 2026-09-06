@@ -2,6 +2,7 @@ import { normalizeOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } f
 import { resolveImageProtocolBinding, IMAGE_NATIVE_PROTOCOLS, IMAGE_PROTOCOL_BINDING_VERSION } from './qianmu-image-models.js';
 import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { retainComfyReferenceSelection } from './qianmu-comfy-reference-contract.js';
+import { normalizeComfyCharacterActivation } from './qianmu-comfy-character-contract.js';
 import { normalizeCharacterCastingSnapshot, assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
 export { assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
 export { planCharacterReference, assertCharacterReferencePlan, characterReferenceNotice, characterReferenceChoice, renderCharacterReferencePicker, applyCharacterReferenceChoice } from './qianmu-character-reference.js';
@@ -2012,6 +2013,7 @@ export function normalizeStoryboardParameterProfile(value, providerId) {
   if (!getStoryboardProvider(providerId)) throw new Error('请选择有效的生图系列');
   const base = legacyProfile(), p = obj(value) ? value : {};
   if (providerId === 'novel' && Object.hasOwn(p,'characterReferenceEnabled')) base.characterReferenceEnabled = p.characterReferenceEnabled === true;
+  if (providerId === 'comfy' && Object.hasOwn(p,'comfyCharacterEnabled')) base.comfyCharacterEnabled = p.comfyCharacterEnabled === true;
   for (const [key, fallback] of Object.entries(base)) {
     const value = Object.hasOwn(p, key) ? p[key] : undefined;
     base[key] = value === undefined ? fallback : (typeof fallback === 'boolean' ? flag(value) : str(value, key === 'comfyWorkflow' ? 2 * 1024 * 1024 : 2048));
@@ -2025,6 +2027,10 @@ export function normalizeStoryboardParameterProfile(value, providerId) {
   }
   if (providerId === 'comfy') {
     if (Object.hasOwn(p, 'comfyReferences')) base.comfyReferences = retainComfyReferenceSelection(p.comfyReferences);
+    if (Object.hasOwn(p,'comfyCharacterActivation')) {
+      try { base.comfyCharacterActivation = normalizeComfyCharacterActivation(p.comfyCharacterActivation); }
+      catch (_) { base.comfyCharacterActivation = {invalid:true}; }
+    }
     const rawWorkflow = Object.hasOwn(p, 'comfyWorkflow') ? p.comfyWorkflow : '';
     const result = sanitizeStoryboardWorkflow(rawWorkflow);
     base.comfyWorkflow = result.ok ? result.serialized : '';

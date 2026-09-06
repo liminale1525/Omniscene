@@ -46,7 +46,7 @@ function environment() {
     storyboardCompilerResult: async () => ({ shouldGenerate: true, prompt: 'extracted prompt', negative: '', shots: [{ prompt: 'extracted prompt', sensitive: false }] }),
     storyboardProviderProfile: (_state, id = state.source) => state.profiles[id],
   });
-  vm.runInContext(['storyboardCreatePreparationGuard', 'storyboardCompilePrompt', 'storyboardAdaptShotForModel'].map(section).join('\n'), context);
+  vm.runInContext(['storyboardUsesComfyCharacters','storyboardCreatePreparationGuard', 'storyboardCompilePrompt', 'storyboardAdaptShotForModel'].map(section).join('\n'), context);
   const dispatchInput = (className = 'sd-storyboard-field') => {
     for (const handler of events.get('input') || []) handler({ target: { className, type: 'text', matches: () => true, closest: () => ({}) } });
   };

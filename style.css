@@ -10251,6 +10251,13 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-character-detail-grid { display: grid; grid-template-columns: minmax(85px,30%) minmax(0,1fr); gap: 10px; }
 #story-director-modal .sd-character-main-fields { min-width: 0; }
 #story-director-modal .sd-character-full { grid-column: 1 / -1; min-width: 0; }
+#story-director-modal .sd-comfy-role-editor { display: grid; gap: var(--sd-storyboard-card-gap,8px); min-width: 0; }
+#story-director-modal .sd-comfy-role-heading { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 4px 0; }
+#story-director-modal .sd-comfy-role-heading > :first-child { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+#story-director-modal .sd-comfy-role-heading > .sd-icon-btn { flex: 0 0 40px; width: 40px; height: 40px; }
+#story-director-modal .sd-comfy-role-item { display: grid; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--sd-border); min-width: 0; }
+#story-director-modal .sd-comfy-role-editor :is(input,select) { box-sizing: border-box; width: 100%; min-width: 0; height: 40px; font-size: 12px; }
+#story-director-modal .sd-comfy-role-editor textarea { box-sizing: border-box; width: 100%; min-width: 0; min-height: 72px; resize: vertical; font-size: 12px; }
 #story-director-modal .sd-character-cover-upload { box-sizing: border-box; width: 100%; aspect-ratio: 3/4; min-width: 0; margin: 0; border: 1px dashed var(--sd-muted); border-radius: 8px; position: relative; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
 #story-director-modal .sd-character-cover-upload > img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
 #story-director-modal .sd-character-cover-upload > i { width: 24px; height: 24px; }

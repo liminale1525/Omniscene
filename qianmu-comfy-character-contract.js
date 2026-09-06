@@ -25,6 +25,10 @@ export function normalizeComfyCharacterWorkflow(value) {
     || typeof value.hash !== 'string' || !/^[a-f0-9]{64}$/.test(value.hash)) fail('请绑定已保存的 Comfy 工作流版本');
   return {id:value.id,revision:value.revision,version:value.version,hash:value.hash};
 }
+export function normalizeComfyCharacterActivation(value) {
+  if (!object(value) || typeof value.namespace !== 'string' || !/^st-user:.+/.test(value.namespace) || value.namespace.length>512 || /[\u0000-\u001f\u007f]/.test(value.namespace)) fail('Comfy 角色启用账户无效，请重新绑定');
+  return {namespace:value.namespace,workflow:normalizeComfyCharacterWorkflow(value.workflow)};
+}
 export function normalizeComfyCharacterImplementation(value) {
   if (!object(value) || value.version !== 1) fail('Comfy 角色实现版本无效');
   const name = boundedText(value.name,80); if (!name) fail('请填写 Comfy 实现名称');

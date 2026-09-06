@@ -184,7 +184,7 @@ function compilerRuntime({changeAccount=false,ambiguous=false,references=false}=
     sanitizeStoryboardDiagnosticData:value=>value,storyboardAnchorForMessage:()=>null,uid:()=> 'generated-id',toast:message=>notices.push(message),
     MODULE_NAME:'test',console:{error:(...args)=>errors.push(args)},
   });
-  vm.runInContext(['storyboardCompilerCharacterCasting','storyboardCompilerContext','storyboardCompilerResult','storyboardShotSpecForSelection','storyboardCompilePrompt'].map(section).join('\n'),context);
+  vm.runInContext(['storyboardUsesComfyCharacters','storyboardCompilerCharacterCasting','storyboardCompilerContext','storyboardCompilerResult','storyboardShotSpecForSelection','storyboardCompilePrompt'].map(section).join('\n'),context);
   return {e,state,plan,calls,notices,errors,context};
 }
 test('actual extraction context -> strict parser -> saved plan -> image payload carries the frozen visible identity',async()=>{

@@ -50,7 +50,7 @@ export function renderComfyWorkbench({profile, capabilities, collapsed={}, promp
       </div></div>
     </details>
     <details class="sd-card sd-storyboard-params" data-storyboard-card="params" ${collapsed.params?'':'open'}><summary><b>工作流参数</b></summary>
-      <div class="sd-storyboard-card-body">${shared.parameterPresets||''}${controls?`<div class="sd-storyboard-grid sd-storyboard-grid-two">${controls}</div>`:''}</div>
+      <div class="sd-storyboard-card-body"><div class="sd-comfy-role-heading"><button type="button" class="sd-btn ${profile.comfyCharacterEnabled?'active':''}" data-comfy-character-action="toggle" aria-pressed="${Boolean(profile.comfyCharacterEnabled)}">角色实现</button>${profile.comfyCharacterEnabled?'<button type="button" class="sd-btn" data-comfy-character-action="bind">绑定当前方案</button>':''}</div>${shared.parameterPresets||''}${controls?`<div class="sd-storyboard-grid sd-storyboard-grid-two">${controls}</div>`:''}</div>
     </details>
     ${renderComfyReferenceControls(profile, capabilities, collapsed)}
     ${shared.generation||''}${shared.composition||''}${shared.queue||''}${shared.recent||''}

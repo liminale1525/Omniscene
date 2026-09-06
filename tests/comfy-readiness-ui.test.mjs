@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import * as storyboard from '../qianmu-storyboard.js';
+import * as roles from '../qianmu-comfy-character-plan.js';
+import {job as roleJob,namespace} from './helpers/comfy-character-fixture.mjs';
 import { storyboardFunctionSource, createStoryboardFormFixture } from './helpers/storyboard-form-fixture.mjs';
 
 const graph = { a: { class_type: 'TestImage', inputs: { text: '%qianmu_prompt%' } }, b: { class_type: 'SaveImage', inputs: { images: ['a', 0] } } };
@@ -40,6 +42,20 @@ test('actual handler uses captured recipe, keeps the typed Key and reports brows
   assert.match(fx.output.children[0].textContent, /当前浏览器/); assert.match(fx.output.children[1].textContent, /未运行工作流/);
   assert.deepEqual(fx.state, before); assert.equal(fx.button.disabled, false);
   fx.listeners.get('input')(); assert.equal(fx.output.hidden, true); assert.equal(fx.listeners.size, 0);
+});
+
+test('workbench node inspection counts frozen role candidates without claiming their final LoRA was executed',async()=>{
+  for(const missing of [false,true]){
+    const fx=fixture(),j=roleJob(),snapshot=structuredClone(j.shotSpec.characters[0].archiveSnapshot.comfyImplementation);
+    if(missing)snapshot.reference=null;Object.assign(fx.state.profiles.comfy,j.profile);
+    Object.assign(fx.context,{ctx:()=>({chat:[{mes:'Alice'}]}),storyboardTargetFloor:()=>0,
+      storyboardCompilerCharacterCasting:async(text,guard,refs,comfy)=>{assert.equal(text,'Alice');assert.equal(refs,false);assert.equal(comfy,true);guard.assertCurrent();return {namespace,prepared:{entries:[{identity:{name:'Alice'},comfyImplementation:snapshot}]},assertCurrent:async()=>{}};}});
+    const load=fx.context.featureRuntime.load;fx.context.featureRuntime.load=key=>key==='comfyCharacters'?Promise.resolve(roles):load(key);
+    await fx.run();assert.equal(fx.calls.length,missing?0:1);
+    if(missing)assert.match(fx.output.textContent,/参考图缺失/);
+    else {assert.equal(fx.calls[0].referenceCount,1);assert.match(fx.output.children[2].textContent,/每镜生成前单独检查/);}
+    assert.equal(fx.button.disabled,false);assert.equal(fx.key.value,'typed-key');
+  }
 });
 
 test('transport-only failure may inspect from ST, labels the requester and uses authenticated same-origin POST without generation', async () => {

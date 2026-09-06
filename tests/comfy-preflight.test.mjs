@@ -4,12 +4,38 @@ import vm from 'node:vm';
 import * as storyboard from '../qianmu-storyboard.js';
 import * as preflight from '../qianmu-comfy-preflight.js';
 import * as references from '../qianmu-comfy-references.js';
+import * as roles from '../qianmu-comfy-character-plan.js';
+import {job as roleJob,namespace as roleNamespace} from './helpers/comfy-character-fixture.mjs';
 import {storyboardFunctionSource as section} from './helpers/storyboard-form-fixture.mjs';
 const graph=()=>({p:{class_type:'CLIPTextEncode',inputs:{text:'%qianmu_prompt%'}},image:{class_type:'EmptyImage',inputs:{width:'%qianmu_width%',height:'%qianmu_height%',batch_size:1}},save:{class_type:'SaveImage',inputs:{images:['image',0]}}});
 const config=()=>({workflow:graph(),parameters:{width:'832',height:'1216',count:'1'},model:'comfy-workflow',outputNodeId:'save'});
 test('local preflight is pure and never claims a real node/model execution was verified',()=>{
   const input=config(),before=structuredClone(input);const result=preflight.checkComfyConfiguration(input);
   assert.equal(result.localConfigurationReady,true);assert.equal(result.remoteExecutionVerified,false);assert.equal(result.requiresManualQuantityReview,false);assert.deepEqual(input,before);
+});
+
+test('actual routing includes only reachable Comfy role recipes, including a mixed mirror-group parameter preset',async()=>{
+  const e=environment();e.state.profiles.comfy.comfyCharacterEnabled=true;e.state.routing.enabled=true;
+  e.state.routing.rules=[{id:'all',priority:10,enabled:true,shotTypes:[],target:target('novel')},{id:'shadow',enabled:true,shotTypes:['portrait'],target:target()}];
+  assert.equal(e.context.storyboardUsesComfyCharacters(e.state),false);
+  e.state.source='novel';e.state.profiles.comfy.comfyCharacterEnabled=false;
+  e.state.parameterPresets=[{id:'role',source:'comfy',profile:{comfyCharacterEnabled:true}}];
+  e.state.routing.rules=[{id:'portrait',enabled:true,shotTypes:['portrait'],target:target('comfy','role')}];
+  assert.equal(e.context.storyboardUsesComfyCharacters(e.state),true);
+  e.state.parameterPresets[0].profile.comfyCharacterEnabled=false;
+  assert.equal(e.context.storyboardUsesComfyCharacters(e.state),false);
+});
+
+test('actual role-enabled compiler prepares candidates before local slot checks and never sends invalid coverage to LLM',async()=>{
+  for(const missing of [false,true]){
+    const e=environment(),j=roleJob();Object.assign(e.state.profiles.comfy,j.profile);
+    const snapshot=structuredClone(j.shotSpec.characters[0].archiveSnapshot.comfyImplementation);if(missing)snapshot.reference=null;
+    e.context.storyboardCompilerContext=async()=>{e.calls.push('context');return {floor:0,messages:[],worldRows:[],characterCasting:{entries:[{identity:{name:'Alice'},comfyImplementation:snapshot}]},casting:{namespace:roleNamespace,assertCurrent:async()=>{}}};};
+    const load=e.context.featureRuntime.load;e.context.featureRuntime.load=key=>key==='comfyCharacters'?Promise.resolve(roles):load(key);
+    await e.context.storyboardCompilePrompt(null,{plan:e.plan});
+    assert.equal(e.calls.includes('llm'),!missing);assert.ok(e.calls.indexOf('context')<e.calls.indexOf('comfyPreflight'));
+    if(missing)assert.match(e.notices.at(-1),/参考图缺失/);
+  }
 });
 for(const [name,change,code] of [
   ['missing workflow',c=>c.workflow='','missing_workflow'],
@@ -46,7 +72,7 @@ function environment({automatic=false}={}) {
     storyboardCompilerResult:async()=>({shouldGenerate:false,skipReason:'no shot'}),sanitizeStoryboardDiagnosticData:value=>value,
     uid:()=> 'test-id',toast:message=>notices.push(message),MODULE_NAME:'test',console:{error:()=>{}},
   });
-  vm.runInContext(['storyboardComfyReferenceMetadata','storyboardWorkflowIssue','storyboardCertainCompilerRoute','storyboardPreflightComfyForCompiler','storyboardCompilePrompt'].map(section).join('\n'),context);
+  vm.runInContext(['storyboardUsesComfyCharacters','storyboardComfyReferenceMetadata','storyboardWorkflowIssue','storyboardCertainCompilerRoute','storyboardPreflightComfyForCompiler','storyboardCompilePrompt'].map(section).join('\n'),context);
   return {state,plan,calls,notices,context,guard,invalidate:()=>current=false};
 }
 const target=(providerId='comfy',parameterPresetId='')=>({providerId,modelId:providerId==='comfy'?'comfy-workflow':'nai-diffusion-5-full',parameterPresetId});
