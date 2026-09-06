@@ -66,7 +66,7 @@ function imageCapabilityResult(status, body = {}) {
     novel: status === 'ready' && novel?.protocol === 'novelai' ? { protocol: 'novelai', capabilityModelIds: ids } : null,
     protocolBinding: { version: status === 'ready' && body.protocolBinding?.version === IMAGE_PROTOCOL_BINDING_VERSION ? IMAGE_PROTOCOL_BINDING_VERSION : 0, providers: protocolProviders },
     comfyExecution: status === 'ready' && body.comfyExecution?.version === 1 && body.comfyExecution.outputSelection === true
-      && body.comfyExecution.staticAccounting === true ? { version: 1, outputSelection: true, staticAccounting: true } : null,
+      && body.comfyExecution.staticAccounting === true ? { version: 1, outputSelection: true, staticAccounting: true, staticReferencesVersion: body.comfyExecution.staticReferencesVersion === 1 ? 1 : 0 } : null,
     comfyQueue: status === 'ready' && body.comfyQueue?.version === 1 && body.comfyQueue.scope === 'st-api-root'
       && body.comfyQueue.durableAcceptance === true ? { version: 1, scope: 'st-api-root', durableAcceptance: true,
         originalTaskLookup: body.comfyQueue.originalTaskLookup === true, resultRetrieval: body.comfyQueue.resultRetrieval === true,
@@ -117,7 +117,8 @@ export function checkQianmuImageModelBinding(capabilities, identity) {
   return { ok: true, bindingVersion: IMAGE_MODEL_BINDING_VERSION };
 }
 
-export function checkQianmuComfyExecutionBinding(capabilities) {
+export function checkQianmuComfyExecutionBinding(capabilities, { references = false } = {}) {
+  if (references && capabilities?.comfyExecution?.staticReferencesVersion !== 1) return { ok: false, code: 'comfy_references_incompatible', message: '增强服务尚不支持单帧参考核查，请同步更新前后端并重启 ST' };
   if (capabilities?.status === 'ready' && capabilities.comfyExecution?.version === 1
     && capabilities.comfyExecution.outputSelection === true && capabilities.comfyExecution.staticAccounting === true
     && capabilities.comfyQueue?.version === 1 && capabilities.comfyQueue.scope === 'st-api-root'

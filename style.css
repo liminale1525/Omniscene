@@ -10194,3 +10194,17 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-comfy-inbox-rows b { font-size: var(--sd-font-body,14px); overflow-wrap: anywhere; }
 #story-director-modal .sd-comfy-inbox input[type=checkbox] { width: 18px; height: 18px; margin: 0; accent-color: var(--sd-accent); }
 #story-director-modal .sd-comfy-inbox-tools label { display: flex; align-items: center; gap: 6px; }
+#story-director-modal .sd-comfy-reference-toolbar { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; align-items: stretch; }
+#story-director-modal .sd-comfy-reference-toolbar :is(.sd-btn,label) { min-width: 0; min-height: 40px; margin: 0; padding: 6px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+#story-director-modal .sd-comfy-reference-toolbar .active { color: var(--sd-accent); border-color: var(--sd-accent); }
+#story-director-modal .sd-comfy-reference-card small { display: block; color: var(--sd-muted); font-size: var(--sd-font-caption,12px); margin-block: 8px; text-align: left; }
+#story-director-modal .sd-comfy-reference-items { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); gap: 8px; max-height: 480px; overflow-y: auto; }
+#story-director-modal .sd-comfy-reference-items article { display: grid; grid-template-columns: 64px minmax(0,1fr); gap: 6px; padding: 8px; border: 1px solid var(--sd-border); border-radius: 8px; }
+#story-director-modal .sd-comfy-reference-items img { width: 64px; height: 64px; object-fit: contain; border-radius: 6px; background: #8881; }
+#story-director-modal .sd-comfy-reference-items article > div:not(.sd-comfy-reference-actions) { min-width: 0; display: grid; align-content: center; overflow-wrap: anywhere; text-align: left; font-size: var(--sd-font-caption,12px); }
+#story-director-modal .sd-comfy-reference-actions { grid-column: 1 / -1; display: flex; gap: 6px; justify-content: flex-end; }
+#story-director-modal .sd-comfy-reference-actions .sd-icon-btn { width: 40px; height: 40px; min-height: 40px; }
+#story-director-modal .sd-comfy-reference-card[aria-busy=true] :is(button,input,.sd-comfy-reference-upload) { pointer-events: none; opacity: .6; }
+#story-director-modal .sd-comfy-reference-card .sd-btn { min-height: 40px; }
+#story-director-modal .sd-comfy-reference-card > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; list-style: none; cursor: pointer; }
+#story-director-modal .sd-comfy-reference-card > summary::-webkit-details-marker { display: none; }

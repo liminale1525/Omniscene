@@ -5,6 +5,6 @@ export function checkComfyConfiguration({workflow,parameters={},model='',outputN
   const template=prepareComfyWorkflow(workflow,{prompt:'qianmu-local-preflight',negativePrompt:'',parameters,model,referenceCount});
   const execution={version:1,automatic:Boolean(automatic),outputNodeIds:outputNodeId?[outputNodeId]:[],maxImages:automatic?1:8,allowUnverified:!automatic};
   const graph=template.bind(Array.from({length:referenceCount},(_,index)=>`qianmu-preflight-reference-${index+1}.png`));
-  const report=auditComfyWorkflow(graph,execution);requireComfyExecution(report,execution);
+  const report=auditComfyWorkflow(graph,execution,{referenceLoadNodeIds:template.referenceLoadNodeIds});requireComfyExecution(report,execution);
   return Object.freeze({localConfigurationReady:true,remoteExecutionVerified:false,requiresManualQuantityReview:!report.verified||!report.automaticSafe,report});
 }

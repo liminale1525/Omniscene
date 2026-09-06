@@ -1,4 +1,5 @@
 // Presentation-only, loaded on entry to the Comfy workbench. No network, storage or node execution.
+import { normalizeComfyReferenceSelection } from './qianmu-comfy-reference-contract.js';
 const escape = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const fields = [
   ['width','Width','number','min="64" max="8192" step="64"'],
@@ -7,6 +8,24 @@ const fields = [
   ['cfg','CFG','number','min="0" max="100" step="0.1"'],
   ['seed','Seed','number','min="-1"'],['sampler','Sampler','text',''],['scheduler','Scheduler','text',''],
 ];
+export function renderComfyReferenceControls(profile, capabilities, collapsed = {}) {
+  if (!capabilities.reference && !profile.comfyReferences) return '';
+  let selection, error = '';
+  try { selection = normalizeComfyReferenceSelection(profile.comfyReferences); } catch (cause) { error = cause.message; }
+  const items = selection?.items || [];
+  return `<details class="sd-card sd-comfy-reference-card" data-storyboard-card="comfy-references" ${collapsed['comfy-references'] ? '' : 'open'}>
+    <summary><b>工作流参考图</b><span>${items.length || ''}</span></summary><div class="sd-storyboard-card-body">
+      <div class="sd-comfy-reference-toolbar"><button type="button" class="sd-btn ${selection?.enabled ? 'active' : ''}" data-comfy-reference-action="toggle" aria-pressed="${Boolean(selection?.enabled)}" ${items.length ? '' : 'disabled'}>启用参考</button>
+      <label class="sd-btn sd-comfy-reference-upload">选择图片<input type="file" class="sd-reader-native-file sd-comfy-reference-file" accept="image/png,image/jpeg,image/webp" multiple ${capabilities.reference ? '' : 'disabled'}></label>
+      <button type="button" class="sd-btn" data-comfy-reference-action="bind" ${items.length && capabilities.reference ? '' : 'disabled'}>确认绑定</button></div>
+      <small>按参考 1～N 顺序接入工作流；不自动关联角色。使用参考可能额外计费。</small>
+      ${error || !capabilities.reference ? `<p role="alert">${escape(error || '当前工作流不支持参考图，请移除旧选择或切回原工作流')}</p>` : ''}
+      <div class="sd-comfy-reference-items">${items.map((item,index) => `<article><img src="${escape(item.url)}" alt="参考 ${index+1}" loading="lazy"><div><b>参考 ${index+1}</b><span>${escape(item.name)}</span></div>
+        <div class="sd-comfy-reference-actions"><button type="button" class="sd-icon-btn" data-comfy-reference-action="up" data-reference-index="${index}" aria-label="参考 ${index+1} 前移" ${index ? '' : 'disabled'}><i data-qm-icon="qm-regular-arrow-left"></i></button><button type="button" class="sd-icon-btn" data-comfy-reference-action="down" data-reference-index="${index}" aria-label="参考 ${index+1} 后移" ${index+1 < items.length ? '' : 'disabled'}><i data-qm-icon="qm-regular-arrow-right"></i></button><button type="button" class="sd-icon-btn" data-comfy-reference-action="remove" data-reference-index="${index}" aria-label="移除参考 ${index+1}"><i data-qm-icon="qm-regular-x"></i></button></div></article>`).join('')}</div>
+      ${profile.comfyReferences ? '<button type="button" class="sd-btn" data-comfy-reference-action="clear">移除全部选择</button>' : ''}
+      <div class="sd-comfy-reference-status" role="status"></div>
+    </div></details>`;
+}
 export function renderComfyWorkbench({profile, capabilities, collapsed={}, promptLayer={}, workflowNotice='', workflowNodes=0, librarySelection=null}, shared={}) {
   const controls=fields.filter(([key])=>capabilities[key]).map(([key,label,type,attrs])=>
     `<label><span>${label}</span><input class="text_pole sd-storyboard-field${['width','height'].includes(key)?` sd-storyboard-${key}`:''}" data-storyboard-field="${key}" type="${type}" ${attrs} value="${escape(profile[key])}"></label>`).join('');
@@ -33,6 +52,7 @@ export function renderComfyWorkbench({profile, capabilities, collapsed={}, promp
     <details class="sd-card sd-storyboard-params" data-storyboard-card="params" ${collapsed.params?'':'open'}><summary><b>工作流参数</b></summary>
       <div class="sd-storyboard-card-body">${shared.parameterPresets||''}${controls?`<div class="sd-storyboard-grid sd-storyboard-grid-two">${controls}</div>`:''}</div>
     </details>
+    ${renderComfyReferenceControls(profile, capabilities, collapsed)}
     ${shared.generation||''}${shared.composition||''}${shared.queue||''}${shared.recent||''}
   </div>`;
 }

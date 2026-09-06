@@ -9,7 +9,7 @@ import {
 } from './qianmu-openai-image-compat.js';
 import { NOVEL_STATIC_MODELS, finalizeModelList, collectImageModelPages, modelsFromComfyObjectInfo, novelModelCapabilities, novelReferenceIssue, novelPreciseReferenceParameters, isImageModelMetadataField } from './qianmu-image-models.js';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
-import { collectComfyStillResults, comfyTaskId, comfyStillMime, readComfyImageBytes } from './qianmu-comfy-results.js';
+import { collectComfyStillResults, comfyTaskId, comfyStillMime, comfyReferenceStillMime, readComfyImageBytes } from './qianmu-comfy-results.js';
 import { auditComfyWorkflow, requireComfyExecution } from './qianmu-comfy-audit.js';
 export { inspectComfyImageExecution, requireComfyExecution } from './qianmu-comfy-audit.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
@@ -556,7 +556,7 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
     if (!Array.isArray(rawReferences) || references.length !== rawReferences.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
     template = prepareComfyWorkflow(parameters.workflow || input.workflow, { ...input, parameters, referenceCount: references.length });
     if (Object.hasOwn(input, 'comfyExecution')) {
-      const report = auditComfyWorkflow(template.bind(references.map((_,i) => `qianmu-audit-${i}.png`)), input.comfyExecution);
+      const report = auditComfyWorkflow(template.bind(references.map((_,i) => `qianmu-audit-${i}.png`)), input.comfyExecution, { referenceLoadNodeIds: template.referenceLoadNodeIds });
       execution = requireComfyExecution(report, input.comfyExecution);
     }
     let total = 0;
@@ -568,6 +568,7 @@ async function generateComfyDirect(input, fetchImpl, waitImpl) {
       catch (_) { throw Object.assign(new Error('参考图 Base64 数据无效'), { code: 'invalid_reference' }); }
       total += bytes.byteLength;
       if (!bytes.byteLength || bytes.byteLength > 16 * 1024 * 1024 || total > 48 * 1024 * 1024) throw Object.assign(new Error('参考图单张须小于 16 MB，总计须小于 48 MB'), { code: 'references_too_large' });
+      reference.mime = comfyReferenceStillMime(bytes);
       return bytes;
     });
   } catch (error) { throw new DirectImageError(error.message, { code: error.code, submissionState: 'not_submitted' }); }

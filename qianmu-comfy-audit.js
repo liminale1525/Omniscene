@@ -39,7 +39,10 @@ export function normalizeComfyExecution(value) {
   return Object.freeze({version:1,automatic:value.automatic,outputNodeIds:Object.freeze([...value.outputNodeIds]),maxImages:value.maxImages,allowUnverified:value.allowUnverified});
 }
 
-export function auditComfyWorkflow(value, execution) {
+export function auditComfyWorkflow(value, execution, { referenceLoadNodeIds = [] } = {}) {
+  // Internal evidence, not part of the wire policy. Actual adapters verify the
+  // uploaded bytes before submitting any graph that uses these node IDs.
+  const singleFrames = new Set(referenceLoadNodeIds);
   const policy = normalizeComfyExecution(execution);
   let graph, serialized;
   try { serialized = JSON.stringify(value); if (serialized.length > 2 * 1024 * 1024) throw Error(); graph = JSON.parse(serialized); }
@@ -95,7 +98,7 @@ export function auditComfyWorkflow(value, execution) {
     if (visiting.has(id)) fail('audit_cycle', 'ComfyUI 节点连接循环');
     visiting.add(id);
     const node = graph[id], type = node.class_type; let result = null, count = null;
-    if (Object.hasOwn(TYPES,type)) result = TYPES[type].map(type => ({type,count:null}));
+    if (Object.hasOwn(TYPES,type)) result = TYPES[type].map(outputType => ({type:outputType,count:type === 'LoadImage' && singleFrames.has(id) ? 1 : null}));
     else if (Object.hasOwn(SOURCES,type)) result = [{type:SOURCES[type],count:literal(id,'batch_size',1)}];
     else if (Object.hasOwn(PASS,type)) {
       const [key,inputType,outputType] = PASS[type];count = source(id,key,inputType);result = [{type:outputType,count}];
@@ -114,7 +117,7 @@ export function auditComfyWorkflow(value, execution) {
   for (const id of active) {
     const result = resolve(id), type = graph[id].class_type;
     if (type === 'SaveImage') outputs.push({id,count:result[0].count});
-    if (type === 'LoadImage') uncertainInputs.add(id); // Local file may be animated/multi-frame.
+    if (type === 'LoadImage' && !singleFrames.has(id)) uncertainInputs.add(id);
   }
   const selectedIds = policy.outputNodeIds.length ? [...policy.outputNodeIds] : outputs.map(row => row.id);
   if (!selectedIds.length) fail('output_selection', '请为工作流选择最终静帧输出节点');
@@ -151,5 +154,5 @@ export function requireComfyExecution(report, execution) {
 export function inspectComfyImageExecution(input) {
   const template = prepareComfyWorkflow(input.parameters?.workflow || input.workflow, {...input,referenceCount:(input.referenceImages || input.references || []).length});
   const names = Array.from({length:(input.referenceImages || input.references || []).length},(_,i)=>`qianmu-audit-reference-${i+1}.png`);
-  return auditComfyWorkflow(template.bind(names),input.comfyExecution);
+  return auditComfyWorkflow(template.bind(names),input.comfyExecution,{referenceLoadNodeIds:template.referenceLoadNodeIds});
 }

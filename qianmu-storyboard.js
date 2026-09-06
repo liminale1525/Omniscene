@@ -1,6 +1,7 @@
 import { normalizeOpenAICompatibleHeaders, normalizeOpenAIImageCompatibility } from './qianmu-openai-image-compat.js';
 import { resolveImageProtocolBinding, IMAGE_NATIVE_PROTOCOLS, IMAGE_PROTOCOL_BINDING_VERSION } from './qianmu-image-models.js';
 import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
+import { retainComfyReferenceSelection } from './qianmu-comfy-reference-contract.js';
 
 // 千幕·分镜数据契约。这里只描述数据与请求计划，不持有密钥，也不发起网络请求。
 export const STORYBOARD_SCHEMA_VERSION = 24;
@@ -2002,6 +2003,7 @@ export function normalizeStoryboardParameterProfile(value, providerId) {
     base.capabilityModelId = validId(capability) && Object.hasOwn(p, 'model') && validId(p.model) ? capability.trim() : '[invalid-capability]';
   }
   if (providerId === 'comfy') {
+    if (Object.hasOwn(p, 'comfyReferences')) base.comfyReferences = retainComfyReferenceSelection(p.comfyReferences);
     const rawWorkflow = Object.hasOwn(p, 'comfyWorkflow') ? p.comfyWorkflow : '';
     const result = sanitizeStoryboardWorkflow(rawWorkflow);
     base.comfyWorkflow = result.ok ? result.serialized : '';

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import * as storyboard from '../qianmu-storyboard.js';
 import * as preflight from '../qianmu-comfy-preflight.js';
+import * as references from '../qianmu-comfy-references.js';
 import {storyboardFunctionSource as section} from './helpers/storyboard-form-fixture.mjs';
 const graph=()=>({p:{class_type:'CLIPTextEncode',inputs:{text:'%qianmu_prompt%'}},image:{class_type:'EmptyImage',inputs:{width:'%qianmu_width%',height:'%qianmu_height%',batch_size:1}},save:{class_type:'SaveImage',inputs:{images:['image',0]}}});
 const config=()=>({workflow:graph(),parameters:{width:'832',height:'1216',count:'1'},model:'comfy-workflow',outputNodeId:'save'});
@@ -45,7 +46,7 @@ function environment({automatic=false}={}) {
     storyboardCompilerResult:async()=>({shouldGenerate:false,skipReason:'no shot'}),sanitizeStoryboardDiagnosticData:value=>value,
     uid:()=> 'test-id',toast:message=>notices.push(message),MODULE_NAME:'test',console:{error:()=>{}},
   });
-  vm.runInContext(['storyboardWorkflowIssue','storyboardCertainCompilerRoute','storyboardPreflightComfyForCompiler','storyboardCompilePrompt'].map(section).join('\n'),context);
+  vm.runInContext(['storyboardComfyReferenceMetadata','storyboardWorkflowIssue','storyboardCertainCompilerRoute','storyboardPreflightComfyForCompiler','storyboardCompilePrompt'].map(section).join('\n'),context);
   return {state,plan,calls,notices,context,guard,invalidate:()=>current=false};
 }
 const target=(providerId='comfy',parameterPresetId='')=>({providerId,modelId:providerId==='comfy'?'comfy-workflow':'nai-diffusion-5-full',parameterPresetId});
@@ -100,5 +101,24 @@ test('explicit ST route verifies the trusted target before context/LLM, while br
     await e.context.storyboardCompilePrompt(null, { plan: e.plan });
     assert.equal(e.calls.includes('llm'), transport === 'browser'); assert.equal(e.calls.includes('context'), transport === 'browser');
     assert.equal(e.calls.includes('untrusted'), transport === 'gateway');
+  }
+});
+
+test('actual compiler uses bound reference receipts before LLM and stops changed-workflow or foreign-account selections', async () => {
+  for (const mode of ['valid', 'changed-workflow', 'foreign-account']) {
+    const e = environment({automatic:true}), workflow = graph();
+    workflow.image = {class_type:'LoadImage',inputs:{image:'%qianmu_reference%'}};
+    const selected = {version:1,enabled:true,namespace:'st-user:alice',workflowHash:await references.comfyWorkflowReferenceHash(workflow),
+      items:[{name:'Reference',url:'/user/images/Qianmu-References/test.png',mime:'image/png',bytes:70,sha256:'a'.repeat(64)}]};
+    if (mode === 'changed-workflow') workflow.p.inputs.text += ' changed';
+    if (mode === 'foreign-account') selected.namespace = 'st-user:bob';
+    Object.assign(e.state.profiles.comfy,{comfyWorkflow:JSON.stringify(workflow),comfyReferences:selected});
+    const load = e.context.featureRuntime.load;
+    e.context.featureRuntime.load = async key => key === 'comfyReferences' ? references
+      : key === 'imageAdmission' ? {resolveImageAccountNamespace:async()=> 'st-user:alice'} : load(key);
+    await e.context.storyboardCompilePrompt(null,{plan:e.plan,automatic:true});
+    assert.equal(e.calls.includes('llm'),mode === 'valid',mode);
+    assert.equal(e.calls.includes('context'),mode === 'valid',mode);
+    if (mode !== 'valid') assert.equal(e.plan.status,'failed');
   }
 });

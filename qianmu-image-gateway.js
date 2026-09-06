@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { prepareComfyWorkflow } from './qianmu-comfy-workflow.js';
-import { collectComfyStillResults, comfyTaskId, comfyStillMime } from './qianmu-comfy-results.js';
+import { collectComfyStillResults, comfyTaskId, comfyStillMime, comfyReferenceStillMime } from './qianmu-comfy-results.js';
 import { normalizeComfyReceipt } from './qianmu-comfy-receipt.js';
 import { auditComfyWorkflow, requireComfyExecution, normalizeComfyExecution, COMFY_EXECUTION_VERSION } from './qianmu-comfy-audit.js';
 import { imageTransportProvider, prepareImageTransportRequest, resolveImageTransportBinding } from './qianmu-image-transport.js';
@@ -68,7 +68,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
       providers: { novel: { protocol: 'novelai', capabilityModelIds: NOVEL_STATIC_MODELS.map(([id]) => id) } },
     },
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
-    comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
+    comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true, staticReferencesVersion: 1 },
     comfyServerTransport: { version: 2, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: true },
     comfyQueue: { version: 1, scope: 'st-api-root', durableAcceptance: true, originalTaskLookup: true, resultRetrieval: true, outputReceiptVersion: 1, cachedResults: true, catalogVersion: 1, taskLocatorVersion: 1, cacheCleanup: true },
   };
@@ -823,9 +823,10 @@ export async function generateImage(input, options = {}) {
       try {
         const references = input.referenceImages || input.references || [];
         if (!Array.isArray(references) || references.length !== request.references.length) throw Object.assign(new Error('参考图数据不完整或数量超限'), { code: 'comfy_reference_count' });
+        for (const image of request.references) image.mime = comfyReferenceStillMime(Buffer.from(image.data, 'base64'));
         comfyTemplate = prepareComfyWorkflow(request.parameters.workflow, { ...request, referenceCount: request.references.length });
         if (request.comfyExecution) {
-          const report = auditComfyWorkflow(comfyTemplate.bind(request.references.map((_,i) => `qianmu-audit-${i}.png`)), request.comfyExecution);
+          const report = auditComfyWorkflow(comfyTemplate.bind(request.references.map((_,i) => `qianmu-audit-${i}.png`)), request.comfyExecution, { referenceLoadNodeIds: comfyTemplate.referenceLoadNodeIds });
           comfyExecution = requireComfyExecution(report, request.comfyExecution);
         }
       } catch (error) { throw new ImageGatewayError(400, error.code, error.message); }

@@ -114,3 +114,32 @@ export async function readComfyImageBytes(response, limit) {
   for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
   return bytes;
 }
+
+// Reference-specific single-frame evidence; not an image decoder. JPEG MPF/MPO
+// and appended streams cannot count as one native LoadImage result.
+export function comfyReferenceStillMime(bytes) {
+  const mime = comfyStillMime(bytes); if (mime !== 'image/jpeg') return mime;
+  const invalid = () => fail('invalid_reference_image', 'Comfy 参考图须为完整的单帧图片，请将该文件另存为静态 PNG 后重试');
+  let at = 2, scan = false, frame = false;
+  while (at < bytes.length) {
+    if (bytes[at++] !== 255) invalid();
+    while (bytes[at] === 255) at++;
+    const marker = bytes[at++];
+    if (marker === 217) { if (at !== bytes.length || !scan || !frame) invalid(); return mime; }
+    if (marker === 216 || marker === 0 || at + 2 > bytes.length) invalid();
+    const length = bytes[at] * 256 + bytes[at+1];
+    if (length < 2 || at + length > bytes.length) invalid();
+    if (marker === 226 && length >= 6 && [77,80,70,0].every((byte,index) => bytes[at+2+index] === byte)) invalid();
+    if (marker >= 192 && marker <= 207 && ![196,200,204].includes(marker)) { if (frame) invalid(); frame = true; }
+    at += length;
+    if (marker === 218) {
+      scan = true;
+      while (at < bytes.length) {
+        if (bytes[at] !== 255) { at++; continue; }
+        if (bytes[at+1] === 0 || bytes[at+1] >= 208 && bytes[at+1] <= 215) { at += 2; continue; }
+        break;
+      }
+    }
+  }
+  invalid();
+}

@@ -119,6 +119,10 @@ export function prepareComfyWorkflow(value, input = {}) {
   if (slots.has('model') && (!replacements.model || replacements.model === 'comfy-workflow')) fail('comfy_model_slot_unbound', '请在工作流中设置实际模型；comfy-workflow 不是模型文件名');
   return Object.freeze({
     capabilities: capabilities(slots),
+    // Only literal reference slots of standard LoadImage can use byte-checked
+    // single-frame evidence; local paths and custom readers stay uncertain.
+    referenceLoadNodeIds: Object.freeze(Object.entries(workflow).filter(([,node]) => node?.class_type === 'LoadImage'
+      && /^%qianmu_reference(?:_(?:[1-9]|1[0-6]))?%$/.test(node.inputs?.image || '')).map(([id]) => id)),
     bind(referenceNames = []) {
       if (!Array.isArray(referenceNames) || referenceNames.length !== count || referenceNames.some(name => typeof name !== 'string' || !name)) fail('comfy_reference_missing', '参考图上传结果不完整，未提交工作流');
       const values = { ...replacements, reference: referenceNames[0] || '', references: [...referenceNames],

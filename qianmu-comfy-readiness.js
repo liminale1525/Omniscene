@@ -10,16 +10,21 @@ const safeClass = value => typeof value === 'string' && value.length > 0 && valu
 const label = value => String(value).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 100);
 
 export function prepareComfyReadiness(input = {}) {
-  const configuration = { ...input, referenceCount: 0, automatic: false };
+  const referenceCount = input.referenceCount ?? 0;
+  const configuration = { ...input, referenceCount, automatic: false };
   checkComfyConfiguration(configuration);
   const graph = prepareComfyWorkflow(input.workflow, { prompt: 'qianmu-readiness-check', negativePrompt: '',
-    model: input.model, parameters: input.parameters, referenceCount: 0 }).bind([]);
+    model: input.model, parameters: input.parameters, referenceCount }).bind(Array.from({length:referenceCount},(_,index)=>`qianmu-readiness-reference-${index+1}.png`));
+  const original = typeof input.workflow === 'string' ? JSON.parse(input.workflow) : input.workflow;
+  const referenceInputs = Object.entries(original).flatMap(([id,node]) => Object.entries(node.inputs || {})
+    .filter(([,value]) => typeof value === 'string' && /%qianmu_reference(?:s|_\d+)?%/.test(value)).map(([field]) => JSON.stringify([id,field])));
   const classes = [...new Set(Object.values(graph).map(node => node.class_type))];
   if (classes.length > 64 || classes.some(value => !safeClass(value))) throw fail('node_classes', '节点种类过多或名称不能安全查询，请分段核查工作流');
-  return { graph, classes };
+  return { graph, classes, referenceInputs };
 }
 
-export function inspectComfyDefinitions(graph, definitions = {}) {
+export function inspectComfyDefinitions(graph, definitions = {}, { referenceInputs = [] } = {}) {
+  const pendingReferences = new Set(referenceInputs);
   const issues = []; let issueCount = 0, errors = 0, warnings = 0;
   const add = (severity, code, id, field, message) => {
     issueCount++; if (severity === 'error') errors++; else warnings++;
@@ -42,6 +47,7 @@ export function inspectComfyDefinitions(graph, definitions = {}) {
       const spec = own(required, field) ? required[field] : own(optional, field) ? optional[field] : undefined;
       if (!Array.isArray(spec) || !spec.length) { add('warning', 'unknown_input', id, field, `${at(field)}：自定义输入待运行时核查`); continue; }
       const type = spec[0], options = object(spec[1]) ? spec[1] : {};
+      if (pendingReferences.has(JSON.stringify([id,field]))) { add('warning', 'reference_pending_upload', id, field, `${at(field)}：参考图将在生成时上传，本次不验证远端文件`); continue; }
       if (options.remote) { add('warning', 'remote_options', id, field, `${at(field)}：动态选项未读取`); continue; }
       if (Array.isArray(value)) {
         if (value.length !== 2 || typeof value[0] !== 'string' || !Number.isInteger(value[1]) || value[1] < 0 || !own(graph, value[0])) {
@@ -106,7 +112,7 @@ async function readDefinition(response, budget) {
 }
 
 export async function checkComfyReadiness(input, { fetchImpl = globalThis.fetch, signal, timeoutMs = 20000 } = {}) {
-  const { graph, classes } = prepareComfyReadiness(input);
+  const { graph, classes, referenceInputs } = prepareComfyReadiness(input);
   const base = comfyReadinessBase(input.baseUrl), definitions = Object.create(null);
   const apiKey = String(input.apiKey || '').trim();
   if (apiKey.length > 2048 || /[\u0000-\u001f\u007f]/.test(apiKey)) throw fail('credential', '访问令牌格式无效');
@@ -134,7 +140,7 @@ export async function checkComfyReadiness(input, { fetchImpl = globalThis.fetch,
       if (own(data, name) && object(data[name])) definitions[name] = data[name];
     }
     controller.signal.throwIfAborted();
-    return inspectComfyDefinitions(graph, definitions);
+    return inspectComfyDefinitions(graph, definitions, { referenceInputs });
   } catch (error) {
     if (controller.signal.aborted) throw fail('cancelled', signal?.aborted ? '节点检查已取消' : '节点检查超时，未提交生成');
     throw error;

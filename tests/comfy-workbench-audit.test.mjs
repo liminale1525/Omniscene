@@ -31,7 +31,7 @@ function harness({ automatic = false, uncertain = false, batch = 1, choice = 'ac
       return choice!=='cancel';
     },
   });
-  vm.runInContext(['storyboardParseWorkflow','storyboardGatewayRequest','storyboardConfirmComfyExecution','storyboardQueueJob'].map(section).join('\n'),context);
+  vm.runInContext(['storyboardComfyReferenceMetadata','storyboardParseWorkflow','storyboardGatewayRequest','storyboardConfirmComfyExecution','storyboardQueueJob'].map(section).join('\n'),context);
   return{job,state,context,waiting,notices,confirmations,admissions};
 }
 

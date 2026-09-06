@@ -22,7 +22,7 @@ function fixture(options = {}) {
     storyboardKeyInputRevision: 0, storyboardConnectionLoadRevision: 0, featureRuntime: { load: async () => runtime },
     storyboardResolveApiKey: async () => assert.fail('typed key should be retained'), storyboardRequestHeaders: () => ({ 'Content-Type': 'application/json' }),
     fetch: async () => assert.fail('unexpected request'), ...options.globals });
-  vm.runInContext(storyboardFunctionSource('storyboardCheckComfyReadiness'), context);
+  vm.runInContext(storyboardFunctionSource('storyboardComfyReferenceMetadata') + storyboardFunctionSource('storyboardCheckComfyReadiness'), context);
   return { root, button, output, key, field, state, calls, listeners, context, run: () => context.storyboardCheckComfyReadiness(root) };
 }
 

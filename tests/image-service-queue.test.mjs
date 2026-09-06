@@ -214,7 +214,7 @@ test('gateway invokes authorization only after validation and before every write
   assert.equal(guards, 0);
   await assert.rejects(generateImage({ provider: 'comfy', baseUrl: 'http://127.0.0.1:8188', allowPrivateNetwork: true, prompt: 'lake',
     parameters: { workflow: { '1': { class_type: 'LoadImage', inputs: { image: '%qianmu_reference%' } }, '2': { class_type: 'CLIPTextEncode', inputs: { text: '%qianmu_prompt%' } } } },
-    referenceImages: [{ data: 'iVBORw0KGgppbWFnZQ==', mime: 'image/png' }],
+    referenceImages: [{ data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==', mime: 'image/png' }],
   }, { beforeSubmit: async () => { if (++guards === 2) throw Error('authorization expired'); }, fetchImpl: async () => { posts++; return new Response(JSON.stringify({ name: 'test.png' })); } }), { code: 'image_submission_not_authorized', submissionState: 'accepted' });
   assert.equal(guards, 2); assert.equal(posts, 1, 'a successful upload is never mislabeled as never submitted');
 });

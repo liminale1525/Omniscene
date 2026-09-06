@@ -240,7 +240,7 @@ test('gateway distinguishes local validation, upstream rejection, network ambigu
 test('gateway Comfy upload success remains recorded after prompt submission is rejected', async () => {
   let writes = 0;
   await assert.rejects(() => generateImage(input({ provider: 'comfy', model: 'comfy-workflow',
-    referenceImages: [{ mime: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6ZQAAAABJRU5ErkJggg==' }],
+    referenceImages: [{ mime: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==' }],
     parameters: { workflow: { '1': { class_type: 'TestNode', inputs: { text: '%qianmu_prompt%', ref: '%qianmu_reference%' } } } },
   }), {
     resolveHost: async () => [{ address: '93.184.216.34', family: 4 }],
