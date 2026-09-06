@@ -26,13 +26,14 @@ export async function comfyArchiveFilename(job, index) {
 export async function acknowledgeComfyImage(job, data, { account = resolveImageAccountNamespace, fetchImpl = globalThis.fetch, headers = () => ({}) } = {}) {
   if (!data?.comfyTask?.resultStored || !/^[a-f0-9]{64}$/.test(data.comfyTask.receipt || '')) return '';
   const receipt = data.comfyTask.receipt, attemptId = data.comfyTask.attemptId, baseUrl = job.connection?.baseUrl;
+  const taskLocator = job.comfyTaskLocator ? { version: job.comfyTaskLocator.version, channelKey: job.comfyTaskLocator.channelKey } : undefined;
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10000);
   try {
     if (attemptId !== job.id) throw Error('identity');
     const binding = await prepareComfySubmission(job, { account });
     const response = await fetchImpl('/api/plugins/qianmu-tts/image/comfy/tasks/acknowledge', { method: 'POST',
       credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: controller.signal, headers: headers(),
-      body: JSON.stringify({ ...binding, baseUrl, receipt, archived: true }),
+      body: JSON.stringify({ ...binding, baseUrl, ...(taskLocator ? { taskLocator } : {}), receipt, archived: true }),
     });
     // This endpoint has only small metadata. Do not consume arbitrary upstream
     // content and never include a Key in a cache acknowledgement.

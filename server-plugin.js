@@ -198,7 +198,7 @@ export async function init(router, options = {}) {
     try { return res.json(await comfyTasksFor(req).query(req, req.body)); }
     catch (error) { const result = imageGatewayErrorPayload(error); return res.status(result.status).json(result.body); }
   });
-  for (const action of ['result', 'acknowledge']) router.post(`/image/comfy/tasks/${action}`, async (req, res) => {
+  for (const action of ['result', 'acknowledge', 'catalog', 'discard']) router.post(`/image/comfy/tasks/${action}`, async (req, res) => {
     prepareImageResponse(res);
     const controller = new AbortController(), onClose = () => { if (!res.writableEnded) controller.abort(); };
     res.once?.('close', onClose);

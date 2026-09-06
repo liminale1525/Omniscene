@@ -10177,3 +10177,20 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 @media (min-width: 760px) {
   #story-director-modal .sd-storyboard-comfy-log-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+#story-director-modal .sd-comfy-inbox { padding: 12px; border: 1px solid var(--sd-border, #8885); border-radius: 12px; margin-block: 8px; }
+#story-director-modal .sd-comfy-inbox :is(header,footer,.sd-comfy-inbox-tools,.sd-comfy-inbox-modes),
+#story-director-modal .sd-storyboard-receipt-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#story-director-modal .sd-comfy-inbox :is(header,footer,.sd-comfy-inbox-tools) { justify-content: space-between; }
+#story-director-modal .sd-comfy-inbox :is(header,.sd-comfy-inbox-modes,.sd-comfy-inbox-tools) { margin-bottom: 8px; }
+#story-director-modal .sd-comfy-inbox small { display: block; color: var(--sd-muted); line-height: 1.45; overflow-wrap: anywhere; }
+#story-director-modal .sd-comfy-inbox :is(p,small) { font-size: var(--sd-font-caption, 12px); text-align: left; }
+#story-director-modal .sd-comfy-inbox .sd-btn { min-width: 0; min-height: 40px; margin: 0; padding: 6px 10px; box-sizing: border-box; }
+#story-director-modal .sd-comfy-inbox-modes > button { flex: 1; }
+#story-director-modal .sd-comfy-inbox :is(header,footer,.sd-comfy-inbox-tools) > .sd-btn { flex: none; width: auto; }
+#story-director-modal .sd-comfy-inbox-modes > button.active { color: var(--sd-accent); border-color: var(--sd-accent); }
+#story-director-modal .sd-comfy-inbox-rows { max-height: min(65vh, 600px); overflow: auto; overscroll-behavior: contain; }
+#story-director-modal .sd-comfy-inbox-rows article { display: grid; grid-template-columns: 20px minmax(0,1fr) auto; gap: 8px; align-items: center; padding-block: 10px; border-bottom: 1px solid var(--sd-border, #8885); }
+#story-director-modal .sd-comfy-inbox-rows article > div { min-width: 0; }
+#story-director-modal .sd-comfy-inbox-rows b { font-size: var(--sd-font-body,14px); overflow-wrap: anywhere; }
+#story-director-modal .sd-comfy-inbox input[type=checkbox] { width: 18px; height: 18px; margin: 0; accent-color: var(--sd-accent); }
+#story-director-modal .sd-comfy-inbox-tools label { display: flex; align-items: center; gap: 6px; }

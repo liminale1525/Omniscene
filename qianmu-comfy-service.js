@@ -26,6 +26,17 @@ function binding(req, input) {
 function validAccount(req, account) {
   if (!imageServiceAccountStillMatches(req, account)) throw fail('account', 'ST 账户已变化，请回原账户核查原任务', 'unknown', 401);
 }
+function locatedBinding(req, input) {
+  const account = binding(req, input), locator = input.taskLocator;
+  let channelKey;
+  if (locator !== undefined) {
+    if (locator?.version !== 1 || !/^[a-f0-9]{64}$/.test(locator.channelKey || '')) throw fail('locator', 'Comfy 原任务定位信息无效');
+    channelKey = locator.channelKey;
+    if (input.baseUrl && imageServiceChannelKey(comfyInstanceResource(input.baseUrl)) !== channelKey) throw fail('locator', 'Comfy 原连接与任务不匹配，未切换地址');
+  } else channelKey = imageServiceChannelKey(comfyInstanceResource(input.baseUrl));
+  return { ...account, channelKey };
+}
+const discardable = row => ['succeeded','failed','released','rejected'].includes(row?.status);
 function safeError(cause) {
   if (cause instanceof ImageGatewayError) {
     cause.submissionState ||= 'not_submitted';
@@ -44,7 +55,7 @@ export function createComfyService({ dataRoot, store = createImageServiceStore({
   if (typeof authorizeTarget !== 'function' || typeof prepareTransport !== 'function') throw fail('configuration', 'Comfy 服务未配置可信连接边界');
   const queue = createImageServiceQueue({ ...queueOptions, store, resourceLabel: 'Comfy 实例' });
   const cache = results || createImageServiceResults({ dataRoot, store, scope: 'comfy' });
-  const jobs = new Map(), retrieving = new Map(); let closed = false, admitted = 0, retainedBytes = 0;
+  const jobs = new Map(), retrieving = new Map(), catalogs = new Set(); let closed = false, admitted = 0, retainedBytes = 0;
   const keyOf = value => JSON.stringify([value.namespace, value.channelKey, value.attemptId]);
   const find = async value => normalizeImageServiceChannel(await store.inspectChannel(value.channelKey), value.channelKey)
     .entries.find(row => row.namespace === value.namespace && row.attemptId === value.attemptId);
@@ -99,6 +110,7 @@ export function createComfyService({ dataRoot, store = createImageServiceStore({
       stored = { ready: true, receipt: result.receipt };
     } else {
       if (!row.upstreamId || !row.comfyReceipt) throw fail('receipt_missing', '原任务缺少可核对的收片约定，请到 Comfy 核查；未重新生成', 'unknown');
+      if (!connection.baseUrl) throw fail('original_connection', '服务器没有可直接领取的暂存，请恢复原 Comfy 连接后再核查；未重新生成', 'accepted');
       const existing = await cache.load(identity, { metadataOnly: true });
       if (!existing) await cache.reserve(identity);
       validAccount(req, value); signal?.throwIfAborted();
@@ -117,6 +129,39 @@ export function createComfyService({ dataRoot, store = createImageServiceStore({
     return packet(value, { ...result, status: 'ready' }, stored, warning);
   }
   return {
+    async catalog(req, input) {
+      try {
+        const account = imageServiceAccount(req);
+        if (input?.version !== 1 || input.expectedAccount !== account.namespace) throw fail('binding', 'ST 账户已变化，请重新读取 Comfy 目录');
+        if (closed || catalogs.size >= 2) throw fail('catalog_busy', 'Comfy 目录正在读取，请稍后刷新');
+        const page = { cursor: input.cursor ? structuredClone(input.cursor) : null, limit: input.limit ?? 40 };
+        if (!Number.isInteger(page.limit) || page.limit < 1 || page.limit > 50
+          || (page.cursor && (!/^[a-f0-9]{64}$/.test(page.cursor.channelKey || '') || !validId(page.cursor.attemptId)))) throw fail('catalog_page', 'Comfy 目录分页无效');
+        const work = (async () => {
+          const inventory = await cache.inventory(account.namespace); validAccount(req, account);
+          const listed = await store.inspectAccount(account.namespace, { ...page, select: inventory.entries }); validAccount(req, account);
+          const selected = new Map(listed.selected.map(row => [JSON.stringify([row.channelKey,row.attemptId]), row])), views = new Map();
+          const originals = inventory.entries.map(meta => {
+            const row = selected.get(JSON.stringify([meta.channelKey,meta.attemptId]));
+            const matches = row && row.fence === meta.fence && row.requestDigest === meta.requestDigest;
+            const value = { ...account, channelKey: meta.channelKey, attemptId: meta.attemptId };
+            const live = jobs.has(keyOf(value)) || retrieving.has(keyOf(value));
+            const view = { ...(imageServiceTaskView(matches ? row : null) || { attemptId: meta.attemptId, status: 'unverified', createdAt: meta.createdAt }),
+              taskLocator: { version: 1, channelKey: meta.channelKey }, live, model: meta.model, cacheReceipt: meta.receipt,
+              cacheBytes: meta.imageBytes, metadataBytes: meta.metadataBytes, temporaryBytes: meta.temporaryBytes, reservedBytes: meta.reservedBytes,
+              imageCount: meta.imageCount, resultStored: meta.ready, resultAvailable: Boolean(matches && meta.ready && row.upstreamId),
+              canDiscard: Boolean(matches && !live && discardable(row)), recipeAvailable: false };
+            views.set(JSON.stringify([meta.channelKey,meta.attemptId]), view); return view;
+          });
+          return { ok: true, version: 1, catalogVersion: 1, totals: { ...inventory.totals, tasks: listed.total },
+            originals: originals.sort((a,b) => b.createdAt - a.createdAt),
+            tasks: listed.entries.map(row => views.get(JSON.stringify([row.channelKey,row.attemptId])) || {
+              ...imageServiceTaskView(row), taskLocator: { version: 1, channelKey: row.channelKey }, resultAvailable: false, canDiscard: false,
+            }), nextCursor: listed.nextCursor, sampledAt: Date.now() };
+        })();
+        catalogs.add(work); try { return await work; } finally { catalogs.delete(work); }
+      } catch (cause) { throw safeError(cause); }
+    },
     async submit(req, input, { signal } = {}) {
       let counted = false, weight = 0;
       try {
@@ -188,13 +233,13 @@ export function createComfyService({ dataRoot, store = createImageServiceStore({
     },
     async query(req, input) {
       try {
-        const account = binding(req, input), channelKey = imageServiceChannelKey(comfyInstanceResource(input?.baseUrl));
-        const value = { ...account, channelKey }, row = await find(value); validAccount(req, value);
+        const value = locatedBinding(req, input), row = await find(value); validAccount(req, value);
         // Lookup reads only this account's own local receipt. It cannot fetch
         // remote history, leak another account's ids or grant submission rights.
         const live = jobs.has(keyOf(value));
         const meta = row ? await cache.load(cacheIdentity(value, row), { metadataOnly: true }) : null; validAccount(req, value);
         return { ok: true, version: 1, task: row ? { ...imageServiceTaskView(row), live, persisted: true,
+          taskLocator: { version: 1, channelKey: value.channelKey },
           resultStored: meta?.ready === true, recoverable: Boolean(row.upstreamId && row.comfyReceipt),
           ...(meta ? { cacheReceipt: meta.receipt, cacheBytes: meta.bytes } : {}),
           ...(row.upstreamId ? { upstreamId: row.upstreamId } : {}) } : live ? { attemptId: value.attemptId, status: 'queued', live: true, persisted: false } : null };
@@ -202,8 +247,8 @@ export function createComfyService({ dataRoot, store = createImageServiceStore({
     },
     async result(req, input, { signal } = {}) {
       try {
-        const account = binding(req, input), connection = { baseUrl: normalizeComfyTarget(input?.baseUrl), apiKey: input.apiKey, allowPrivateNetwork: input.allowPrivateNetwork === true };
-        const value = { ...account, channelKey: imageServiceChannelKey(comfyInstanceResource(connection.baseUrl)) }, key = keyOf(value);
+        const value = locatedBinding(req, input), connection = { baseUrl: input.baseUrl ? normalizeComfyTarget(input.baseUrl) : '', apiKey: input.apiKey, allowPrivateNetwork: input.allowPrivateNetwork === true };
+        const key = keyOf(value);
         if (closed || signal?.aborted || retrieving.has(key) || retrieving.size >= 2) throw fail('busy', 'Comfy 原图正在领取或服务正在停止，请稍后再试', 'accepted');
         const work = receive(req, value, connection, signal); retrieving.set(key, work);
         try { return await work; }
@@ -212,16 +257,25 @@ export function createComfyService({ dataRoot, store = createImageServiceStore({
     },
     async acknowledge(req, input) {
       try {
-        const account = binding(req, input), value = { ...account, channelKey: imageServiceChannelKey(comfyInstanceResource(input?.baseUrl)) }, receipt = input.receipt;
+        const value = locatedBinding(req, input), receipt = input.receipt, archived = input.archived === true;
         const row = await find(value); validAccount(req, value);
-        if (!row || row.status !== 'succeeded' || jobs.has(keyOf(value)) || retrieving.has(keyOf(value)) || input.archived !== true
+        if (!row || row.status !== 'succeeded' || jobs.has(keyOf(value)) || retrieving.has(keyOf(value)) || !archived
           || typeof receipt !== 'string' || !/^[a-f0-9]{64}$/.test(receipt)) throw fail('acknowledge', '请先确认原图已归档，未清理服务器暂存', 'accepted');
         return { ok: true, ...(await cache.discard(cacheIdentity(value, row), receipt, { valid: () => imageServiceAccountStillMatches(req, value) })) };
       } catch (cause) { throw safeError(cause); }
     },
+    async discard(req, input) {
+      try {
+        const value = locatedBinding(req, input), receipt = input.receipt, confirmed = input.confirmed === true;
+        if (!confirmed || !/^[a-f0-9]{64}$/.test(receipt || '')) throw fail('discard', '请先确认删除选中的 Comfy 暂存原图');
+        const row = await find(value); validAccount(req, value);
+        if (closed || !discardable(row) || jobs.has(keyOf(value)) || retrieving.has(keyOf(value))) throw fail('discard', 'Comfy 原任务仍在执行或等待核查，未清理暂存');
+        return { ok: true, ...(await cache.discard(cacheIdentity(value, row), receipt, { valid: () => !closed && imageServiceAccountStillMatches(req, value) })) };
+      } catch (cause) { throw safeError(cause); }
+    },
     async close() {
       closed = true; queue.close();
-      await Promise.allSettled([...jobs.values(), ...retrieving.values()]); await store.close();
+      await Promise.allSettled([...jobs.values(), ...retrieving.values(), ...catalogs]); await store.close();
     },
   };
 }

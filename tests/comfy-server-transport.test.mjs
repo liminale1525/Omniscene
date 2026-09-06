@@ -169,6 +169,27 @@ test('installed result and acknowledgement routes recover the original by GET on
   assert.equal(queried.body.task.status, 'succeeded'); assert.equal(queried.body.task.resultStored, false);
 });
 
+test('installed Comfy catalog and explicit cleanup use ST authentication, never provider network or ledger deletion', async () => {
+  const calls = [];
+  const handlers = await routes({ resolveHost: publicDns, requestImpl: mockNodeRequest(calls, call => {
+    if (call.url.pathname.endsWith('/prompt')) return { body: { prompt_id: 'catalog-original' } };
+    if (call.url.pathname.includes('/history/')) return { body: { 'catalog-original': { status: { completed: true }, outputs: { save: { images: [{ filename: 'catalog.png', type: 'output' }] } } } } };
+    if (call.url.pathname.endsWith('/view')) return { body: png, headers: { 'content-type': 'image/png' } };
+    assert.fail(call.url.pathname);
+  }) });
+  const generated = response(); await handlers.get('POST /image/generate')({ ...account(), body: input() }, generated);
+  assert.equal(generated.body.ok, true); const previousCalls = calls.length;
+  const body = { version: 1, expectedAccount: input().comfyQueue.expectedAccount };
+  const unauthorized = response(); await handlers.get('POST /image/comfy/tasks/catalog')({ body }, unauthorized); assert.equal(unauthorized.statusCode, 401);
+  const listed = response(); await handlers.get('POST /image/comfy/tasks/catalog')({ ...account(), body }, listed);
+  assert.equal(listed.body.catalogVersion, 1); assert.equal(listed.headers['cache-control'], 'no-store'); assert.equal(listed.body.originals.length, 1);
+  const original = listed.body.originals[0], target = { ...body, attemptId: original.attemptId, taskLocator: original.taskLocator, receipt: original.cacheReceipt };
+  const denied = response(); await handlers.get('POST /image/comfy/tasks/discard')({ ...account(), body: target }, denied); assert.equal(denied.statusCode, 409);
+  const removed = response(); await handlers.get('POST /image/comfy/tasks/discard')({ ...account(), body: { ...target, confirmed: true } }, removed); assert.equal(removed.body.ok, true);
+  const queried = response(); await handlers.get('POST /image/comfy/tasks/query')({ ...account(), body: target }, queried); assert.equal(queried.body.task.status, 'succeeded');
+  assert.equal(calls.length, previousCalls);
+});
+
 test('revoking private admin stops subsequent reads and response delivery', async () => {
   const req = account(true), calls = [];
   const handlers = await routes({ resolveHost: async () => [{ address: '127.0.0.1' }], requestImpl: mockNodeRequest(calls, () => {

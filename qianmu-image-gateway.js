@@ -70,7 +70,7 @@ export function imageGatewayCapabilities(serviceVersion = '') {
     protocolBinding: { version: IMAGE_PROTOCOL_BINDING_VERSION, providers: IMAGE_COMPATIBLE_PROTOCOLS },
     comfyExecution: { version: COMFY_EXECUTION_VERSION, outputSelection: true, staticAccounting: true },
     comfyServerTransport: { version: 2, authenticated: true, privateAccess: 'administrator-opt-in', dnsPinning: 'operation', redirects: false, trustedTargetRegistry: true },
-    comfyQueue: { version: 1, scope: 'st-api-root', durableAcceptance: true, originalTaskLookup: true, resultRetrieval: true, outputReceiptVersion: 1, cachedResults: true },
+    comfyQueue: { version: 1, scope: 'st-api-root', durableAcceptance: true, originalTaskLookup: true, resultRetrieval: true, outputReceiptVersion: 1, cachedResults: true, catalogVersion: 1, taskLocatorVersion: 1, cacheCleanup: true },
   };
 }
 

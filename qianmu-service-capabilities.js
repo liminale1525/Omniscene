@@ -70,7 +70,9 @@ function imageCapabilityResult(status, body = {}) {
     comfyQueue: status === 'ready' && body.comfyQueue?.version === 1 && body.comfyQueue.scope === 'st-api-root'
       && body.comfyQueue.durableAcceptance === true ? { version: 1, scope: 'st-api-root', durableAcceptance: true,
         originalTaskLookup: body.comfyQueue.originalTaskLookup === true, resultRetrieval: body.comfyQueue.resultRetrieval === true,
-        outputReceiptVersion: body.comfyQueue.outputReceiptVersion === 1 ? 1 : 0, cachedResults: body.comfyQueue.cachedResults === true } : null,
+        outputReceiptVersion: body.comfyQueue.outputReceiptVersion === 1 ? 1 : 0, cachedResults: body.comfyQueue.cachedResults === true,
+        catalogVersion: body.comfyQueue.catalogVersion === 1 ? 1 : 0, taskLocatorVersion: body.comfyQueue.taskLocatorVersion === 1 ? 1 : 0,
+        cacheCleanup: body.comfyQueue.cacheCleanup === true } : null,
   };
 }
 

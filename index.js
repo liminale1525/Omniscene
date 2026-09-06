@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.61';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.61';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.61';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.62';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.62';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.62';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.61';
+} from './qianmu-llm-output.js?v=1.59.62';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -172,187 +172,191 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.61';
+} from './qianmu-storyboard.js?v=1.59.62';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.61';
+const VERSION = '1.59.62';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.61'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.62'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.61'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.62'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.61'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.62'),
   },
   imageChannel: {
     label: 'NAI 跨页顺序生成',
-    load: () => import('./qianmu-image-channel.js?v=1.59.61'),
+    load: () => import('./qianmu-image-channel.js?v=1.59.62'),
   },
   imageServiceClient: {
     label: '增强生图任务',
-    load: () => import('./qianmu-image-service-client.js?v=1.59.61'),
+    load: () => import('./qianmu-image-service-client.js?v=1.59.62'),
   },
   comfySubmission: {
     label: 'Comfy 实例排队',
-    load: () => import('./qianmu-comfy-submission.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-submission.js?v=1.59.62'),
   },
   comfyRecovery: {
     label: 'Comfy 原图领取',
-    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-recovery-client.js?v=1.59.62'),
+  },
+  comfyInbox: {
+    label: 'Comfy 收片管理',
+    load: () => import('./qianmu-comfy-inbox-view.js?v=1.59.62'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.61').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.62').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.61'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.62'),
   },
   comfyWorkbench: {
     label: 'Comfy 镜头台',
-    load: () => import('./qianmu-comfy-workbench.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-workbench.js?v=1.59.62'),
   },
   comfyLibrary: {
     label: 'Comfy 工作流库',
-    load: () => import('./qianmu-comfy-library-view.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-library-view.js?v=1.59.62'),
   },
   comfyPreflight: {
     label: 'Comfy 配置检查',
-    load: () => import('./qianmu-comfy-preflight.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-preflight.js?v=1.59.62'),
   },
   comfyReadiness: {
     label: 'Comfy 节点检查',
-    load: () => import('./qianmu-comfy-readiness.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-readiness.js?v=1.59.62'),
   },
   comfyTargets: {
     label: 'Comfy 可信连接',
-    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.61'),
+    load: () => import('./qianmu-comfy-targets-view.js?v=1.59.62'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.61'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.62'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.61'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.62'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.61'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.62'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.61'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.62'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.61'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.62'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.61'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.62'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.61'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.62'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.61'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.62'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.61'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.62'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.61'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.62'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.61'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.62'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.61'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.62'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.61'),
+    load: () => import('./qianmu-video-task.js?v=1.59.62'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.61'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.62'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.61'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.62'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.61'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.62'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.61'),
+    load: () => import('./qianmu-video-store.js?v=1.59.62'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.61'),
+    load: () => import('./qianmu-video-result.js?v=1.59.62'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.61'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.62'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.61'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.62'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.61'),
+    load: () => import('./qianmu-video-media.js?v=1.59.62'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.61'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.62'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.61'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.62'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.61'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.62'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.61'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.62'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.61'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.62'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.61'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.62'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.61'),
-        import('./qianmu-theaters.js?v=1.59.61'),
+        import('./builtin-theaters.js?v=1.59.62'),
+        import('./qianmu-theaters.js?v=1.59.62'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -7654,13 +7658,14 @@ function storageSettingsSnapshotWithoutDiagnostics() {
 
 async function collectStorageInventory() {
   const storageApi = globalThis.navigator?.storage;
-  const [originEstimate, idb, orphanReaderBlobs, imageAttempts, imageChannels, serviceReceipts] = await Promise.all([
+  const [originEstimate, idb, orphanReaderBlobs, imageAttempts, imageChannels, serviceReceipts, comfyReceipts] = await Promise.all([
     storageApi?.estimate?.().catch(() => null) || Promise.resolve(null),
     blobStore.estimateBlobStoreUsage(),
     blobStore.auditOrphanedReaderBlobs(),
     featureRuntime.load('imageAdmission').then(module => module.manageImageAdmissionStorage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || '生图防重记录暂不可读取' })),
     storyboardManageImageChannels().catch(error => ({ bytes: 0, count: 0, error: error?.message || 'NAI 连接协调记录暂不可读取' })),
     storyboardImageServiceRuntime().then(client => client.manage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || '增强生图领取记录暂不可读取' })),
+    storyboardComfyRecoveryRuntime().then(client => client.usage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || 'Comfy 领取记录暂不可读取' })),
   ]);
   const pressure = blobStore.classifyStoragePressure(originEstimate || {});
   const settingsBytes = storageJsonBytes(storageSettingsSnapshotWithoutDiagnostics());
@@ -7686,9 +7691,10 @@ async function collectStorageInventory() {
   addCategory('logs', imageAttempts.bytes, imageAttempts.count);
   addCategory('logs', imageChannels.bytes, imageChannels.count);
   addCategory('logs', serviceReceipts.bytes, serviceReceipts.count);
-  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes + imageChannels.bytes + serviceReceipts.bytes;
+  addCategory('logs', comfyReceipts.bytes, comfyReceipts.count);
+  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes + imageChannels.bytes + serviceReceipts.bytes + comfyReceipts.bytes;
   const recoverableBytes = Number(idb.recoverableBytes || 0) + diagnosticsBytes;
-  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes + imageChannels.bytes + serviceReceipts.bytes;
+  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes + imageChannels.bytes + serviceReceipts.bytes + comfyReceipts.bytes;
   return {
     sampledAt: Date.now(),
     origin: {
@@ -7709,6 +7715,7 @@ async function collectStorageInventory() {
     imageAttempts,
     imageChannels,
     serviceReceipts,
+    comfyReceipts,
   };
 }
 
@@ -7778,6 +7785,8 @@ function renderStorageManagementCard() {
     ${data.imageAttempts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageAttempts.error)}</p>` : ''}
     ${data.imageChannels?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageChannels.error)}</p>` : ''}
     ${data.serviceReceipts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.serviceReceipts.error)}</p>` : ''}
+    ${data.comfyReceipts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.comfyReceipts.error)}</p>` : ''}
+    <div class="sd-storage-actions"><span>Comfy 本机领取记录 · ${Number(data.comfyReceipts?.count) || 0} 条 · ${htmlEscape(formatStorageBytes(data.comfyReceipts?.bytes || 0))}</span><button type="button" class="sd-btn sd-storage-comfy-receipts">收片管理</button></div>
     <p class="sd-storage-scope">此处是浏览器分配给当前 ST 站点来源的空间，不代表 VPS 磁盘总容量；千幕仅统计可明确归因的本地内容。</p>
     <div class="sd-storage-actions"><button type="button" class="sd-btn sd-primary sd-storage-clean" ${data.manageableBytes > 0 ? '' : 'disabled'}><i class="fa-solid fa-sliders"></i>选择清理模块</button><button type="button" class="sd-btn sd-storage-chat-clean" ${data.idb?.chatScopes?.length ? '' : 'disabled'}><i class="fa-solid fa-message"></i>按聊天管理</button></div>
   </section>`;
@@ -8207,6 +8216,11 @@ function paintStorageManagementCard() {
 }
 
 function bindStorageManagementEvents(root) {
+  root.querySelector('.sd-storage-comfy-receipts')?.addEventListener('click', () => {
+    if (activeTab !== 'imagegen') storyboardBeginSession();
+    activeTab = 'imagegen'; storyboardNavigate(root, { view: 'logs' });
+    const modal = document.getElementById(MODAL_ID); if (modal) void storyboardOpenComfyInbox(modal);
+  });
   root.querySelector('.sd-storage-refresh')?.addEventListener('click', () => void refreshStorageInventory(true));
   root.querySelector('.sd-storage-clean')?.addEventListener('click', async () => {
     const selected = await openStorageCleanupDialog(storageInventoryState.data);
@@ -12235,6 +12249,7 @@ function storyboardBeginSession() {
 function storyboardEndSession() {
   if (typeof document !== 'undefined') document.getElementById(MODAL_ID)?._sdComfyReadinessCleanup?.();
   if (typeof document !== 'undefined') document.getElementById(MODAL_ID)?._sdComfyTargetsCleanup?.();
+  if (typeof document !== 'undefined') document.getElementById(MODAL_ID)?._sdComfyInboxCleanup?.();
   storyboardComfyLibraryController?.detach();
   storyboardPendingRestoreScroll = null;
   storyboardPresetUndo = null;
@@ -16727,7 +16742,7 @@ function renderStoryboardLogs(state) {
     </details>`;
   }).join('');
   return `<div class="sd-storyboard-logs-page">
-    <div><button type="button" class="sd-btn sd-storyboard-open-service-inbox">服务收片</button><div class="sd-storyboard-service-inbox" role="status"></div></div>
+    <div><div class="sd-storyboard-receipt-tools"><button type="button" class="sd-btn sd-storyboard-open-service-inbox">NAI 收片</button><button type="button" class="sd-btn sd-storyboard-open-comfy-inbox">Comfy 收片</button></div><div class="sd-storyboard-service-inbox" role="status"></div><div class="sd-storyboard-comfy-inbox"></div></div>
       <section class="sd-card sd-storyboard-log-head"><div><small>${state.logs.length} / ${STORYBOARD_PIPELINE_LOG_LIMIT}</small></div>${state.logs.length ? `<div><button type="button" class="sd-btn sd-storyboard-export-logs">导出</button><button type="button" class="sd-btn sd-storyboard-clear-logs" ${storyboardActiveJobs.size || storyboardQueue.length ? 'disabled' : ''}>清空</button></div>` : ''}</section>
     <section class="sd-card sd-storyboard-pack-card"><div><b>分镜数据打包</b><small>跨 SillyTavern 迁移，不包含 API Key</small></div><div><button type="button" class="sd-icon-btn sd-storyboard-pack-export" title="导出分镜数据" aria-label="导出分镜数据"><i class="fa-solid fa-file-export"></i></button><label class="sd-icon-btn sd-storyboard-pack-import" title="导入分镜数据" aria-label="导入分镜数据"><i class="fa-solid fa-file-import"></i><input type="file" class="sd-reader-native-file sd-storyboard-pack-file" accept="application/json,.json"></label></div></section>
     <div class="sd-storyboard-log-tools"><div class="sd-storyboard-log-filters">${[['all', '全部'], ['success', '完成'], ['failed', '失败']].map(([id, label]) => `<button type="button" class="${state.logFilter === id ? 'active' : ''}" data-storyboard-log-filter="${id}">${label}<span>${counts[id]}</span></button>`).join('')}</div></div>
@@ -18147,7 +18162,7 @@ async function storyboardComfyRecoveryRuntime() {
   const epoch = storyboardAdmissionEpoch;
   const module = await featureRuntime.load('comfyRecovery');
   if (epoch !== storyboardAdmissionEpoch) throw new Error('分镜会话已结束');
-  storyboardComfyRecovery ||= module.createComfyRecoveryClient({ headers: storyboardRequestHeaders });
+  storyboardComfyRecovery ||= module.createComfyRecoveryClient({ headers: storyboardRequestHeaders, confirm: confirmDialog });
   return storyboardComfyRecovery;
 }
 
@@ -18173,11 +18188,11 @@ async function storyboardResolveComfyRecoveryKey(connection) {
   return matches() ? apiKey : '';
 }
 
-async function storyboardReceiveComfyImage(log) {
+async function storyboardReceiveComfyImage(log, { refresh = true, taskLocator } = {}) {
   try {
     if (!storyboardCanReceiveComfyLog(log)) throw new Error('请使用原 Comfy 服务日志领取');
     const snapshot = sanitizeStoryboardSnapshot(log.snapshot, { source: 'comfy' });
-    const job = { ...snapshot, id: snapshot.imageAdmission.attemptId, logId: log.id, recoveringOriginal: true };
+    const job = { ...snapshot, id: snapshot.imageAdmission.attemptId, logId: log.id, recoveringOriginal: true, ...(taskLocator ? { comfyTaskLocator: taskLocator } : {}) };
     if (job.chatKey && job.chatKey !== String(getChatKey() || '')) throw new Error('请返回原聊天后领取 Comfy 原图');
     const service = await storyboardComfyRecoveryRuntime();
     const apiKey = await storyboardResolveComfyRecoveryKey(job.connection);
@@ -18193,8 +18208,34 @@ async function storyboardReceiveComfyImage(log) {
       catch (_) { result.warning ||= '原图已归档；本地任务状态尚待核查'; }
     }
     toast(result.warning || '原图已领取并归档', result.warning ? 'warning' : 'success');
-    renderModal();
+    if (refresh) renderModal();
+    return result;
   } catch (error) { toast(error.message || 'Comfy 原图暂不可领取，未重新生成', 'warning'); }
+}
+
+async function storyboardOpenComfyInbox(root) {
+  const host = root.querySelector('.sd-storyboard-comfy-inbox'); if (!host) return;
+  root._sdComfyInboxCleanup?.();
+  const epoch = storyboardAdmissionEpoch, ticket = uid('comfy-inbox'); host.dataset.ticket = ticket;
+  const valid = () => root.isConnected && host.isConnected && host.dataset.ticket === ticket && epoch === storyboardAdmissionEpoch;
+  host.textContent = '正在读取';
+  const nai = root.querySelector('.sd-storyboard-service-inbox'); if (nai) nai.hidden = true; host.hidden = false;
+  try {
+    const [view, service] = await Promise.all([featureRuntime.load('comfyInbox'), storyboardComfyRecoveryRuntime()]);
+    if (!valid()) return;
+    const dispose = view.mountComfyInbox(host, { service, isCurrent: valid, receive: async row => {
+      const log = storyboardState().logs.find(item => (!row.logId || item.id === row.logId) && item.snapshot?.source === 'comfy' && item.snapshot?.imageAdmission?.attemptId === row.attemptId && item.snapshot?.imageAdmission?.namespace === row.namespace);
+      if (log && storyboardCanReceiveComfyLog(log) && !row.originalOnly) return storyboardReceiveComfyImage(log, { refresh: false, taskLocator: row.taskLocator });
+      const chatKey = String(getChatKey() || '');
+      const apiKey = row.baseUrl ? await storyboardResolveComfyRecoveryKey({ baseUrl: row.baseUrl, credentialId: row.credentialId }) : '';
+      return service.retrieveOriginal(row, { chatKey, apiKey, deliver: (job, data, archiveFiles, checkpoint, guard) =>
+        storyboardDeliverGatewayResult(job, null, data, { service: true, archiveFiles, checkpoint, guard: async () => {
+          await guard(); if (String(getChatKey() || '') !== chatKey) throw new Error('聊天已切换，请返回原页面领取');
+        } }),
+      });
+    } });
+    root._sdComfyInboxCleanup = () => { dispose(); host.dataset.ticket = ''; root._sdComfyInboxCleanup = null; };
+  } catch (error) { if (valid()) host.textContent = error.message || 'Comfy 收片管理暂不可用'; }
 }
 
 async function storyboardReceiveServiceImage(attemptId, discovered = null, expectedNamespace = discovered?.namespace) {
@@ -20255,6 +20296,7 @@ function storyboardUnbindChat() {
 function bindStoryboardTabEvents(root) {
   root._sdComfyReadinessCleanup?.();
   root._sdComfyTargetsCleanup?.();
+  root._sdComfyInboxCleanup?.();
   if (activeTab !== 'imagegen') return;
   const state = storyboardState();
   root._sdStoryboardState = state;
@@ -21351,7 +21393,13 @@ function bindStoryboardTabEvents(root) {
     row.querySelector('.sd-storyboard-cancel-queued-log')?.addEventListener('click', () => storyboardRemoveQueuedLog(log));
   });
   let gallerySearchTimer = null;
-  root.querySelector('.sd-storyboard-open-service-inbox')?.addEventListener('click', () => void storyboardPaintServiceInbox(root));
+  root.querySelector('.sd-storyboard-open-service-inbox')?.addEventListener('click', () => {
+    root._sdComfyInboxCleanup?.();
+    const comfy = root.querySelector('.sd-storyboard-comfy-inbox'); if (comfy) { comfy.hidden = true; comfy.dataset.ticket = ''; }
+    const nai = root.querySelector('.sd-storyboard-service-inbox'); if (nai) nai.hidden = false;
+    void storyboardPaintServiceInbox(root);
+  });
+  root.querySelector('.sd-storyboard-open-comfy-inbox')?.addEventListener('click', () => void storyboardOpenComfyInbox(root));
   root.querySelector('.sd-storyboard-gallery-search')?.addEventListener('input', (event) => {
     state.gallerySearch = String(event.target.value || '').slice(0, 120);
     saveSettings();
