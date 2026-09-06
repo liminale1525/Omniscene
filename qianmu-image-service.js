@@ -31,10 +31,16 @@ export function createImageService({ dataRoot, store = createImageServiceStore({
   const cache = results || createImageServiceResults({ dataRoot, store });
   const queue = createImageServiceQueue({ ...queueOptions, store, ownerId: randomUUID() });
   const jobs = new Map(), retrieving = new Map(); let closed = false, admitted = 0, admissionBytes = 0;
-  const context = (request, input) => {
+  const context = (request, input, allowLocator = false) => {
     const account = imageServiceAccount(request);
     if (input?.schemaVersion !== IMAGE_SERVICE_TASK_VERSION) throw fail('version', '增强生图任务协议不兼容，请同步更新前后端');
-    return { ...account, channelKey: imageServiceChannelKey(input.apiKey ?? input.request?.apiKey), attemptId: taskId(input.attemptId) };
+    if (input.expectedAccount !== undefined && input.expectedAccount !== account.namespace) throw fail('authentication_changed', 'ST 登录账户已变化，未提交本次操作', 'not_submitted', 401);
+    // A locator selects a channel, never an account or authorization. Retrieval
+    // remains scoped to the authenticated owner and survives API-key rotation.
+    const locator = input.taskLocator;
+    const channelKey = allowLocator && locator?.version === 1 && /^[a-f0-9]{64}$/.test(locator.channelKey || '')
+      ? locator.channelKey : imageServiceChannelKey(input.apiKey ?? input.request?.apiKey);
+    return { ...account, channelKey, attemptId: taskId(input.attemptId) };
   };
   const validAccount = (request, value) => { if (!imageServiceAccountStillMatches(request, value)) throw fail('authentication_changed', 'ST 账户已变化，请重新操作', 'not_submitted', 401); };
   const find = async value => {
@@ -141,7 +147,7 @@ export function createImageService({ dataRoot, store = createImageServiceStore({
       } finally { admitted--; admissionBytes -= weight; }
     },
     async query(request, input) {
-      const value = context(request, input), row = await find(value); validAccount(request, value);
+      const value = context(request, input, true), row = await find(value); validAccount(request, value);
       const pending = jobs.get(jobKey(value));
       const result = { ok: true, schemaVersion: 1, task: imageServiceTaskView(row) };
       if (!row) return pending ? { ok: true, schemaVersion: 1, task: { attemptId: value.attemptId, status: 'queued', persisted: false, resultAvailable: false } } : result;
@@ -151,17 +157,17 @@ export function createImageService({ dataRoot, store = createImageServiceStore({
       } };
     },
     async result(request, input) {
-      const value = context(request, input), row = await find(value); validAccount(request, value);
+      const value = context(request, input, true), row = await find(value); validAccount(request, value);
       return readResult(request, value, row);
     },
     async acknowledge(request, input) {
-      const value = context(request, input), row = await find(value); validAccount(request, value);
+      const value = context(request, input, true), row = await find(value); validAccount(request, value);
       if (!row || row.status !== 'succeeded' || jobs.has(jobKey(value)) || retrieving.has(jobKey(value))) throw fail('not_complete', '原任务尚未完成，未清理暂存');
       if (input.archived !== true || typeof input.receipt !== 'string' || !/^[a-f0-9]{64}$/.test(input.receipt)) throw fail('receipt', '请先确认图片已在本地保存');
       return { ok: true, ...(await cache.discard(resultIdentity(value, row), input.receipt, { valid: () => imageServiceAccountStillMatches(request, value) })) };
     },
     async discard(request, input) {
-      const value = context(request, input), row = await find(value); validAccount(request, value);
+      const value = context(request, input, true), row = await find(value); validAccount(request, value);
       if (!row || ['reserved','submitting'].includes(row.status) || jobs.has(jobKey(value)) || retrieving.has(jobKey(value))) throw fail('not_complete', '原任务仍在运行或等待核查，未清理暂存');
       if (input.confirmed !== true || !/^[a-f0-9]{64}$/.test(input.receipt || '')) throw fail('receipt', '请先确认清理当前暂存图片');
       return { ok: true, ...(await cache.discard(resultIdentity(value, row), input.receipt, { valid: () => imageServiceAccountStillMatches(request, value) })) };

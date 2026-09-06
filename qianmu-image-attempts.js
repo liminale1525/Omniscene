@@ -159,6 +159,18 @@ export function settleImageAttempt(value, scope, { attemptId, ownerId, outcome }
   return result(ledger, true, target, { attempt: { ...row } });
 }
 
+// A retrieved, archived original image is completion evidence, not permission
+// to dispatch. Identity must match the existing narrative shot exactly.
+export function confirmImageAttemptResult(value, scope, { attemptId, logicalShotId }, now) {
+  const ledger = normalizeImageAttempts(value, scope);
+  const row = ledger.entries.find(entry => entry.attemptId === id(attemptId, '原请求编号'));
+  if (!row) return result(ledger, true, 'absent');
+  if (row.logicalShotId !== id(logicalShotId, '原镜头编号')) return result(ledger, false, 'identity_conflict');
+  if (!['submitting', 'unknown', 'accepted', 'succeeded'].includes(row.status)) return result(ledger, false, 'invalid_transition');
+  row.status = 'succeeded'; row.updatedAt = time(now); row.revision++;
+  return result(ledger, true, 'succeeded');
+}
+
 export function summarizeImageAttempts(value, scope, now) {
   const ledger = normalizeImageAttempts(value, scope);
   expireReservations(ledger, time(now));

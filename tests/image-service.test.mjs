@@ -7,6 +7,8 @@ import { createImageService } from '../qianmu-image-service.js';
 import { createImageServiceStore } from '../qianmu-image-service-store.js';
 import { createImageServiceResults } from '../qianmu-image-service-results.js';
 import { imageServiceChannelKey } from '../qianmu-image-service-queue.js';
+import { createImageServiceClient } from '../qianmu-image-service-client.js';
+import { imageServiceTaskErrorPayload } from '../qianmu-image-service.js';
 
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKuoAAAAASUVORK5CYII=';
 const actor = (handle = 'alice') => ({ user: { profile: { handle, enabled: true } } });
@@ -16,6 +18,58 @@ const query = attemptId => ({ schemaVersion: 1, apiKey: request.apiKey, attemptI
 const response = () => new Response(JSON.stringify({ data: [{ b64_json: PNG }] }), { headers: { 'Content-Type': 'application/json' } });
 const dns = async () => [{ address: '8.8.8.8', family: 4 }];
 const deferred = () => { let resolve; const promise = new Promise(yes => { resolve = yes; }); return { promise, resolve }; };
+
+test('authenticated locator retrieves after key rotation but never authorizes another account or submission', async t => {
+  let posts = 0;
+  const { service } = await fixture(t, { gatewayOptions: { resolveHost: dns, fetchImpl: () => { posts++; return response(); } } });
+  await service.submit(actor(), input('locator'));
+  const locator = { schemaVersion: 1, attemptId: 'locator', taskLocator: { version: 1, channelKey: imageServiceChannelKey(request.apiKey) } };
+  assert.equal((await service.query(actor('bob'), locator)).task, null);
+  await assert.rejects(service.result(actor('bob'), locator), /未找到/);
+  assert.equal((await service.result(actor(), locator)).images[0].data, PNG);
+  await assert.rejects(service.submit(actor(), { ...locator, automatic: true, request: { ...request, apiKey: '' } }));
+  const meta = await service.query(actor(), locator);
+  await service.acknowledge(actor(), { ...locator, archived: true, receipt: meta.task.cacheReceipt });
+  assert.equal((await service.query(actor(), locator)).task.resultAvailable, false); assert.equal(posts, 1);
+});
+test('login changing between browser preparation and HTTP arrival cannot submit under a different account', async t => {
+  let posts=0;
+  const {service,root}=await fixture(t,{gatewayOptions:{resolveHost:dns,fetchImpl:()=>{posts++;return response();}}});
+  const expectedAccount=`st-user:${imageServiceChannelKey('alice')}`;
+  await assert.rejects(service.submit(actor('bob'),input('account-race',{expectedAccount})),{status:401,submissionState:'not_submitted'});
+  assert.equal(posts,0);assert.deepEqual(await fs.readdir(root),[]);
+});
+
+test('actual client and durable service recover a lost response without another provider POST', async t => {
+  let posts = 0, lose = true;
+  const { service } = await fixture(t, { gatewayOptions: { resolveHost: dns, fetchImpl: () => { posts++; return response(); } } });
+  const rows = new Map(), actions = [];
+  const store = { get: async (_ns, id) => structuredClone(rows.get(id) || null), list: async () => [...rows.values()].map(row => structuredClone(row)),
+    put: async row => rows.set(row.attemptId, structuredClone(row)), remove: async (_ns, id) => rows.delete(id), close() {} };
+  const options = { store, account: async () => 'st-user:alice', locks: { request: (_key, _options, work) => work({}) },
+    fetchImpl: async (url, init) => {
+      const action = url.split('/').at(-1); actions.push(action);
+      if (action === 'capabilities') return Response.json({ ok: true, schemaVersion: 1, taskLocatorVersion: 1, accountBindingVersion: 1, scope: 'coordinated-endpoints-only', providers: ['novel'], protocols: ['novelai'], resultRetrieval: true, resultAcknowledgement: true });
+      let body;
+      try { body = await service[action](actor(), JSON.parse(init.body)); }
+      catch (error) { const payload = imageServiceTaskErrorPayload(error); return Response.json(payload.body, { status: payload.status }); }
+      if (action === 'submit' && lose) { lose = false; throw new TypeError('simulate connection loss after provider success'); }
+      return Response.json(body);
+    } };
+  const client = createImageServiceClient(options);
+  const job = { id: 'full-flow', logId: 'log', automatic: true, source: 'novel', target: 'gallery', chatKey: 'chat',
+    imageAdmission: { namespace: 'st-user:alice' }, profile: { model: request.model }, payload: { prompt: request.prompt } };
+  await assert.rejects(client.submit(job, request, { beforeSubmit: async () => {}, deliver: () => assert.fail('lost response') }), { submissionState: 'unknown' });
+  const restarted = createImageServiceClient(options);
+  let saves = 0;
+  const result = await restarted.retrieve(job.id, async (data, row, checkpoint) => {
+    assert.equal(data.images[0].data, PNG); assert.equal(row.snapshot.payload.prompt, request.prompt);
+    await checkpoint([{ id: 'saved', url: '/user/images/saved.png' }]); saves++; return true;
+  });
+  assert.equal(result.archived, true); assert.equal(saves, 1); assert.equal(posts, 1); assert.equal(rows.size, 0);
+  assert.deepEqual(actions, ['capabilities','submit','query','result','acknowledge']);
+  assert.equal((await service.query(actor(), query(job.id))).task.resultAvailable, false);
+});
 async function fixture(t, options = {}) {
   const parent = await fs.realpath(os.tmpdir()), root = await fs.mkdtemp(path.join(parent, 'qianmu-service-flow-'));
   t.after(async () => { const real = await fs.realpath(root); assert.equal(path.dirname(real), parent); assert.match(path.basename(real), /^qianmu-service-flow-/); await fs.rm(real, { recursive: true }); });

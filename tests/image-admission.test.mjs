@@ -223,7 +223,7 @@ function liveHarness({ failure = '', confirm = async () => true } = {}) {
   const { store, runtime } = setup({ confirm }), state = { enabled: true, logs: [], automation: { autoCapture: true, autoGenerate: true } };
   const gallery = [], waiting = [], notices = [], writes = [];
   const context = vm.createContext({
-    storyboardAdmission: runtime, storyboardImageAdmissionRuntime: async () => runtime, storyboardState: () => state,
+    clone: structuredClone, storyboardAdmission: runtime, storyboardImageAdmissionRuntime: async () => runtime, storyboardState: () => state,
     getChatKey: () => 'chat-a', storyboardValidatedAnchor: () => ({ valid: true, floor: 0 }),
     STORYBOARD_QUEUE_LIMIT: 8, storyboardQueue: waiting, storyboardActiveJobs: new Map(),
     getStoryboardGenerationPolicy: () => ({ maxImages: 1 }), storyboardGalleryRecords: () => gallery,
@@ -250,7 +250,7 @@ function liveHarness({ failure = '', confirm = async () => true } = {}) {
     storyboardFinishLog: (log, status, detail) => Object.assign(log, { status }, detail),
     toast: message => { notices.push(message); return false; },
   });
-  vm.runInContext(['storyboardSettleImageAdmission', 'storyboardQueueJob', 'storyboardRunJob', 'storyboardClearWaitingQueue', 'storyboardRetryLog'].map(section).join('\n'), context);
+  vm.runInContext(['storyboardSettleImageAdmission', 'storyboardQueueJob', 'storyboardDeliverGatewayResult', 'storyboardRunJob', 'storyboardClearWaitingQueue', 'storyboardRetryLog'].map(section).join('\n'), context);
   return { context, state, gallery, waiting, notices, writes, store, runtime };
 }
 const liveJob = extra => job({ source: 'openai', profile: { count: '1', model: 'gpt-image-1' },

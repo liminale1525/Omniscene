@@ -45,7 +45,9 @@ const chatChanged = indexSource.slice(indexSource.indexOf('async function storyb
 assert.doesNotMatch(chatChanged, /discardRequested|storyboardQueue\s*=|storyboardFinishLog/);
 const runJob = indexSource.slice(indexSource.indexOf('async function storyboardRunJob'), indexSource.indexOf('async function storyboardRunQueuedJob'));
 assert.match(runJob, /beforeRequestAnchor\.linkState !== 'foreign'/);
-assert.match(runJob, /currentOwnsResult[\s\S]*storyboardStoreDeferredDelivery/);
+assert.match(runJob, /storyboardDeliverGatewayResult\(job, log, data/);
+const deliverJob = indexSource.slice(indexSource.indexOf('async function storyboardDeliverGatewayResult'), indexSource.indexOf('async function storyboardRunJob'));
+assert.match(deliverJob, /currentOwnsResult[\s\S]*storyboardStoreDeferredDelivery/);
 assert.doesNotMatch(runJob, /聊天已切换，任务未执行|生成期间切换了聊天/);
 
 // Foreign plans cannot leak a placeholder into an unrelated chat with the same floor number.

@@ -10069,3 +10069,14 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
   .sd-storyboard-film-viewer-stage.is-transition-dip_black::after { animation: none; }
   .sd-storyboard-film-viewer-stage.is-transition-dip_black::after { opacity: 0; }
 }
+
+/* On-demand, account-scoped service receipt list; no empty placeholder card. */
+#story-director-modal .sd-storyboard-service-inbox:empty { display: none; }
+#story-director-modal .sd-storyboard-service-inbox { max-height: 22rem; overflow: auto; }
+#story-director-modal .sd-storyboard-service-inbox .sd-storyboard-log-actions {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center; gap: .4rem; margin-top: .4rem;
+}
+#story-director-modal .sd-storyboard-service-inbox .sd-storyboard-log-actions > span {
+  min-width: 0; overflow-wrap: anywhere; font-size: var(--sd-type-caption, 12px);
+}

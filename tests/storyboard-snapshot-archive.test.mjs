@@ -41,7 +41,7 @@ test('redraw, edit, attach and export hydrate exact snapshots on demand', () => 
 test('gallery lifecycle archives, prunes, clears and invalidates snapshots safely', () => {
   assert.match(source, /async function storyboardHandleChatChanged[\s\S]*?storyboardSnapshotEpoch\+\+[\s\S]*?storyboardArchiveGallerySnapshots/);
   assert.match(source, /receivedRecords\.push\(record\)[\s\S]*?storyboardArchiveGallerySnapshots\(receivedRecords\)/);
-  assert.match(source, /gallery\.push\(\.\.\.records\)[\s\S]*?storyboardArchiveGallerySnapshots\(records\)/);
+  assert.match(source, /gallery\.some\(item => item.id === record.id\)\) gallery.push\(record\)[\s\S]*?storyboardArchiveGallerySnapshots\(records\)/);
   assert.match(source, /storyboard_snapshots: \['不可恢复 · 阅片精确重绘设置', true\]/);
   assert.match(source, /STORAGE_CHAT_CLEARABLE[^\n]*storyboard_snapshots/);
   assert.match(source, /cleared\.has\('storyboard_snapshots'\)[\s\S]*?delete record\.snapshotRef/);

@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.46';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.46';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.46';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.47';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.47';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.47';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.46';
+} from './qianmu-llm-output.js?v=1.59.47';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -170,155 +170,159 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.46';
+} from './qianmu-storyboard.js?v=1.59.47';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.46';
+const VERSION = '1.59.47';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.46'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.47'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.46'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.47'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.46'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.47'),
   },
   imageChannel: {
     label: 'NAI 跨页顺序生成',
-    load: () => import('./qianmu-image-channel.js?v=1.59.46'),
+    load: () => import('./qianmu-image-channel.js?v=1.59.47'),
+  },
+  imageServiceClient: {
+    label: '增强生图任务',
+    load: () => import('./qianmu-image-service-client.js?v=1.59.47'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.46').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.47').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.46'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.47'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.46'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.47'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.46'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.47'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.46'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.47'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.46'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.47'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.46'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.47'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.46'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.47'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.46'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.47'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.46'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.47'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.46'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.47'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.46'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.47'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.46'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.47'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.46'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.47'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.46'),
+    load: () => import('./qianmu-video-task.js?v=1.59.47'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.46'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.47'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.46'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.47'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.46'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.47'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.46'),
+    load: () => import('./qianmu-video-store.js?v=1.59.47'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.46'),
+    load: () => import('./qianmu-video-result.js?v=1.59.47'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.46'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.47'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.46'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.47'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.46'),
+    load: () => import('./qianmu-video-media.js?v=1.59.47'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.46'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.47'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.46'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.47'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.46'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.47'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.46'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.47'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.46'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.47'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.46'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.47'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.46'),
-        import('./qianmu-theaters.js?v=1.59.46'),
+        import('./builtin-theaters.js?v=1.59.47'),
+        import('./qianmu-theaters.js?v=1.59.47'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1157,6 +1161,7 @@ let storyboardWorldEntryCache = { key: '', names: [], boundNames: [], books: {},
 const storyboardActiveJobs = new Map(); // 正在生成的任务；放弃时不取消可能已计费的上游请求，只丢弃回传
 let storyboardAdmission = null;
 let storyboardImageChannel = null;
+let storyboardImageService = null;
 let storyboardAdmissionEpoch = 0;
 const storyboardGenerationPreparing = new Set();
 const storyboardPlanRetries = new WeakSet();
@@ -7614,12 +7619,13 @@ function storageSettingsSnapshotWithoutDiagnostics() {
 
 async function collectStorageInventory() {
   const storageApi = globalThis.navigator?.storage;
-  const [originEstimate, idb, orphanReaderBlobs, imageAttempts, imageChannels] = await Promise.all([
+  const [originEstimate, idb, orphanReaderBlobs, imageAttempts, imageChannels, serviceReceipts] = await Promise.all([
     storageApi?.estimate?.().catch(() => null) || Promise.resolve(null),
     blobStore.estimateBlobStoreUsage(),
     blobStore.auditOrphanedReaderBlobs(),
     featureRuntime.load('imageAdmission').then(module => module.manageImageAdmissionStorage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || '生图防重记录暂不可读取' })),
     storyboardManageImageChannels().catch(error => ({ bytes: 0, count: 0, error: error?.message || 'NAI 连接协调记录暂不可读取' })),
+    storyboardImageServiceRuntime().then(client => client.manage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || '增强生图领取记录暂不可读取' })),
   ]);
   const pressure = blobStore.classifyStoragePressure(originEstimate || {});
   const settingsBytes = storageJsonBytes(storageSettingsSnapshotWithoutDiagnostics());
@@ -7644,9 +7650,10 @@ async function collectStorageInventory() {
   addCategory('logs', diagnosticsBytes, 0, diagnosticsBytes);
   addCategory('logs', imageAttempts.bytes, imageAttempts.count);
   addCategory('logs', imageChannels.bytes, imageChannels.count);
-  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes + imageChannels.bytes;
+  addCategory('logs', serviceReceipts.bytes, serviceReceipts.count);
+  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes + imageChannels.bytes + serviceReceipts.bytes;
   const recoverableBytes = Number(idb.recoverableBytes || 0) + diagnosticsBytes;
-  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes + imageChannels.bytes;
+  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes + imageChannels.bytes + serviceReceipts.bytes;
   return {
     sampledAt: Date.now(),
     origin: {
@@ -7666,6 +7673,7 @@ async function collectStorageInventory() {
     orphanReaderBlobs,
     imageAttempts,
     imageChannels,
+    serviceReceipts,
   };
 }
 
@@ -7734,6 +7742,7 @@ function renderStorageManagementCard() {
     ${pressureNotice}
     ${data.imageAttempts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageAttempts.error)}</p>` : ''}
     ${data.imageChannels?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageChannels.error)}</p>` : ''}
+    ${data.serviceReceipts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.serviceReceipts.error)}</p>` : ''}
     <p class="sd-storage-scope">此处是浏览器分配给当前 ST 站点来源的空间，不代表 VPS 磁盘总容量；千幕仅统计可明确归因的本地内容。</p>
     <div class="sd-storage-actions"><button type="button" class="sd-btn sd-primary sd-storage-clean" ${data.manageableBytes > 0 ? '' : 'disabled'}><i class="fa-solid fa-sliders"></i>选择清理模块</button><button type="button" class="sd-btn sd-storage-chat-clean" ${data.idb?.chatScopes?.length ? '' : 'disabled'}><i class="fa-solid fa-message"></i>按聊天管理</button></div>
   </section>`;
@@ -7784,6 +7793,7 @@ function openStorageCleanupDialog(data) {
     { id: '__diagnostics__', label: '生成与运行日志', bytes: Number(data?.diagnosticsBytes) || 0, count: 0 },
     { id: '__image_attempts__', label: '生图请求与预算记录（当前账户）', bytes: Number(data?.imageAttempts?.bytes) || 0, count: Number(data?.imageAttempts?.count) || 0 },
     { id: '__image_channels__', label: 'NAI 连接协调记录（当前账户）', bytes: Number(data?.imageChannels?.bytes) || 0, count: Number(data?.imageChannels?.count) || 0 },
+    { id: '__image_service_receipts__', label: '本机原图领取记录（服务器原图不删）', bytes: Number(data?.serviceReceipts?.bytes) || 0, count: Number(data?.serviceReceipts?.count) || 0 },
   ];
   const fixedNotes = modules.find((item) => item.id === 'notes');
   const favorites = modules.find((item) => item.id === 'favorites');
@@ -8169,6 +8179,7 @@ function bindStorageManagementEvents(root) {
     try {
       const stores = selected.filter((item) => !item.startsWith('__'));
       if (selected.includes('__image_channels__')) await storyboardManageImageChannels({ remove: true });
+      if (selected.includes('__image_service_receipts__')) await (await storyboardImageServiceRuntime()).manage({ remove: true });
       if (selected.includes('__image_attempts__')) {
         if (storyboardQueue.length || storyboardActiveJobs.size || storyboardGenerationPreparing.size) throw new Error('仍有等待或生成中的画面，请结束后再清理防重记录');
         const module = await featureRuntime.load('imageAdmission');
@@ -12434,6 +12445,7 @@ function renderStoryboardModelCard(state) {
       <label><span>API 地址</span><input class="text_pole sd-storyboard-base-url" value="${htmlEscape(profile.baseUrl)}" placeholder="${htmlEscape(provider.defaultBaseUrl || 'http://127.0.0.1:8188')}"></label>
       <div class="sd-storyboard-key-field"><label for="sd-storyboard-key-input">${state.source === 'comfy' ? '访问令牌（可选）' : 'API Key'}</label><div class="sd-storyboard-key-control"><input id="sd-storyboard-key-input" class="text_pole sd-storyboard-api-key-memory" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" value="${htmlEscape(storyboardDraftApiKeys.get(state.source) || '')}" placeholder="输入 API Key"><button type="button" class="sd-icon-btn sd-storyboard-key-visibility" title="显示 API Key" aria-label="显示 API Key" aria-pressed="false" aria-controls="sd-storyboard-key-input"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div></div>
       ${renderStoryboardConnectionCompatibility(state)}
+      ${state.source === 'novel' ? `<label><span>执行方式</span><select class="text_pole sd-storyboard-service-mode" aria-label="执行方式"><option value="auto" ${connection.draft?.options?.imageTransport !== 'service' ? 'selected' : ''}>浏览器优先</option><option value="service" ${connection.draft?.options?.imageTransport === 'service' ? 'selected' : ''}>增强服务协调</option></select></label>` : ''}
       ${state.source === 'comfy' ? `<label class="sd-switch-row"><span>允许本地网络</span><input type="checkbox" class="sd-storyboard-private-network" ${(connection.active?.options?.allowPrivateNetwork ?? connection.group?.draft?.options?.allowPrivateNetwork) ? 'checked' : ''}></label><label><span>API Workflow</span><textarea class="text_pole sd-storyboard-workflow" placeholder="粘贴 ComfyUI API Workflow JSON">${htmlEscape(typeof profile.comfyWorkflow === 'string' && profile.comfyWorkflow.trim().startsWith('{') ? profile.comfyWorkflow : '')}</textarea></label><div class="sd-storyboard-workflow-warning sd-storyboard-connection-result failed" ${workflowNotice ? '' : 'hidden'}><i class="fa-solid fa-triangle-exclamation"></i><span>${htmlEscape(workflowNotice || '')}</span></div>` : ''}
       ${check ? `<div class="sd-storyboard-connection-result ${check.ok ? (check.verified === false ? 'partial' : 'ok') : 'failed'}"><i class="fa-solid ${check.ok && check.verified !== false ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${htmlEscape(check.message)}</span></div>` : ''}
       <div class="sd-storyboard-model-actions"><button type="button" class="sd-btn sd-storyboard-check-connection">测试连接</button><button type="button" class="sd-btn sd-primary sd-storyboard-save-connection">保存连接</button></div>
@@ -16215,6 +16227,7 @@ function storyboardCreateJob(state, profile, { attempt = 1, shot = null, sourceI
       id: connection?.id || '', credentialId, baseUrl: String(connection?.baseUrl || ''),
       ...resolveStoryboardConnectionBinding(sourceId, connection),
       model: String(providerProfile.model || ''),
+      imageTransport: sourceId === 'novel' && connection?.options?.imageTransport === 'service' ? 'service' : 'auto',
       allowPrivateNetwork: Boolean(connection?.options?.allowPrivateNetwork ?? connectionState.group?.draft?.options?.allowPrivateNetwork),
       ...(resolveStoryboardConnectionBinding(sourceId, connection).protocol === 'openai-images' ? {
         compatibility: clone(connection?.compatibility || {}),
@@ -16498,11 +16511,12 @@ function renderStoryboardLogs(state) {
         ${stageRows ? `<ol class="sd-storyboard-pipeline-stages">${stageRows}</ol>` : ''}
         ${stageRows ? '<section class="sd-storyboard-stage-detail" hidden><header><b></b><button type="button" class="sd-icon-btn sd-storyboard-copy-stage" title="复制当前阶段" aria-label="复制当前阶段"><i class="fa-solid fa-copy"></i></button></header><pre></pre></section>' : ''}
         ${log.error ? `<pre>${htmlEscape(log.error)}</pre>` : ''}
-        <div class="sd-storyboard-log-actions"><button type="button" class="sd-btn sd-storyboard-load-log">载入镜头台</button>${runAction}<button type="button" class="sd-btn sd-storyboard-copy-log">复制诊断</button></div>
+        <div class="sd-storyboard-log-actions"><button type="button" class="sd-btn sd-storyboard-load-log">载入镜头台</button>${log.snapshot?.serviceTask?.attemptId ? '<button type="button" class="sd-btn sd-storyboard-receive-log">领取原图</button>' : ''}${runAction}<button type="button" class="sd-btn sd-storyboard-copy-log">复制诊断</button></div>
       </div>
     </details>`;
   }).join('');
   return `<div class="sd-storyboard-logs-page">
+    <div><button type="button" class="sd-btn sd-storyboard-open-service-inbox">服务收片</button><div class="sd-storyboard-service-inbox" role="status"></div></div>
       <section class="sd-card sd-storyboard-log-head"><div><small>${state.logs.length} / ${STORYBOARD_PIPELINE_LOG_LIMIT}</small></div>${state.logs.length ? `<div><button type="button" class="sd-btn sd-storyboard-export-logs">导出</button><button type="button" class="sd-btn sd-storyboard-clear-logs" ${storyboardActiveJobs.size || storyboardQueue.length ? 'disabled' : ''}>清空</button></div>` : ''}</section>
     <section class="sd-card sd-storyboard-pack-card"><div><b>分镜数据打包</b><small>跨 SillyTavern 迁移，不包含 API Key</small></div><div><button type="button" class="sd-icon-btn sd-storyboard-pack-export" title="导出分镜数据" aria-label="导出分镜数据"><i class="fa-solid fa-file-export"></i></button><label class="sd-icon-btn sd-storyboard-pack-import" title="导入分镜数据" aria-label="导入分镜数据"><i class="fa-solid fa-file-import"></i><input type="file" class="sd-reader-native-file sd-storyboard-pack-file" accept="application/json,.json"></label></div></section>
     <div class="sd-storyboard-log-tools"><div class="sd-storyboard-log-filters">${[['all', '全部'], ['success', '完成'], ['failed', '失败']].map(([id, label]) => `<button type="button" class="${state.logFilter === id ? 'active' : ''}" data-storyboard-log-filter="${id}">${label}<span>${counts[id]}</span></button>`).join('')}</div></div>
@@ -16651,6 +16665,8 @@ function storyboardCaptureWorkbench(root, sourceId = storyboardState().source, {
     const baseField = root.querySelector('.sd-storyboard-base-url');
     connection.draft.baseUrl = String(baseField ? baseField.value : (connection.draft.baseUrl || '')).trim();
     connection.draft.options ||= {};
+    const serviceMode = root.querySelector('.sd-storyboard-service-mode');
+    if (serviceMode && sourceId === 'novel') connection.draft.options.imageTransport = serviceMode.value === 'service' ? 'service' : 'auto';
     connection.draft.options.allowPrivateNetwork = Boolean(root.querySelector('.sd-storyboard-private-network')?.checked);
     if (root.querySelector('.sd-storyboard-openai-compat')) {
       const parsedHeaders = parseOpenAICompatibleHeaders(root.querySelector('.sd-storyboard-openai-headers')?.value || '');
@@ -17073,7 +17089,7 @@ async function storyboardSaveConnectionPreset(root) {
     name, providerId: sourceId, baseUrl, model: String(profile.model || ''),
     ...resolveStoryboardConnectionBinding(sourceId, group.draft),
     customModel: Boolean(STORYBOARD_PROVIDER_REGISTRY[sourceId]?.customModelId && !getStoryboardModel(sourceId, profile.model)),
-    credentialId, options: { allowPrivateNetwork: Boolean(group.draft.options?.allowPrivateNetwork) },
+    credentialId, options: { allowPrivateNetwork: Boolean(group.draft.options?.allowPrivateNetwork), imageTransport: sourceId === 'novel' && group.draft.options?.imageTransport === 'service' ? 'service' : 'auto' },
     ...(sourceId === 'openai' || group.draft.compatibility ? {
       compatibility: normalizeOpenAIImageCompatibility(group.draft.compatibility),
       headers: clone(group.draft.headers || {}),
@@ -17728,6 +17744,53 @@ async function storyboardManageImageChannels(options = {}) {
   finally { channels.close(); }
 }
 
+async function storyboardImageServiceRuntime() {
+  const epoch = storyboardAdmissionEpoch;
+  const module = await featureRuntime.load('imageServiceClient');
+  if (epoch !== storyboardAdmissionEpoch) throw new Error('分镜会话已结束');
+  storyboardImageService ||= module.createImageServiceClient({ headers: storyboardRequestHeaders, confirm: confirmDialog });
+  return storyboardImageService;
+}
+
+async function storyboardReceiveServiceImage(attemptId) {
+  try {
+    const service = await storyboardImageServiceRuntime();
+    const result = await service.retrieve(attemptId, async (data, row, checkpoint, guard) => {
+      const job = { ...clone(row.snapshot), id: row.attemptId, automatic: Boolean(row.snapshot.automatic), discardRequested: false };
+      const log = storyboardState().logs.find(item => item.id === row.logId);
+      const archived = await storyboardDeliverGatewayResult(job, log, data, { service: true, archiveRecords: row.archiveRecords, checkpoint, guard });
+      if (archived) {
+        await guard();
+        try {
+          const admission = await storyboardImageAdmissionRuntime();
+          if (job.imageAdmission) await admission.confirmResult(job.imageAdmission);
+          await (await storyboardImageChannelRuntime()).confirmResult({ namespace: row.namespace, attemptId: row.attemptId, channelKey: row.channelKey });
+        } catch (_) { throw new Error('原图已归档；本地请求保护记录尚待核查，可稍后再领取以同步，不会重新生图'); }
+      }
+      return archived;
+    });
+    toast(result.warning || '原图已领取并归档', result.warning ? 'warning' : 'success');
+    renderModal();
+  } catch (error) { toast(error.message || '原图暂不可领取，未重新生成', 'warning'); }
+}
+
+async function storyboardPaintServiceInbox(root) {
+  const host = root.querySelector('.sd-storyboard-service-inbox');
+  if (!host) return;
+  host.textContent = '正在读取';
+  try {
+    const rows = await (await storyboardImageServiceRuntime()).list();
+    if (!host.isConnected) return;
+    host.innerHTML = rows.length ? rows.sort((a,b) => b.createdAt-a.createdAt).map(row => `<div class="sd-storyboard-log-actions"><span>${htmlEscape(formatDateTime(row.createdAt))} · ${htmlEscape(row.snapshot.profile?.model || 'NAI')}</span><button type="button" class="sd-btn" data-service-receive="${htmlEscape(row.attemptId)}">${row.status === 'archived' ? '确认归档' : '领取原图'}</button><button type="button" class="sd-icon-btn" data-service-dismiss="${htmlEscape(row.attemptId)}" aria-label="移除此设备的领取记录" title="移除此设备的领取记录"><i class="fa-solid fa-trash-can"></i></button></div>`).join('') : '<span>暂无待领取请求</span>';
+    host.querySelectorAll('[data-service-receive]').forEach(button => button.addEventListener('click', () => void storyboardReceiveServiceImage(button.dataset.serviceReceive)));
+    host.querySelectorAll('[data-service-dismiss]').forEach(button => button.addEventListener('click', async () => {
+      try { await (await storyboardImageServiceRuntime()).dismiss(button.dataset.serviceDismiss); if (root.isConnected) await storyboardPaintServiceInbox(root); }
+      catch (error) { toast(error.message, 'warning'); }
+    }));
+    applyQianmuIcons(host);
+  } catch (error) { if (host.isConnected) host.textContent = error.message; }
+}
+
 async function storyboardSettleImageAdmission(job, outcome) {
   if (!storyboardAdmission || !job.imageAdmission) return;
   try { await storyboardAdmission.settle(job, outcome); }
@@ -18370,15 +18433,16 @@ function storyboardImageExtension(mime = '') {
   return 'png';
 }
 
-async function storyboardPersistGatewayImage(image, job, index) {
+async function storyboardPersistGatewayImage(image, job, index, { requireLocal = false } = {}) {
   const utils = await storyboardUtilsModule().catch(() => null);
   const extension = storyboardImageExtension(image?.mime);
   const filename = `qianmu_storyboard_${Date.now()}_${String(index + 1).padStart(2, '0')}`;
   if (image?.data && typeof utils?.saveBase64AsFile === 'function') {
     const saved = await utils.saveBase64AsFile(String(image.data), getCharacterName() || 'Qianmu', filename, extension);
     const url = storyboardSafeUrl(saved);
-    if (url) return url;
+    if (url && (!requireLocal || new URL(url, location.origin).origin === location.origin)) return url;
   }
+  if (requireLocal) throw new Error(`第 ${index + 1} 张原图未确认本地保存，服务暂存已保留`);
   const upstreamUrl = storyboardSafeUrl(image?.url);
   if (!upstreamUrl) throw new Error(`第 ${index + 1} 张图片没有可保存的数据`);
   if (typeof utils?.saveBase64AsFile === 'function') {
@@ -18439,6 +18503,67 @@ function storyboardCreateRecord(job, log, url, index, anchorState, response) {
   };
 }
 
+async function storyboardDeliverGatewayResult(job, log, data, { service = false, archiveRecords = [], checkpoint, guard = async () => {} } = {}) {
+  const plan = storyboardPlanForJob(job);
+  const images = Array.isArray(data.images) ? data.images.slice(0, 8) : [];
+  if (!images.length) throw new Error('生图服务没有返回可用图片');
+  await guard();
+  const records = clone(archiveRecords);
+  if (records.length > images.length) throw new Error('原图归档数量与结果不符，请核查原任务');
+  if (records.length < images.length) {
+    storyboardSetPlanStatus(plan, 'generating', { job, stage: 'persistence', progress: 0.8 });
+    storyboardPipelineStage(log, 'asset_persistence', 'running', {}, { imageCount: images.length });
+    for (let index = records.length; index < images.length; index++) {
+      await guard();
+      const url = await storyboardPersistGatewayImage(images[index], job, index, { requireLocal: service });
+      await guard();
+      const anchor = storyboardValidatedAnchor(job);
+      const record = storyboardCreateRecord(job, log || (service ? { snapshot: job } : null), url, index, anchor, data);
+      if (service) record.id = `service-${job.id}-${index}`;
+      records.push(record);
+      // One frozen job is enough for all variants. Save each completed file's
+      // checkpoint without duplicating that full recipe for every image.
+      if (checkpoint) await checkpoint(records.map(({ snapshot, snapshotRef, ...item }) => item));
+    }
+  }
+  await guard();
+  if (service) for (const record of records) record.snapshot ||= sanitizeStoryboardSnapshot(log?.snapshot || job, { source: job.source });
+  const anchorState = storyboardValidatedAnchor(job);
+  const currentOwnsResult = !job.chatKey || job.chatKey === String(getChatKey() || '');
+  let deliveryState = anchorState.valid || job.target === 'gallery' ? 'delivered' : 'gallery_fallback';
+  const resultLinkState = job.target === 'gallery' ? '' : anchorState.linkState;
+  if (currentOwnsResult) {
+    if (service && typeof ctx().saveMetadata !== 'function') throw new Error('当前聊天无法确认保存，原图已保留');
+    const gallery = storyboardGalleryRecords();
+    for (const record of records) {
+      // A retry after a page close reuses the exact result, never creates a copy.
+      if (service) Object.assign(record, { floor: anchorState.floor, inline: Boolean(job.inlineByDefault && anchorState.valid), linkState: anchorState.valid ? 'active' : resultLinkState || 'orphaned' });
+      if (!gallery.some(item => item.id === record.id)) gallery.push(record);
+    }
+    const prunedRecords = gallery.length > 400 ? gallery.splice(0, gallery.length - 400) : [];
+    await saveMetadata();
+    void storyboardArchiveGallerySnapshots(records);
+    if (prunedRecords.length) void storyboardDeleteRecordSnapshots(prunedRecords);
+    storyboardSetPlanStatus(plan, 'generating', { job, floor: anchorState.floor, stage: 'attachment', progress: 0.92, deliveryState, linkState: resultLinkState });
+  } else {
+    deliveryState = await storyboardStoreDeferredDelivery(job, records);
+    storyboardSetPlanStatus(plan, 'generating', { job, floor: null, stage: 'delivery_pending', progress: 0.96, deliveryState, linkState: 'foreign' });
+  }
+  await guard();
+  storyboardPipelineStage(log, 'asset_persistence', 'success', {}, { recordIds: records.map(item => item.id) });
+  storyboardPipelineStage(log, 'paragraph_anchor', 'success', {}, { requestedFloor: job.floor, finalFloor: anchorState.floor,
+    fallback: !anchorState.valid && job.target !== 'gallery', deliveryState, deferredToOriginalChat: !currentOwnsResult });
+  if (log) { log.error = ''; log.submissionState = 'accepted'; }
+  storyboardFinishLog(log, 'success', { recordId: records[0].id, recordIds: records.map(item => item.id), floor: anchorState.floor });
+  storyboardSetPlanStatus(plan, 'completed', { resultIds: records.map(item => item.id), job, floor: currentOwnsResult ? anchorState.floor : null,
+    stage: currentOwnsResult ? 'complete' : 'delivery_pending', progress: currentOwnsResult ? 1 : 0.96,
+    deliveryState, linkState: currentOwnsResult ? resultLinkState : 'foreign' });
+  if (!currentOwnsResult && !job.automatic) toast(`${records.length} 张分镜已生成；返回原聊天后会自动归档。`, 'info');
+  else if (!anchorState.valid && job.target !== 'gallery') toast(`${records.length} 张分镜已生成；原楼层变化，已安全转存阅片室。`, 'warning');
+  else if (!job.automatic) toast(records[0].inline ? `${records.length} 张分镜已穿插至第 ${anchorState.floor} 层。` : `${records.length} 张分镜已存入阅片室。`, 'success');
+  return deliveryState !== 'volatile_pending' && (!service || currentOwnsResult);
+}
+
 async function storyboardRunJob(job, log) {
   const plan = storyboardPlanForJob(job);
   let admissionOutcome = 'not_submitted';
@@ -18489,6 +18614,29 @@ async function storyboardRunJob(job, log) {
       const assets = await storyboardPrepareGatewayAssets(job);
       const gatewayRequest = storyboardGatewayRequest(job, apiKey, assets);
       storyboardPipelineStage(log, 'provider_request', 'running', { request: gatewayRequest });
+      if (job.connection?.imageTransport === 'service') {
+        const service = await storyboardImageServiceRuntime();
+        const result = await service.submit(job, gatewayRequest, { beforeSubmit,
+          valid: () => !job.discardRequested && storyboardState().enabled,
+          onPrepared: row => { if (log?.snapshot) { log.snapshot.serviceTask = { version: 1, attemptId: row.attemptId }; saveSettings(); } },
+          deliver: async (data, row, checkpoint, guard) => {
+            job.submissionState = 'accepted'; admissionOutcome = 'accepted';
+            await storyboardSettleImageAdmission(job, 'accepted');
+            if (log) log.submissionState = 'accepted';
+            storyboardPipelineStage(log, 'provider_request', 'success', {}, { transport: 'coordinated_service', response: data });
+            if (job.discardRequested) {
+              storyboardFinishLog(log, 'cancelled', { error: '已停止当前收片，原图可在服务收片中领取', submissionState: 'accepted' });
+              storyboardSetPlanStatus(plan, 'cancelled', { error: '已停止当前收片', job });
+              return false;
+            }
+            const archived = await storyboardDeliverGatewayResult(job, log, data, { service: true, archiveRecords: row.archiveRecords, checkpoint, guard });
+            if (archived) admissionOutcome = 'succeeded';
+            return archived;
+          },
+        });
+        if (result.warning) toast(result.warning, 'warning');
+        return { serviceDelivered: true };
+      }
       const directImage = await directImageRuntime();
       let data = null;
       let transport = 'browser_direct';
@@ -18538,6 +18686,7 @@ async function storyboardRunJob(job, log) {
         onWarning: () => toast('NAI 连接记录未完成结算；再次生图前请核对渠道记录', 'warning'),
       }, async ticket => { channelTicket = ticket; return generateTransport(); });
     } else response = await generateTransport();
+    if (response.serviceDelivered) return;
     const { data, transport } = response;
     job.submissionState = 'accepted';
     admissionOutcome = 'accepted';
@@ -18553,44 +18702,8 @@ async function storyboardRunJob(job, log) {
       storyboardSetPlanStatus(plan, 'cancelled', { error: '用户放弃收片', job });
       return;
     }
-    const images = Array.isArray(data.images) ? data.images.slice(0, 8) : [];
-    if (!images.length) throw new Error('生图服务没有返回可用图片');
-    const anchorState = storyboardValidatedAnchor(job);
-    storyboardSetPlanStatus(plan, 'generating', { job, floor: anchorState.floor, stage: 'persistence', progress: 0.8 });
-    storyboardPipelineStage(log, 'asset_persistence', 'running', {}, { imageCount: images.length });
-    const urls = [];
-    for (let index = 0; index < images.length; index++) urls.push(await storyboardPersistGatewayImage(images[index], job, index));
-    const records = urls.map((url, index) => storyboardCreateRecord(job, log, url, index, anchorState, data));
-    const currentOwnsResult = !job.chatKey || job.chatKey === String(getChatKey() || '');
-    let deliveryState = anchorState.valid || job.target === 'gallery' ? 'delivered' : 'gallery_fallback';
-    const resultLinkState = job.target === 'gallery' ? '' : anchorState.linkState;
-    if (currentOwnsResult) {
-      const gallery = storyboardGalleryRecords();
-      gallery.push(...records);
-      const prunedRecords = gallery.length > 400 ? gallery.splice(0, gallery.length - 400) : [];
-      await saveMetadata();
-      void storyboardArchiveGallerySnapshots(records);
-      if (prunedRecords.length) void storyboardDeleteRecordSnapshots(prunedRecords);
-      storyboardSetPlanStatus(plan, 'generating', { job, floor: anchorState.floor, stage: 'attachment', progress: 0.92, deliveryState, linkState: resultLinkState });
-    } else {
-      deliveryState = await storyboardStoreDeferredDelivery(job, records);
-      storyboardSetPlanStatus(plan, 'generating', { job, floor: null, stage: 'delivery_pending', progress: 0.96, deliveryState, linkState: 'foreign' });
-    }
-    storyboardPipelineStage(log, 'asset_persistence', 'success', {}, { recordIds: records.map((item) => item.id) });
-    storyboardPipelineStage(log, 'paragraph_anchor', 'success', {}, {
-      requestedFloor: job.floor, finalFloor: anchorState.floor, fallback: !anchorState.valid && job.target !== 'gallery',
-      deliveryState, deferredToOriginalChat: !currentOwnsResult,
-    });
-    storyboardFinishLog(log, 'success', { recordId: records[0].id, recordIds: records.map((item) => item.id), floor: anchorState.floor });
+    await storyboardDeliverGatewayResult(job, log, data);
     admissionOutcome = 'succeeded';
-    storyboardSetPlanStatus(plan, 'completed', {
-      resultIds: records.map((item) => item.id), job, floor: currentOwnsResult ? anchorState.floor : null,
-      stage: currentOwnsResult ? 'complete' : 'delivery_pending', progress: currentOwnsResult ? 1 : 0.96,
-      deliveryState, linkState: currentOwnsResult ? resultLinkState : 'foreign',
-    });
-    if (!currentOwnsResult && !job.automatic) toast(`${records.length} 张分镜已生成；返回原聊天后会自动归档。`, 'info');
-    else if (!anchorState.valid && job.target !== 'gallery') toast(`${records.length} 张分镜已生成；原楼层变化，已安全转存阅片室。`, 'warning');
-    else if (!job.automatic) toast(records[0].inline ? `${records.length} 张分镜已穿插至第 ${anchorState.floor} 层。` : `${records.length} 张分镜已存入阅片室。`, 'success');
   } catch (error) {
     console.error(`[${MODULE_NAME}] storyboard generation failed`, error);
     const submissionState = error?.submissionState || job.submissionState || 'not_submitted';
@@ -19936,6 +20049,12 @@ function bindStoryboardTabEvents(root) {
     storyboardCaptureWorkbench(root); void storyboardLoadConnectionPreset(String(event.target.value || ''));
   });
   root.querySelector('.sd-storyboard-protocol')?.addEventListener('change', (event) => storyboardChangeConnectionProtocol(root, event.target.value));
+  root.querySelector('.sd-storyboard-service-mode')?.addEventListener('change', async (event) => {
+    storyboardCaptureWorkbench(root); saveSettings();
+    if (event.target.value !== 'service') return;
+    try { await (await storyboardImageServiceRuntime()).probe(); toast('服务协调可用，仅协调进入此服务的 NAI 请求', 'success'); }
+    catch (error) { toast(error.message, 'warning'); }
+  });
   root.querySelector('.sd-storyboard-api-key-memory')?.addEventListener('input', (event) => {
     storyboardKeyInputRevision++;
     const value = String(event.target.value || '').trim();
@@ -20644,9 +20763,13 @@ function bindStoryboardTabEvents(root) {
     row.querySelector('.sd-storyboard-retry-log')?.addEventListener('click', () => {
       if (log) storyboardRetryLog(log);
     });
+    row.querySelector('.sd-storyboard-receive-log')?.addEventListener('click', () => {
+      if (log?.snapshot?.serviceTask?.attemptId) void storyboardReceiveServiceImage(log.snapshot.serviceTask.attemptId);
+    });
     row.querySelector('.sd-storyboard-cancel-queued-log')?.addEventListener('click', () => storyboardRemoveQueuedLog(log));
   });
   let gallerySearchTimer = null;
+  root.querySelector('.sd-storyboard-open-service-inbox')?.addEventListener('click', () => void storyboardPaintServiceInbox(root));
   root.querySelector('.sd-storyboard-gallery-search')?.addEventListener('input', (event) => {
     state.gallerySearch = String(event.target.value || '').slice(0, 120);
     saveSettings();
@@ -33445,6 +33568,7 @@ function cleanupRuntime(resetSettings = false) {
       void storyboardAdmission?.close();
       storyboardAdmission = null;
       storyboardImageChannel?.close(); storyboardImageChannel = null;
+      storyboardImageService?.close(); storyboardImageService = null;
       for (const job of storyboardActiveJobs.values()) {
         job.discardRequested = true;
         storyboardSyncTaskState(job, 'cancelled', { error: '扩展已停用或更新', plan: storyboardPlanForJob(job) });

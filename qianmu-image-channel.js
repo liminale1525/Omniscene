@@ -166,6 +166,20 @@ export function createBrowserImageChannel({ locks = globalThis.navigator?.locks,
         throw error;
       } finally { clearTimeout(timer); pending.delete(controller); }
     },
+    async confirmResult({ namespace, attemptId, channelKey, valid = () => true }) {
+      identity(namespace, 'ST 账户'); identity(attemptId, '原请求编号'); assertOpen(); checkLocks();
+      if (!/^[a-f0-9]{64}$/.test(channelKey || '')) throw problem('identity', '原连接指纹无效');
+      return locks.request(MAINTENANCE, { mode: 'shared', ifAvailable: true }, maintenance => {
+        if (!maintenance) throw problem('busy', 'NAI 记录正在维护');
+        return locks.request(`${PREFIX}${channelKey}`, { mode: 'exclusive', ifAvailable: true }, lock => {
+          if (!lock) throw problem('busy', 'NAI 连接仍在使用，暂缓同步原结果');
+          return change(channelKey, current => {
+            if (!valid()) throw problem('cancelled', '原图账户已变化');
+            return current?.namespace === namespace && current.attemptId === attemptId ? null : undefined;
+          });
+        });
+      });
+    },
     async manage(namespace, { remove = false } = {}) {
       identity(namespace, 'ST 账户'); assertOpen();
       const scan = () => transact(remove ? 'readwrite' : 'readonly', (store, output, abort) => {

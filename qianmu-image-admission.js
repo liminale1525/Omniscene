@@ -163,5 +163,12 @@ export function createImageAdmission({ store = createImageAttemptStore(), accoun
       }));
       live.clear(); store.close();
     },
+    async confirmResult(saved) {
+      if (!saved || saved.version !== 1 || await account() !== saved.namespace) throw error('account_changed', '原生图账户不匹配');
+      const decision = await store.confirmResult({ namespace: saved.namespace, chatKey: saved.chatKey, messageKey: saved.messageKey, revisionId: saved.revisionId },
+        { attemptId: saved.attemptId, logicalShotId: saved.logicalShotId });
+      if (!decision.ok) throw error('identity', '原图与本地请求记录不匹配，未修改保护记录');
+      return decision;
+    },
   };
 }
