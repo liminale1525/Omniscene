@@ -1,4 +1,5 @@
 // 千幕·导演工作单。下游工种只接收已批准决策的有限投影，不再解释原始推演文本。
+import { normalizeWorldSource } from './qianmu-world-source.js';
 import {
   QIANMU_DIRECTOR_DECISION_CONSUMERS,
   canConsumeDirectorDecision,
@@ -93,6 +94,7 @@ export function normalizeDirectorWorkOrder(value = {}) {
       eventId: stableId(source.eventId || source.event_id),
       track: ['main_camera', 'second_camera'].includes(source.track) ? source.track : '',
       canonLevel: ['canon', 'director', 'draft'].includes(source.canonLevel || source.canon_level) ? (source.canonLevel || source.canon_level) : '',
+      ...(normalizeWorldSource(source.worldSource) ? {worldSource:normalizeWorldSource(source.worldSource)} : {}),
     },
     payload: normalizePayload(raw.payload, consumer),
     createdAt: timestamp(raw.createdAt || raw.created_at),
@@ -134,6 +136,7 @@ export function createDirectorWorkOrder(decisionValue = {}, consumer = '', chatK
       candidateId: decision.source.candidateId, ledgerEntryId: decision.source.ledgerEntryId,
       packetId: decision.source.packetId, eventId: decision.source.eventId,
       track: decision.source.track, canonLevel: decision.source.canonLevel,
+      worldSource: decision.source.worldSource,
     },
     payload: decision.lanes,
     createdAt,
@@ -178,6 +181,7 @@ export function directorWorkOrderToStoryboardShot(value = {}, chatKey = '') {
       packetId: order.source.packetId, eventId: order.source.eventId, track: order.source.track,
       canonLevel: order.source.canonLevel, autoInsert: false, decisionId: order.source.decisionId,
       decisionStatus: 'approved', truthMode: order.truthMode,
+      ...(order.source.worldSource ? {worldSource:order.source.worldSource} : {}),
     },
     decisions: [`导演工作单：${order.workOrderId}`],
   };

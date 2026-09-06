@@ -76,7 +76,7 @@ test('the additive draft store is idle and included in the release', async () =>
   const persistence = storage.slice(storage.indexOf('function normalizeStoredVideoDraft'), storage.indexOf('// ── 完整影片：时间线草稿'));
   assert.match(persistence, /schema: 'qianmu\.video-draft\.v1'/);
   assert.doesNotMatch(persistence, /apiKey|authorization|remoteUrl|base64|blob/i);
-assert.match(source, /videoDraftStore:\s*\{[\s\S]*import\('\.\/qianmu-video-draft-store\.js\?v=1\.59\.69'\)/);
+assert.match(source, /videoDraftStore:\s*\{[\s\S]*import\('\.\/qianmu-video-draft-store\.js\?v=1\.59\.70'\)/);
   assert.ok(release.files.includes('qianmu-video-draft-store.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('videoDraftStore'\)/);

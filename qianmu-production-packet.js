@@ -1,4 +1,6 @@
 // 千幕·共享片场制片包。纯数据适配器：不读写 DOM、设置、聊天元数据或媒体二进制。
+import { normalizeWorldSource } from './qianmu-world-source.js';
+export { buildWorldSourceIndex, worldSourceKey, indexWorldMedia } from './qianmu-world-source.js';
 export const QIANMU_PRODUCTION_PACKET_SCHEMA = 'qianmu.production.packet.v1';
 export const QIANMU_PRODUCTION_TRACKS = Object.freeze(['main_camera', 'second_camera']);
 export const QIANMU_CANON_LEVELS = Object.freeze(['canon', 'director', 'draft']);
@@ -60,7 +62,8 @@ export function normalizeQianmuProductionPacket(value = {}) {
       messageId: text(anchorRaw.messageId || anchorRaw.message_id, 200),
       revisionId: text(anchorRaw.revisionId || anchorRaw.revision_id, 200),
     },
-    sourceRef: { field: text(sourceRaw.field, 80), index: integer(sourceRaw.index), itemId: text(sourceRaw.itemId || sourceRaw.item_id, 200) },
+    sourceRef: { field: text(sourceRaw.field, 80), index: integer(sourceRaw.index), itemId: text(sourceRaw.itemId || sourceRaw.item_id, 200),
+      ...(normalizeWorldSource(sourceRaw.worldSource) ? {worldSource:normalizeWorldSource(sourceRaw.worldSource)} : {}) },
     knowledgeScope: { directorOnly: Boolean(directorOnly), visibleTo, hiddenFrom },
     sceneState: {
       location: text(sceneRaw.location, 1000), time: text(sceneRaw.time, 240), weather: text(sceneRaw.weather, 240),
@@ -113,12 +116,14 @@ export function adaptDirectorPlanToProductionPackets(plan = {}, context = {}) {
       if (!summary) return;
       const itemId = text(item.id || item.title || item.name, 200);
       const eventId = itemId || `director-${field}-${hash(`${summary}|${index}`)}`;
+      const worldSource = normalizeWorldSource(anchor.worldSourceIndex?.entries?.find(row=>row.index===index && row.source?.field===field)?.source);
       packets.push(normalizeQianmuProductionPacket({
-        eventId,
+        eventId: worldSource?.itemId || eventId,
+        ...(worldSource ? {packetId:`packet-${worldSource.revisionId.slice(5)}-${worldSource.itemId.slice(6)}`} : {}),
         sceneId: anchor.sceneId || '',
         ...profile,
-        timelineAnchor: { chatKey: anchor.chatKey, floor: anchor.floor, messageId: anchor.messageId, revisionId: anchor.revisionId },
-        sourceRef: { field, index, itemId },
+        timelineAnchor: { chatKey: anchor.chatKey, floor: anchor.floor, messageId: anchor.messageId, revisionId: worldSource?.revisionId || anchor.revisionId },
+        sourceRef: { field, index, itemId:worldSource?.itemId || itemId, ...(worldSource ? {worldSource} : {}) },
         knowledgeScope: { directorOnly: true, visibleTo: [], hiddenFrom: [] },
         sceneState: { location: anchor.location || '', time: item.timing || anchor.time || '', weather: anchor.weather || '', environment: [story.mood, item.scope].filter(Boolean) },
         characterState: itemCharacters(field, item),

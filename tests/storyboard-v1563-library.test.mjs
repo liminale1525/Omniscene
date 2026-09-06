@@ -53,7 +53,7 @@ assert.match(style, /@media \(max-width: 720px\)[\s\S]*\.sd-media-library-shell 
 assert.match(source, /data-storyboard-chat-action="artist"/);
 assert.match(source, /function storyboardChooseArtistForRecord/);
 assert.match(source, /function storyboardBasePromptsForArtistRedraw/);
-assert.match(source, /function storyboardRedrawRecord\(record, \{ artistPreset = undefined, artistPool = null, rerollArtist = false \} = \{\}\)/);
+assert.match(source, /function storyboardRedrawRecord\(record, \{ artistPreset = undefined, artistPool = null, rerollArtist = false, verify = async\(\)=>\{\} \} = \{\}\)/);
 assert.match(source, /value="__reroll_pool__"[\s\S]*excludedArtistIds: \[record\.artistPresetId[\s\S]*reroll: true/, '正文换画师必须支持从原方案显式重抽并排除当前画师');
 assert.match(source, /artistRerollCount = Math\.max[\s\S]*snapshot\.artistRerollCount = artistRerollCount/, '显式换画师必须留下稳定递增的重抽次数');
 assert.match(source, /fallbackToStateArtist = true[\s\S]*fallbackToStateArtist: false/, '单镜明确清除画师层时不得重新吸入镜头台的全局画师');

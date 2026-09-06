@@ -1,5 +1,6 @@
 // 千幕·导演决策单。把用户确认后的候选转成下游唯一可消费凭据；不读写存储、媒体或网络。
 import { normalizeDirectorCandidate } from './qianmu-director-candidate.js';
+import { normalizeWorldSource } from './qianmu-world-source.js';
 
 export const QIANMU_DIRECTOR_DECISION_SCHEMA = 'qianmu.director-decision.v1';
 export const QIANMU_DIRECTOR_DECISION_CONSUMERS = Object.freeze(['storyboard', 'voice', 'subtitle', 'film']);
@@ -64,6 +65,7 @@ export function normalizeDirectorDecision(value = {}) {
       eventId: text(source.eventId || source.event_id, 200),
       track: ['main_camera', 'second_camera'].includes(source.track) ? source.track : '',
       canonLevel: ['canon', 'director', 'draft'].includes(source.canonLevel || source.canon_level) ? (source.canonLevel || source.canon_level) : '',
+      ...(normalizeWorldSource(source.worldSource) ? {worldSource:normalizeWorldSource(source.worldSource)} : {}),
     },
     approval: {
       mode: approval.mode === 'explicit' ? 'explicit' : 'none',
@@ -126,6 +128,7 @@ export function createDirectorDecision(candidateValue = {}, packetValue = {}, op
     source: {
       candidateId: candidate.candidateId, ledgerEntryId: candidate.entryId, packetId: packet.packetId,
       eventId: packet.eventId, track: packet.track, canonLevel: packet.canonLevel,
+      worldSource: packet.sourceRef?.worldSource,
     },
     approval: { mode: 'explicit', approvedAt, revision: 1 },
     outputs,

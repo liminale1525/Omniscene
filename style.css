@@ -7353,6 +7353,17 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 .sd-storyboard-lightbox-detail dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.55; }
 .sd-storyboard-lightbox-detail footer { position: sticky; bottom: 0; width: 100%; display: flex; justify-content: flex-end; margin-top: 12px; padding: 9px 0 0; border: 0; border-radius: 0; background: transparent; }
 .sd-storyboard-lightbox-detail footer .sd-btn { min-width: 88px; }
+.sd-storyboard-lightbox-detail footer { flex-wrap: wrap; gap: 6px; position: static; }
+.sd-storyboard-lightbox-detail footer .sd-btn { flex: 1 1 88px; min-height: 36px; }
+.sd-storyboard-lightbox-stage { min-width: 0; min-height: 0; touch-action: pan-y; }
+.sd-storyboard-lightbox-stage img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.sd-storyboard-lightbox-detail { min-width: 0; }
+.sd-storyboard-lightbox-detail dd { word-break: break-word; }
+#story-director-modal .sd-world-media-entry { flex: 0 0 auto; width: auto; min-width: 32px; height: 32px; padding: 5px; gap: 3px; margin-inline-start: auto; }
+#story-director-modal .sd-world-media-entry.has-media { color: var(--sd-accent); }
+#story-director-modal .sd-world-media-entry span { font-size: 10px; }
+#story-director-modal .sd-world-media-entry .qm-icon { width: 17px; height: 17px; }
+#story-director-modal .sd-chain-item > .sd-world-media-entry { align-self: flex-end; }
 
 @media (max-width: 640px) {
   #story-director-modal .sd-storyboard-gallery-tools { grid-template-columns: minmax(100px, .36fr) minmax(0, 1fr) auto auto; }

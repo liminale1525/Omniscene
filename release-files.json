@@ -16,6 +16,7 @@
     "qianmu-character-archive-view.js",
     "qianmu-character-casting.js",
     "qianmu-world-shot.js",
+    "qianmu-world-source.js",
     "qianmu-character-shot-edit.js",
     "qianmu-character-shot-view.js",
     "qianmu-character-reference.js",

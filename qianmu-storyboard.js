@@ -3,6 +3,7 @@ import { resolveImageProtocolBinding, IMAGE_NATIVE_PROTOCOLS, IMAGE_PROTOCOL_BIN
 import { inspectComfyWorkflow } from './qianmu-comfy-workflow.js';
 import { retainComfyReferenceSelection } from './qianmu-comfy-reference-contract.js';
 import { normalizeComfyCharacterActivation } from './qianmu-comfy-character-contract.js';
+import { normalizeWorldSource } from './qianmu-world-source.js';
 import { normalizeCharacterCastingSnapshot, assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
 export { assertCharacterCastingSnapshots } from './qianmu-character-casting.js';
 export { planCharacterReference, assertCharacterReferencePlan, characterReferenceNotice, characterReferenceChoice, renderCharacterReferencePicker, applyCharacterReferenceChoice } from './qianmu-character-reference.js';
@@ -993,6 +994,7 @@ function normalizeStoryboardDirectorDecisionSnapshot(value) {
       eventId: cleanId(source.eventId || source.event_id),
       track: ['main_camera', 'second_camera'].includes(source.track) ? source.track : '',
       canonLevel: ['canon', 'director', 'draft'].includes(source.canonLevel || source.canon_level) ? (source.canonLevel || source.canon_level) : '',
+      ...(normalizeWorldSource(source.worldSource) ? {worldSource:normalizeWorldSource(source.worldSource)} : {}),
     },
     approval: {
       mode: approval.mode === 'explicit' ? 'explicit' : 'none',
@@ -1113,6 +1115,7 @@ export function normalizeStoryboardShotSpec(value = {}) {
       decisionId: cleanId(productionRaw.decisionId || productionRaw.decision_id),
       decisionStatus: productionRaw.decisionStatus === 'approved' ? 'approved' : productionRaw.decisionStatus === 'revoked' ? 'revoked' : '',
       truthMode: productionRaw.truthMode === 'canon' ? 'canon' : productionRaw.truthMode === 'speculative' ? 'speculative' : '',
+      ...(normalizeWorldSource(productionRaw.worldSource) ? {worldSource:normalizeWorldSource(productionRaw.worldSource)} : {}),
     },
     directorDecision: normalizeStoryboardDirectorDecisionSnapshot(raw.directorDecision || raw.director_decision),
     continuityUpdates,
@@ -1152,7 +1155,7 @@ export function adaptProductionPacketToStoryboardShotSpec(value = {}, overrides 
     promptAtoms: { global: [visual.description, visual.subject].filter(Boolean), environment },
     continuityUpdates: { time: sceneState.time, weather: sceneState.weather, props: Object.fromEntries((Array.isArray(sceneState.props) ? sceneState.props : []).map((prop) => [String(prop), true])) },
     evidence: { type: 'inferred', paragraphIds: evidenceRefs, quote: visual.evidenceQuote || '', rationale: visual.rationale || '由制片包映射，需在镜头详情确认后提交。' },
-    productionContext: { packetId: packet.packetId, eventId: packet.eventId, track: packet.track, canonLevel: packet.canonLevel, autoInsert: false, decisionId: '', decisionStatus: '', truthMode: '' },
+    productionContext: { packetId: packet.packetId, eventId: packet.eventId, track: packet.track, canonLevel: packet.canonLevel, autoInsert: false, decisionId: '', decisionStatus: '', truthMode: '', worldSource:packet.sourceRef?.worldSource },
     decisions: [`制片包来源：${packet.sourceRef?.field || 'unknown'}`],
     ...overrides,
   });
@@ -1185,6 +1188,7 @@ export function storyboardProductionContext(value = {}) {
     decisionId: cleanId(raw.decisionId || raw.decision_id),
     decisionStatus: raw.decisionStatus === 'approved' ? 'approved' : raw.decisionStatus === 'revoked' ? 'revoked' : '',
     truthMode: raw.truthMode === 'canon' ? 'canon' : raw.truthMode === 'speculative' ? 'speculative' : '',
+    ...(normalizeWorldSource(raw.worldSource) ? {worldSource:normalizeWorldSource(raw.worldSource)} : {}),
   };
 }
 

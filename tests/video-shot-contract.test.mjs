@@ -197,7 +197,7 @@ test('the unfinished video contract ships as an idle feature chunk, not a startu
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
   assert.doesNotMatch(source, /^import[^\n]*qianmu-video-contract\.js/m);
-assert.match(source, /videoContract:\s*\{[\s\S]*import\('\.\/qianmu-video-contract\.js\?v=1\.59\.69'\)/);
+assert.match(source, /videoContract:\s*\{[\s\S]*import\('\.\/qianmu-video-contract\.js\?v=1\.59\.70'\)/);
   assert.ok(release.files.includes('qianmu-video-contract.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('videoContract'\)/);

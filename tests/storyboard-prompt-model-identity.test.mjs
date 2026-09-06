@@ -8,6 +8,7 @@ import {
   resolveStoryboardConnectionBinding, projectStoryboardProtocolParameters,
   getStoryboardCapabilities, synchronizeStoryboardCaptionBase,
   planCharacterReference, characterReferenceChoice,
+  storyboardProductionContext,
 } from '../qianmu-storyboard.js';
 import { generateDirectImage } from '../qianmu-image-direct.js';
 import { generateImage } from '../qianmu-image-gateway.js';
@@ -206,6 +207,7 @@ function redrawRuntime(archive, { mutate = null, archived = true } = {}) {
   const queued = [], notices = [];
   let chatKey = 'chat-a';
   const context = runtime(state, {
+    storyboardProductionContext, storyboardAdmissionEpoch: 1,
     ctx: () => ({ chat }), getChatKey: () => chatKey, uid: () => 'job-a',
     storyboardReconcileGalleryLinks: () => {},
     storyboardLoadRecordToWorkbench: () => assert.fail('unexpected workbench fallback'),
