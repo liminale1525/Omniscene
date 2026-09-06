@@ -25,6 +25,7 @@
     "qianmu-image-attempts.js",
     "qianmu-image-attempt-store.js",
     "qianmu-image-admission.js",
+    "qianmu-image-channel.js",
     "qianmu-image-gateway.js",
     "qianmu-image-models.js",
     "qianmu-image-transport.js",

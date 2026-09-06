@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.44';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.44';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.44';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.45';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.45';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.45';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.44';
+} from './qianmu-llm-output.js?v=1.59.45';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -170,151 +170,155 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.44';
+} from './qianmu-storyboard.js?v=1.59.45';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.44';
+const VERSION = '1.59.45';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.44'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.45'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.44'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.45'),
   },
   imageAdmission: {
     label: '生图请求保护',
-    load: () => import('./qianmu-image-admission.js?v=1.59.44'),
+    load: () => import('./qianmu-image-admission.js?v=1.59.45'),
+  },
+  imageChannel: {
+    label: 'NAI 跨页顺序生成',
+    load: () => import('./qianmu-image-channel.js?v=1.59.45'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.44').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.45').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.44'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.45'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.44'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.45'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.44'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.45'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.44'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.45'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.44'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.45'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.44'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.45'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.44'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.45'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.44'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.45'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.44'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.45'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.44'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.45'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.44'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.45'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.44'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.45'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.44'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.45'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.44'),
+    load: () => import('./qianmu-video-task.js?v=1.59.45'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.44'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.45'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.44'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.45'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.44'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.45'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.44'),
+    load: () => import('./qianmu-video-store.js?v=1.59.45'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.44'),
+    load: () => import('./qianmu-video-result.js?v=1.59.45'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.44'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.45'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.44'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.45'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.44'),
+    load: () => import('./qianmu-video-media.js?v=1.59.45'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.44'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.45'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.44'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.45'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.44'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.45'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.44'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.45'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.44'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.45'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.44'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.45'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.44'),
-        import('./qianmu-theaters.js?v=1.59.44'),
+        import('./builtin-theaters.js?v=1.59.45'),
+        import('./qianmu-theaters.js?v=1.59.45'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1152,6 +1156,7 @@ let storyboardCredentialRevision = 0;
 let storyboardWorldEntryCache = { key: '', names: [], boundNames: [], books: {}, rows: [], loading: null, error: '' }; // 分镜独立选择，读取链路与「取材」共用
 const storyboardActiveJobs = new Map(); // 正在生成的任务；放弃时不取消可能已计费的上游请求，只丢弃回传
 let storyboardAdmission = null;
+let storyboardImageChannel = null;
 let storyboardAdmissionEpoch = 0;
 const storyboardGenerationPreparing = new Set();
 const storyboardPlanRetries = new WeakSet();
@@ -7609,11 +7614,12 @@ function storageSettingsSnapshotWithoutDiagnostics() {
 
 async function collectStorageInventory() {
   const storageApi = globalThis.navigator?.storage;
-  const [originEstimate, idb, orphanReaderBlobs, imageAttempts] = await Promise.all([
+  const [originEstimate, idb, orphanReaderBlobs, imageAttempts, imageChannels] = await Promise.all([
     storageApi?.estimate?.().catch(() => null) || Promise.resolve(null),
     blobStore.estimateBlobStoreUsage(),
     blobStore.auditOrphanedReaderBlobs(),
     featureRuntime.load('imageAdmission').then(module => module.manageImageAdmissionStorage()).catch(error => ({ bytes: 0, count: 0, error: error?.message || '生图防重记录暂不可读取' })),
+    storyboardManageImageChannels().catch(error => ({ bytes: 0, count: 0, error: error?.message || 'NAI 连接协调记录暂不可读取' })),
   ]);
   const pressure = blobStore.classifyStoragePressure(originEstimate || {});
   const settingsBytes = storageJsonBytes(storageSettingsSnapshotWithoutDiagnostics());
@@ -7637,9 +7643,10 @@ async function collectStorageInventory() {
   addCategory('chat', currentChatBytes, 1, 0);
   addCategory('logs', diagnosticsBytes, 0, diagnosticsBytes);
   addCategory('logs', imageAttempts.bytes, imageAttempts.count);
-  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes;
+  addCategory('logs', imageChannels.bytes, imageChannels.count);
+  const trackedBytes = Number(idb.totalBytes || 0) + settingsBytes + currentChatBytes + diagnosticsBytes + imageAttempts.bytes + imageChannels.bytes;
   const recoverableBytes = Number(idb.recoverableBytes || 0) + diagnosticsBytes;
-  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes;
+  const manageableBytes = Number(idb.totalBytes || 0) + diagnosticsBytes + portableTtsBytes + imageAttempts.bytes + imageChannels.bytes;
   return {
     sampledAt: Date.now(),
     origin: {
@@ -7658,6 +7665,7 @@ async function collectStorageInventory() {
     manageableBytes,
     orphanReaderBlobs,
     imageAttempts,
+    imageChannels,
   };
 }
 
@@ -7725,6 +7733,7 @@ function renderStorageManagementCard() {
     <div class="sd-storage-legend">${legend || '<p class="sd-muted">暂未发现千幕本地数据。</p>'}</div>
     ${pressureNotice}
     ${data.imageAttempts?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageAttempts.error)}</p>` : ''}
+    ${data.imageChannels?.error ? `<p class="sd-storage-pressure is-warning">${htmlEscape(data.imageChannels.error)}</p>` : ''}
     <p class="sd-storage-scope">此处是浏览器分配给当前 ST 站点来源的空间，不代表 VPS 磁盘总容量；千幕仅统计可明确归因的本地内容。</p>
     <div class="sd-storage-actions"><button type="button" class="sd-btn sd-primary sd-storage-clean" ${data.manageableBytes > 0 ? '' : 'disabled'}><i class="fa-solid fa-sliders"></i>选择清理模块</button><button type="button" class="sd-btn sd-storage-chat-clean" ${data.idb?.chatScopes?.length ? '' : 'disabled'}><i class="fa-solid fa-message"></i>按聊天管理</button></div>
   </section>`;
@@ -7753,6 +7762,7 @@ const STORAGE_ITEM_RISK = Object.freeze({
   __orphan_reader_blobs__: ['无书籍主体引用 · 删除前重查', false],
   __diagnostics__: ['千幕与分镜日志', false],
   __image_attempts__: ['不可恢复 · 请求防重与自动图数核对；不影响渠道实际账单', true],
+  __image_channels__: ['不可恢复 · 清理后失去本地未确认 NAI 请求的暂停保护', true],
 });
 
 function openStorageCleanupDialog(data) {
@@ -7773,6 +7783,7 @@ function openStorageCleanupDialog(data) {
     }] : []),
     { id: '__diagnostics__', label: '生成与运行日志', bytes: Number(data?.diagnosticsBytes) || 0, count: 0 },
     { id: '__image_attempts__', label: '生图请求与预算记录（当前账户）', bytes: Number(data?.imageAttempts?.bytes) || 0, count: Number(data?.imageAttempts?.count) || 0 },
+    { id: '__image_channels__', label: 'NAI 连接协调记录（当前账户）', bytes: Number(data?.imageChannels?.bytes) || 0, count: Number(data?.imageChannels?.count) || 0 },
   ];
   const fixedNotes = modules.find((item) => item.id === 'notes');
   const favorites = modules.find((item) => item.id === 'favorites');
@@ -8157,6 +8168,7 @@ function bindStorageManagementEvents(root) {
     if (!selected?.length) return;
     try {
       const stores = selected.filter((item) => !item.startsWith('__'));
+      if (selected.includes('__image_channels__')) await storyboardManageImageChannels({ remove: true });
       if (selected.includes('__image_attempts__')) {
         if (storyboardQueue.length || storyboardActiveJobs.size || storyboardGenerationPreparing.size) throw new Error('仍有等待或生成中的画面，请结束后再清理防重记录');
         const module = await featureRuntime.load('imageAdmission');
@@ -17700,6 +17712,22 @@ async function storyboardImageAdmissionRuntime() {
   return storyboardAdmission;
 }
 
+async function storyboardImageChannelRuntime() {
+  const epoch = storyboardAdmissionEpoch;
+  const module = await featureRuntime.load('imageChannel');
+  if (epoch !== storyboardAdmissionEpoch) throw new Error('分镜会话已结束，未提交生图');
+  storyboardImageChannel ||= module.createBrowserImageChannel();
+  return storyboardImageChannel;
+}
+
+async function storyboardManageImageChannels(options = {}) {
+  const [identityModule, channelModule] = await Promise.all([featureRuntime.load('imageAdmission'), featureRuntime.load('imageChannel')]);
+  const namespace = await identityModule.resolveImageAccountNamespace();
+  const channels = channelModule.createBrowserImageChannel();
+  try { return await channels.manage(namespace, options); }
+  finally { channels.close(); }
+}
+
 async function storyboardSettleImageAdmission(job, outcome) {
   if (!storyboardAdmission || !job.imageAdmission) return;
   try { await storyboardAdmission.settle(job, outcome); }
@@ -18414,6 +18442,7 @@ function storyboardCreateRecord(job, log, url, index, anchorState, response) {
 async function storyboardRunJob(job, log) {
   const plan = storyboardPlanForJob(job);
   let admissionOutcome = 'not_submitted';
+  let channelTicket = null;
   const beforeSubmit = async () => {
     const state = storyboardState(), anchor = storyboardValidatedAnchor(job);
     if (job.discardRequested || !state.enabled || (job.automatic && (state.automation?.autoCapture === false || state.automation?.autoGenerate === false))) {
@@ -18426,6 +18455,7 @@ async function storyboardRunJob(job, log) {
       await storyboardAdmission.beforeSubmit(job, () => !job.discardRequested && storyboardState().enabled
         && (!job.automatic || (storyboardState().automation?.autoCapture !== false && storyboardState().automation?.autoGenerate !== false))
         && (job.target === 'gallery' || storyboardValidatedAnchor(job).valid || storyboardValidatedAnchor(job).linkState === 'foreign'));
+      await channelTicket?.beforeSubmit();
     } catch (error) {
       throw Object.assign(new Error(error?.message || '生图授权已失效'), { code: 'storyboard_submission_cancelled', submissionState: job.submissionState || 'not_submitted' });
     }
@@ -18452,47 +18482,63 @@ async function storyboardRunJob(job, log) {
     storyboardPipelineStage(log, 'context', 'success', {}, {
       floor: job.floor, chatKey: job.chatKey, paragraphAnchor: job.paragraphAnchor,
     });
-    const assets = await storyboardPrepareGatewayAssets(job);
     const apiKey = await storyboardResolveApiKey(job.source, job.connection?.credentialId);
     if (job.source !== 'comfy' && !apiKey) throw new Error('当前连接没有可用的 API Key');
-    const gatewayRequest = storyboardGatewayRequest(job, apiKey, assets);
-    storyboardPipelineStage(log, 'provider_request', 'running', { request: gatewayRequest });
-    const directImage = await directImageRuntime();
-    let data = null;
-    let transport = 'browser_direct';
-    try { data = await directImage.generateDirectImage(gatewayRequest, { probeTransport: true, beforeSubmit }); }
-    catch (error) {
-      if (!(directImage.isDirectImageTransportError(error) && error?.submissionState === 'not_submitted') && error?.code !== 'direct_unsupported') {
-        storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, error?.message || String(error));
-        throw error;
+    const generateTransport = async () => {
+      // Do not expand reference images while another tab owns this NAI channel.
+      const assets = await storyboardPrepareGatewayAssets(job);
+      const gatewayRequest = storyboardGatewayRequest(job, apiKey, assets);
+      storyboardPipelineStage(log, 'provider_request', 'running', { request: gatewayRequest });
+      const directImage = await directImageRuntime();
+      let data = null;
+      let transport = 'browser_direct';
+      try { data = await directImage.generateDirectImage(gatewayRequest, { probeTransport: true, beforeSubmit }); }
+      catch (error) {
+        if (!(directImage.isDirectImageTransportError(error) && error?.submissionState === 'not_submitted') && error?.code !== 'direct_unsupported') {
+          storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, error?.message || String(error));
+          throw error;
+        }
       }
-    }
-    if (!data) {
-      transport = 'same_origin_gateway';
-      const bindingVersion = await storyboardConfirmGatewayModelBinding(job);
-      if (job.discardRequested || !storyboardState().enabled) {
-        storyboardFinishLog(log, 'cancelled', { error: '生图已取消，未转发网关' });
-        storyboardSetPlanStatus(plan, 'cancelled', { error: '生图已取消，未转发网关', job });
-        return;
+      if (!data) {
+        transport = 'same_origin_gateway';
+        const bindingVersion = await storyboardConfirmGatewayModelBinding(job);
+        if (job.discardRequested || !storyboardState().enabled) {
+          throw Object.assign(new Error('生图已取消，未转发网关'), { code: 'storyboard_submission_cancelled', submissionState: 'not_submitted' });
+        }
+        if (bindingVersion) gatewayRequest.modelBindingVersion = bindingVersion;
+        await beforeSubmit();
+        const response = await fetch('/api/plugins/qianmu-tts/image/generate', {
+          method: 'POST', headers: storyboardRequestHeaders(), body: JSON.stringify(gatewayRequest),
+        });
+        data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          const message = response.status === 404
+            ? `${STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || job.source} 浏览器直连被当前网络拦截，且未检测到可选的千幕网关`
+            : data.message || `生图服务请求失败（${response.status}）`;
+          storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, message);
+          const error = new Error(message);
+          error.retryable = Boolean(data.retryable);
+          // Older gateways cannot prove whether an earlier variant was accepted.
+          error.submissionState = ['not_submitted', 'rejected', 'unknown', 'accepted'].includes(data.submissionState) ? data.submissionState : 'unknown';
+          throw error;
+        }
       }
-      if (bindingVersion) gatewayRequest.modelBindingVersion = bindingVersion;
-      await beforeSubmit();
-      const response = await fetch('/api/plugins/qianmu-tts/image/generate', {
-        method: 'POST', headers: storyboardRequestHeaders(), body: JSON.stringify(gatewayRequest),
-      });
-      data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) {
-        const message = response.status === 404
-          ? `${STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || job.source} 浏览器直连被当前网络拦截，且未检测到可选的千幕网关`
-          : data.message || `生图服务请求失败（${response.status}）`;
-        storyboardPipelineStage(log, 'provider_request', 'failed', {}, {}, message);
-        const error = new Error(message);
-        error.retryable = Boolean(data.retryable);
-        // Older gateways cannot prove whether an earlier variant was accepted.
-        error.submissionState = ['not_submitted', 'rejected', 'unknown', 'accepted'].includes(data.submissionState) ? data.submissionState : 'unknown';
-        throw error;
-      }
-    }
+      return { data, transport };
+    };
+    let response;
+    if (job.source === 'novel') {
+      const channel = await storyboardImageChannelRuntime();
+      storyboardPipelineStage(log, 'channel_queue', 'running', {}, { reason: 'NAI 同连接顺序生成' });
+      response = await channel.run({ apiKey, namespace: job.imageAdmission?.namespace, attemptId: job.id,
+        automatic: Boolean(job.automatic), confirmedAttempts: job.confirmedImageAttempts || [], confirm: confirmDialog,
+        valid: () => !job.discardRequested && storyboardState().enabled
+          && (!job.automatic || (storyboardState().automation?.autoCapture !== false && storyboardState().automation?.autoGenerate !== false))
+          && (job.target === 'gallery' || storyboardValidatedAnchor(job).valid || storyboardValidatedAnchor(job).linkState === 'foreign'),
+        onAcquired: () => storyboardPipelineStage(log, 'channel_queue', 'success', {}, { acquired: true }),
+        onWarning: () => toast('NAI 连接记录未完成结算；再次生图前请核对渠道记录', 'warning'),
+      }, async ticket => { channelTicket = ticket; return generateTransport(); });
+    } else response = await generateTransport();
+    const { data, transport } = response;
     job.submissionState = 'accepted';
     admissionOutcome = 'accepted';
     await storyboardSettleImageAdmission(job, 'accepted');
@@ -33398,6 +33444,7 @@ function cleanupRuntime(resetSettings = false) {
       storyboardAdmissionEpoch++;
       void storyboardAdmission?.close();
       storyboardAdmission = null;
+      storyboardImageChannel?.close(); storyboardImageChannel = null;
       for (const job of storyboardActiveJobs.values()) {
         job.discardRequested = true;
         storyboardSyncTaskState(job, 'cancelled', { error: '扩展已停用或更新', plan: storyboardPlanForJob(job) });

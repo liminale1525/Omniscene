@@ -197,6 +197,7 @@ function runHarness(options = {}) {
     }) },
   });
   const run = load('storyboardRunJob', {
+    storyboardImageChannelRuntime: async () => options.channel || ({ run: async (_identity, work) => work({ beforeSubmit: async () => {} }) }), confirmDialog: async () => true,
     storyboardAdmission: { beforeSubmit: async () => {} }, storyboardSettleImageAdmission: async () => {},
     MODULE_NAME: 'qianmu-test',
     storyboardPlanForJob: () => null, storyboardState: () => ({ enabled: true }),
@@ -207,7 +208,7 @@ function runHarness(options = {}) {
     storyboardGatewayRequest: load('storyboardGatewayRequest'), getStoryboardModel,
     storyboardConfirmGatewayModelBinding: confirmBinding,
     directImageRuntime: async () => ({
-      generateDirectImage: async () => { stats.direct++; if (options.directSuccess) return { ok: true, images: [] }; throw Object.assign(new Error('simulated read-only probe failure'), { submissionState: options.submissionUnknown ? 'unknown' : 'not_submitted' }); },
+      generateDirectImage: async (_request, control) => { stats.direct++; if (options.directImpl) return options.directImpl(control); if (options.directSuccess) return { ok: true, images: [] }; throw Object.assign(new Error('simulated read-only probe failure'), { submissionState: options.submissionUnknown ? 'unknown' : 'not_submitted' }); },
       isDirectImageTransportError: () => !options.directRejected,
     }),
     storyboardRequestHeaders: () => ({ 'Content-Type': 'application/json' }),
@@ -285,6 +286,30 @@ test('cancellation during capability inspection cannot submit a paid fallback re
   assert.equal(stats.probes, 1);
   assert.equal(stats.fetches, 0);
   assert.equal(stats.failures[0].status, 'cancelled');
+});
+
+test('a real queued NAI job waits before loading reference assets or starting either transport', async () => {
+  let unlock, acquired, ticketCalls = 0;
+  const ready = new Promise(resolve => { acquired = resolve; }), held = new Promise(resolve => { unlock = resolve; });
+  const { stats, run } = runHarness({ compatible: true, channel: { run: async (identity, work) => {
+    assert.equal(identity.apiKey, 'mock-key'); acquired(); await held;
+    return work({ beforeSubmit: async () => { ticketCalls++; } });
+  } } });
+  const task = run(makeJob({ profile: { model: 'vendor/NAI-alias', capabilityModelId: V45 } }), {});
+  await ready;
+  assert.equal(stats.assets, 0); assert.equal(stats.direct, 0); assert.equal(stats.fetches, 0);
+  unlock(); await task;
+  assert.equal(stats.assets, 1); assert.equal(stats.direct, 1); assert.equal(stats.fetches, 1); assert.equal(ticketCalls, 1);
+});
+
+test('actual direct dispatch cannot bypass a failed channel receipt or fall back after it', async () => {
+  let ticketCalls = 0, attemptedPosts = 0;
+  const { stats, run } = runHarness({ directRejected: true, channel: { run: async (_identity, work) => work({ beforeSubmit: async () => {
+    ticketCalls++; throw Object.assign(new Error('channel storage unavailable'), { code: 'image_channel_storage', submissionState: 'not_submitted' });
+  } }) }, directImpl: async control => { await control.beforeSubmit(); attemptedPosts++; } });
+  await run(makeJob(), {});
+  assert.equal(ticketCalls, 1); assert.equal(attemptedPosts, 0); assert.equal(stats.fetches, 0); assert.equal(stats.probes, 0);
+  assert.match(stats.failures[0].detail.error, /channel storage unavailable/);
 });
 
 test('gateway capability inspection is shared only while in flight, never retained for subsequent jobs', async () => {

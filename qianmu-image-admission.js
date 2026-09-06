@@ -113,11 +113,12 @@ export function createImageAdmission({ store = createImageAttemptStore(), accoun
         const kind = job.automatic ? 'automatic' : job.imageAdmission || job.variantRootId || Number(job.attempt) > 1 ? 'redraw' : job.manualSupplement ? 'supplement' : 'manual';
         const input = { attemptId: job.id, logicalShotId: identity.logicalShotId, operationKey: identity.operationKey,
           ownerId, kind, maxAutomatic, imageCount: Number(job.payload?.parameters?.count ?? job.profile?.count ?? 1) };
-        let decision = await store.claim(identity.scope, input, seeds);
+        let decision = await store.claim(identity.scope, input, seeds), confirmedAttempts = [];
         if (!decision.ok && decision.code === 'confirmation_required' && !job.automatic) {
           current(valid);
           if (await confirm('确认重新生图', '原请求可能已受理或扣费。请先核对渠道记录；继续会发起一次新的生图请求。')) {
             current(valid);
+            confirmedAttempts = JSON.parse(decision.confirmation).map(row => row[0]);
             decision = await store.claim(identity.scope, { ...input, confirmation: decision.confirmation }, seeds);
           }
         }
@@ -128,6 +129,8 @@ export function createImageAdmission({ store = createImageAttemptStore(), accoun
         live.add(job);
         job.imageAdmission = { version: 1, ...identity.scope, logicalShotId: identity.logicalShotId,
           attemptId: input.attemptId, automaticSlot: decision.attempt.automaticSlot };
+        // Live consent only: start-log's explicit snapshot whitelist excludes it.
+        job.confirmedImageAttempts = confirmedAttempts;
         return true;
       } catch (failure) {
         if (receipt) await store.settle(receipt.scope, { ...receipt, outcome: 'not_submitted' });

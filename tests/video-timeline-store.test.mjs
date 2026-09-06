@@ -80,7 +80,7 @@ test('the additive timeline store is idle, chat-cleanable and included in the re
   const persistence = storage.slice(storage.indexOf('function normalizeStoredVideoTimeline'), storage.indexOf('// ── 动态镜头：本地成片仓'));
   assert.match(persistence, /schema: 'qianmu\.video-timeline\.v1'/);
   assert.doesNotMatch(persistence, /apiKey|authorization|remoteUrl|base64|Blob/);
-assert.match(source, /videoTimelineStore:\s*\{[\s\S]*import\('\.\/qianmu-video-timeline-store\.js\?v=1\.59\.44'\)/);
+assert.match(source, /videoTimelineStore:\s*\{[\s\S]*import\('\.\/qianmu-video-timeline-store\.js\?v=1\.59\.45'\)/);
   assert.match(source, /video_timelines: \['不可恢复 · 完整影片时间线', true\]/);
   assert.match(source, /STORAGE_CHAT_CLEARABLE[^\n]*video_timelines/);
   assert.ok(release.files.includes('qianmu-video-timeline-store.js'));
