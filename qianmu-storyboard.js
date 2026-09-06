@@ -797,6 +797,7 @@ export function normalizeStoryboardCharacterVisualState(value, index = 0) {
     action: shotStringList(raw.action, 12, 500),
     gaze: shotStringList(raw.gaze, 8, 300),
     props: shotStringList(raw.props, 20, 300),
+    ...(Object.hasOwn(raw,'negative') ? {negative:str(raw.negative,6000)} : {}),
     spatial: normalizeSpatial(raw.spatial, index),
     ...(raw.archiveSnapshot != null ? { archiveSnapshot: normalizeCharacterCastingSnapshot(raw.archiveSnapshot) } : {}),
   };
@@ -1460,7 +1461,7 @@ export function compileStoryboardPrompt(input = {}) {
   ].filter(Boolean).join(', ');
   const useNativeCharacters = input.providerId === 'novel' && capability.multiCharacter && shot.characters.length > 0;
   // Shared identity is not a Comfy implementation. Model-interface exclusions never acquire node bindings.
-  const characterNegatives = shot.characters.map(character => input.providerId === 'comfy' ? '' : character.archiveSnapshot?.negative || '');
+  const characterNegatives = shot.characters.map(character => input.providerId === 'comfy' ? '' : Object.hasOwn(character,'negative') ? character.negative : character.archiveSnapshot?.negative || '');
   if (input.providerId === 'comfy' && shot.characters.some(character => character.archiveSnapshot?.negative)) {
     validation.warnings.push('Comfy 使用共用身份；模型接口专属负面不参与工作流');
   }

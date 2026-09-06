@@ -10251,6 +10251,20 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
 #story-director-modal .sd-character-detail-grid { display: grid; grid-template-columns: minmax(85px,30%) minmax(0,1fr); gap: 10px; }
 #story-director-modal .sd-character-main-fields { min-width: 0; }
 #story-director-modal .sd-character-full { grid-column: 1 / -1; min-width: 0; }
+.sd-character-shot-dialog { width: min(720px, calc(100vw - 64px)); max-width: 100%; max-height: min(72vh,760px); overflow-y: auto; overscroll-behavior: contain; min-width: 0; text-align: left; font-size: 12px; padding: 2px; box-sizing: border-box; }
+.sd-character-shot-dialog fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 10px; }
+.sd-character-shot-person { border: 1px solid var(--sd-border,#8886); border-radius: 10px; min-width: 0; }
+.sd-character-shot-person summary { display: flex; gap: 8px; padding: 10px; cursor: pointer; list-style: none; }
+.sd-character-shot-person summary::-webkit-details-marker { display: none; }
+.sd-character-shot-fields { padding: 10px; display: grid; gap: 10px; grid-template-columns: minmax(0,1fr); }
+.sd-character-shot-fields label { display: grid; gap: 5px; min-width: 0; text-align: left; }
+.sd-character-shot-fields label>span { color: var(--sd-muted,#aaa); }
+.sd-character-shot-fields :is(input,select,button) { height: 40px; min-height: 40px; box-sizing: border-box; width: 100%; min-width: 0; font-size: 12px; border-radius: 8px; }
+.sd-character-shot-fields textarea { box-sizing: border-box; min-width: 0; width: 100%; min-height: 64px; max-height: 280px; resize: vertical; font-size: 12px; border-radius: 8px; }
+.sd-character-shot-fields button { color: inherit; background: color-mix(in srgb,currentColor 8%,transparent); border: 1px solid var(--sd-border,#8886); font-family: inherit; }
+.sd-character-shot-dialog small { font-size: 11px; color: var(--sd-muted,#aaa); }
+.sd-character-shot-status { min-height: 1.5em; overflow-wrap: anywhere; }
+@media (min-width: 700px) { .sd-character-shot-fields { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; } .sd-character-shot-wide { grid-column: 1/-1; } }
 #story-director-modal .sd-comfy-role-editor { display: grid; gap: var(--sd-storyboard-card-gap,8px); min-width: 0; }
 #story-director-modal .sd-comfy-role-heading { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 4px 0; }
 #story-director-modal .sd-comfy-role-heading > :first-child { min-width: 0; flex: 1; overflow-wrap: anywhere; }

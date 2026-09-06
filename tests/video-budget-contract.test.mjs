@@ -134,7 +134,7 @@ test('the unfinished budget gate ships as an idle feature chunk', async () => {
   const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
   const release = JSON.parse(await readFile(new URL('../release-files.json', import.meta.url), 'utf8'));
   assert.doesNotMatch(source, /^import[^\n]*qianmu-video-budget\.js/m);
-assert.match(source, /videoBudget:\s*\{[\s\S]*import\('\.\/qianmu-video-budget\.js\?v=1\.59\.67'\)/);
+assert.match(source, /videoBudget:\s*\{[\s\S]*import\('\.\/qianmu-video-budget\.js\?v=1\.59\.68'\)/);
   assert.ok(release.files.includes('qianmu-video-budget.js'));
   const initSource = source.slice(source.indexOf('function init()'), source.indexOf('function destroy()'));
   assert.doesNotMatch(initSource, /featureRuntime\.load\('videoBudget'\)/);
