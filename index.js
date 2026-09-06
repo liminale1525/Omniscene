@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.42';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.42';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.42';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.43';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.43';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.43';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.42';
+} from './qianmu-llm-output.js?v=1.59.43';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -170,147 +170,147 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.42';
+} from './qianmu-storyboard.js?v=1.59.43';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.42';
+const VERSION = '1.59.43';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.42'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.43'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.42'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.43'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.42').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.43').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.42'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.43'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.42'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.43'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.42'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.43'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.42'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.43'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.42'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.43'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.42'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.43'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.42'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.43'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.42'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.43'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.42'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.43'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.42'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.43'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.42'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.43'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.42'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.43'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.42'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.43'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.42'),
+    load: () => import('./qianmu-video-task.js?v=1.59.43'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.42'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.43'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.42'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.43'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.42'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.43'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.42'),
+    load: () => import('./qianmu-video-store.js?v=1.59.43'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.42'),
+    load: () => import('./qianmu-video-result.js?v=1.59.43'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.42'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.43'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.42'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.43'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.42'),
+    load: () => import('./qianmu-video-media.js?v=1.59.43'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.42'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.43'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.42'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.43'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.42'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.43'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.42'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.43'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.42'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.43'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.42'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.43'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.42'),
-        import('./qianmu-theaters.js?v=1.59.42'),
+        import('./builtin-theaters.js?v=1.59.43'),
+        import('./qianmu-theaters.js?v=1.59.43'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1140,6 +1140,10 @@ let focusClockVoiceDrawerEl = null;  // 专注角色语音二层抽屉；挂在�
 const STORYBOARD_QUEUE_LIMIT = 8;     // 仅本页运行态；刷新后不自动续跑，避免意外消耗生图额度
 let storyboardBusy = false;          // 分镜生成独立忙碌态，不占用推演/幕外请求锁
 let storyboardCompilerBusy = false;  // 自动取景是独立的一次 LLM 请求，不与正文生成共用返回
+const storyboardAutomaticPending = new Map(); // Bounded notification tickets; never rediscover a later floor after waiting.
+let storyboardAutomaticCurrent = null;
+let storyboardAutomaticTimer = null;
+let storyboardAutomaticEpoch = 0;
 let storyboardCredentialRevision = 0;
 let storyboardWorldEntryCache = { key: '', names: [], boundNames: [], books: {}, rows: [], loading: null, error: '' }; // 分镜独立选择，读取链路与「取材」共用
 const storyboardActiveJobs = new Map(); // 正在生成的任务；放弃时不取消可能已计费的上游请求，只丢弃回传
@@ -11803,6 +11807,11 @@ function storyboardState() {
   if (!storyboardRuntimeReconciled) {
     storyboardRuntimeReconciled = true;
     let changed = false;
+    for (const plan of state.shotPlans || []) {
+      if (!['screening', 'compiling'].includes(plan.status)) continue;
+      Object.assign(plan, { status: 'cancelled', error: '页面刷新后未自动续跑，请手动重新提取', updatedAt: Date.now() });
+      changed = true;
+    }
     for (const log of state.logs) {
       if (!['queued', 'generating'].includes(log.status)) continue;
       log.status = 'cancelled';
@@ -17585,6 +17594,7 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false } = {}
   } finally {
     inputGuard.dispose();
     storyboardCompilerBusy = false;
+    storyboardScheduleAutomaticCapture();
     renderModal();
   }
 }
@@ -19500,6 +19510,7 @@ function bindStoryboardTabEvents(root) {
     state.enabled = Boolean(event.target.checked);
     state.promptCompiler.enabled = true;
     if (!state.enabled) {
+      storyboardResetAutomaticCapture();
       for (const job of storyboardActiveJobs.values()) job.discardRequested = true;
       if (storyboardQueue.length) storyboardClearWaitingQueue('分镜总开关已关闭');
       resetDirectorNarrativeBridge();
@@ -19510,12 +19521,22 @@ function bindStoryboardTabEvents(root) {
   });
   root.querySelector('.sd-storyboard-auto-capture')?.addEventListener('change', (event) => {
     state.automation.autoCapture = Boolean(event.target.checked);
-    if (!state.automation.autoCapture) state.automation.autoGenerate = false;
+    if (!state.automation.autoCapture) {
+      state.automation.autoGenerate = false;
+      storyboardResetAutomaticCapture();
+    }
     state.promptCompiler.enabled = true;
     saveSettings(); renderModal();
   });
   root.querySelector('.sd-storyboard-auto-generate')?.addEventListener('change', (event) => {
     state.automation.autoGenerate = state.automation.autoCapture && Boolean(event.target.checked);
+    if (!state.automation.autoGenerate) {
+      for (const ticket of storyboardAutomaticPending.values()) ticket.autoGenerate = false;
+      if (storyboardAutomaticCurrent) {
+        storyboardAutomaticCurrent.autoGenerate = false;
+        if (storyboardAutomaticCurrent.plan) storyboardAutomaticCurrent.plan.autoGenerate = false;
+      }
+    }
     state.promptCompiler.enabled = true;
     saveSettings(); renderModal();
   });
@@ -32899,31 +32920,113 @@ function startInputMenuObserver() {
 let resizeHandler = null;
 let eventBindings = [];
 
-async function storyboardHandleAutomaticCapture() {
+function storyboardResetAutomaticCapture() {
+  storyboardAutomaticEpoch++;
+  storyboardAutomaticPending.clear();
+  if (storyboardAutomaticTimer !== null) clearTimeout(storyboardAutomaticTimer);
+  storyboardAutomaticTimer = null;
+  const plan = storyboardAutomaticCurrent?.plan;
+  // Do not cancel already queued/accepted image jobs just because the reader changed chat.
+  if (plan?.origin === 'automatic' && ['screening', 'compiling', 'prompt_ready'].includes(plan.status)) {
+    Object.assign(plan, { status: 'cancelled', error: '自动取景环境已变化，未继续自动提交', updatedAt: Date.now() });
+  }
+  storyboardAutomaticCurrent = null;
+}
+
+function storyboardAutomaticTicketFloor(ticket) {
+  if (!ticket || ticket.epoch !== storyboardAutomaticEpoch || ticket.state !== storyboardState()
+    || ticket.chatKey !== String(getChatKey() || '') || Date.now() - ticket.createdAt > 5 * 60_000) return -1;
+  const state = ticket.state;
+  if (!state.enabled || !state.automation?.autoCapture || !state.promptCompiler?.enabled) return -1;
+  const chat = ctx().chat || [];
+  const floor = chat[ticket.floor] === ticket.message ? ticket.floor : chat.indexOf(ticket.message);
+  if (floor < 0 || ticket.message.is_user || ticket.message.is_system) return -1;
+  const current = createStoryboardMessageReference({ message: ticket.message, chatKey: ticket.chatKey, floor });
+  return current.messageKey === ticket.messageRef.messageKey && current.revisionId === ticket.messageRef.revisionId ? floor : -1;
+}
+
+function storyboardScheduleAutomaticCapture() {
+  if (!storyboardAutomaticPending.size || storyboardAutomaticCurrent || storyboardCompilerBusy || storyboardAutomaticTimer !== null) return;
+  // One event-loop handoff, not a repeating timer. Compiler completion wakes the queue.
+  storyboardAutomaticTimer = setTimeout(() => {
+    storyboardAutomaticTimer = null;
+    void storyboardDrainAutomaticCapture().catch(error => console.warn(`[${MODULE_NAME}] automatic storyboard capture failed`, error));
+  }, 0);
+}
+
+async function storyboardDrainAutomaticCapture() {
+  if (storyboardAutomaticCurrent || storyboardCompilerBusy) return false;
+  const entry = storyboardAutomaticPending.entries().next().value;
+  if (!entry) return false;
+  const [key, ticket] = entry;
+  storyboardAutomaticPending.delete(key);
+  storyboardAutomaticCurrent = ticket;
+  try { return await storyboardPerformAutomaticCapture(ticket); }
+  catch (error) {
+    if (ticket.plan && ['screening', 'compiling'].includes(ticket.plan.status)) {
+      Object.assign(ticket.plan, { status: 'failed', error: '自动取景准备失败，请手动重新提取', updatedAt: Date.now() });
+      if (storyboardAutomaticTicketFloor(ticket) >= 0) { saveSettings(); toast(ticket.plan.error, 'warning'); }
+    }
+    console.warn(`[${MODULE_NAME}] automatic storyboard capture failed`, error);
+    return false;
+  }
+  finally {
+    if (storyboardAutomaticCurrent === ticket) storyboardAutomaticCurrent = null;
+    storyboardScheduleAutomaticCapture();
+  }
+}
+
+async function storyboardHandleAutomaticCapture(messageIndex) {
   const state = storyboardState();
   if (!state.enabled || !state.automation?.autoCapture || !state.promptCompiler?.enabled) return false;
-  const floor = storyboardCurrentAssistantFloor();
+  const receivedIndex = typeof messageIndex === 'string' && /^\d+$/.test(messageIndex) ? Number(messageIndex) : messageIndex;
+  const floor = Number.isInteger(receivedIndex) ? receivedIndex : storyboardCurrentAssistantFloor();
   const message = floor >= 0 ? ctx().chat?.[floor] : null;
-  if (!message || message.is_user || message.is_system) return false;
+  if (!message || message.is_user || message.is_system || !String(message.mes || '').trim()) return false;
   const existing = storyboardPlanForMessage(state, floor, message);
   // A repeated host event is not authorization to retry a failed/uncertain paid request.
   if (existing && (existing.status !== 'idle' || existing.origin !== 'automatic' || existing.promptLocked || existing.manualReviewRequired)) return false;
-  if (storyboardCompilerBusy) {
-    setTimeout(() => void storyboardHandleAutomaticCapture(), 900);
+  const chatKey = String(getChatKey() || '');
+  if (!chatKey) return false;
+  const messageRef = createStoryboardMessageReference({ message, chatKey, floor });
+  const key = JSON.stringify([chatKey, messageRef.messageKey, messageRef.revisionId]);
+  if (storyboardAutomaticPending.has(key) || storyboardAutomaticCurrent?.key === key) return false;
+  if (storyboardAutomaticPending.size >= STORYBOARD_QUEUE_LIMIT) {
+    toast('自动取景等待已满，本层可稍后手动提取', 'info');
     return false;
   }
+  storyboardAutomaticPending.set(key, { key, epoch: storyboardAutomaticEpoch, state, chatKey, floor, message, messageRef, createdAt: Date.now(), autoGenerate: Boolean(state.automation.autoGenerate) });
+  storyboardScheduleAutomaticCapture();
+  return true;
+}
+
+async function storyboardPerformAutomaticCapture(ticket) {
+  const floor = storyboardAutomaticTicketFloor(ticket);
+  if (floor < 0) return false;
+  const { state, message } = ticket;
+  const existing = storyboardPlanForMessage(state, floor, message);
+  if (existing && (existing.status !== 'idle' || existing.origin !== 'automatic' || existing.promptLocked || existing.manualReviewRequired)) return false;
   const plan = existing || storyboardEnsurePlan(state, floor, message, {
-    origin: 'automatic', autoGenerate: state.automation.autoGenerate,
+    origin: 'automatic', autoGenerate: ticket.autoGenerate && state.automation.autoGenerate,
   });
-  if (plan.archiveRef) await storyboardReleasePlanArchive(plan);
-  plan.origin = 'automatic';
-  plan.autoGenerate = Boolean(state.automation.autoGenerate);
+  ticket.plan = plan;
+  // Reserve before awaiting archive I/O; a duplicate receipt cannot start the same LLM twice.
   plan.status = 'screening';
+  plan.updatedAt = Date.now();
+  saveSettings();
+  if (plan.archiveRef) await storyboardReleasePlanArchive(plan);
+  if (storyboardAutomaticTicketFloor(ticket) !== floor || !state.shotPlans.includes(plan) || plan.status !== 'screening') {
+    if (plan.status === 'screening') Object.assign(plan, { status: 'cancelled', error: '原正文已变化，未继续自动取景', updatedAt: Date.now() });
+    return false;
+  }
+  plan.origin = 'automatic';
+  plan.autoGenerate = Boolean(ticket.autoGenerate && state.automation.autoGenerate);
   plan.updatedAt = Date.now();
   state.target = 'floor';
   state.floor = String(floor);
   state.paragraphMode = 'auto';
   state.manualParagraphIndex = null;
+  state.pendingParagraphSelection = null;
   state.promptMode = 'auto';
   state.prompt = '';
   state.negative = '';
@@ -32937,7 +33040,11 @@ async function storyboardHandleAutomaticCapture() {
   saveSettings();
   storyboardScheduleInlineRender(20, floor);
   const compiled = await storyboardCompilePrompt(null, { plan, quiet: true });
-  if (!compiled || !plan.autoGenerate) return compiled;
+  if (!compiled && plan.status === 'screening') {
+    Object.assign(plan, { status: 'failed', error: '取景未启动，请核对配置后手动重试', updatedAt: Date.now() });
+    if (storyboardAutomaticTicketFloor(ticket) >= 0) saveSettings();
+  }
+  if (!compiled || !plan.autoGenerate || !ticket.autoGenerate || !state.automation.autoGenerate || storyboardAutomaticTicketFloor(ticket) !== floor) return compiled;
   return storyboardGenerate(null, { plan, automatic: true });
 }
 
@@ -32988,13 +33095,14 @@ function bindEvents() {
       console.warn(`[${MODULE_NAME}] auto refresh handler failed`, error);
     }
   };
-  const refreshHandler = () => {
+  const refreshHandler = (messageIndex) => {
     resetDirectorNarrativeBridge();
     storyboardScheduleInlineRender(120);
-    void storyboardHandleAutomaticCapture().catch((error) => console.warn(`[${MODULE_NAME}] automatic storyboard capture failed`, error));
+    void storyboardHandleAutomaticCapture(messageIndex).catch((error) => console.warn(`[${MODULE_NAME}] automatic storyboard capture failed`, error));
     queueMicrotask(() => void runBackgroundDirectorRefresh());
   };
   const rerenderHandler = async () => {
+    storyboardResetAutomaticCapture();
     storyboardCloseVideoDraftEditor();
     resetDirectorNarrativeBridge();
     settings = getSettings();
@@ -33188,6 +33296,7 @@ function cleanupRuntime(resetSettings = false) {
     });
     clean('speech', () => ttsStopChat());
     clean('storyboard queue', () => {
+      storyboardResetAutomaticCapture();
       for (const job of storyboardActiveJobs.values()) {
         job.discardRequested = true;
         storyboardSyncTaskState(job, 'cancelled', { error: '扩展已停用或更新', plan: storyboardPlanForJob(job) });

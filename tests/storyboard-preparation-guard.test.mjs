@@ -28,6 +28,7 @@ function environment() {
     storyboardState: () => state, getChatKey: () => 'chat-a', ctx: () => ({ chat, mainApi: 'openai' }),
     getCharacterDescription: () => 'character', getPersonaDescription: () => 'persona', storyboardCredentialRevision: 0,
     storyboardDraftApiKeys: new Map(), storyboardCompilerBusy: false, storyboardTargetFloor: () => 0,
+    storyboardScheduleAutomaticCapture: () => {},
     storyboardCaptureWorkbench: () => ({ state, profile: state.profiles[state.source] }),
     storyboardSetPlanStatus: (target, status, info = {}) => { if (target) Object.assign(target, { status, ...info }); },
     renderModal: () => {}, saveSettings: () => calls.push('save'), storyboardSchedulePlanArchive: () => {}, storyboardScheduleInlineRender: () => {},

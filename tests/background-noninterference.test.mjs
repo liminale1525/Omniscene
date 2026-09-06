@@ -7,9 +7,9 @@ const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
 test('message receipt releases the ST event immediately and starts automatic capture independently', () => {
   const events = source.slice(source.indexOf('function bindEvents()'), source.indexOf('function init()'));
   const refresh = events.slice(events.indexOf('const refreshHandler ='), events.indexOf('const rerenderHandler ='));
-  assert.match(refresh, /const refreshHandler = \(\) =>/);
+  assert.match(refresh, /const refreshHandler = \(messageIndex\) =>/);
   assert.doesNotMatch(refresh, /const refreshHandler = async|await /);
-  assert.ok(refresh.indexOf('storyboardHandleAutomaticCapture()') < refresh.indexOf('queueMicrotask'));
+  assert.ok(refresh.indexOf('storyboardHandleAutomaticCapture(messageIndex)') < refresh.indexOf('queueMicrotask'));
   assert.match(refresh, /queueMicrotask\(\(\) => void runBackgroundDirectorRefresh\(\)\)/);
   assert.match(events, /MESSAGE_RECEIVED[^\n]+refreshHandler/);
 });
@@ -41,6 +41,6 @@ test('director bridge invalidation changes only ephemeral director state', () =>
 test('automatic capture failures are contained outside the ST message event', () => {
   const events = source.slice(source.indexOf('function bindEvents()'), source.indexOf('function init()'));
   const refresh = events.slice(events.indexOf('const refreshHandler ='), events.indexOf('const rerenderHandler ='));
-  assert.match(refresh, /storyboardHandleAutomaticCapture\(\)\.catch/);
+  assert.match(refresh, /storyboardHandleAutomaticCapture\(messageIndex\)\.catch/);
   assert.match(refresh, /automatic storyboard capture failed/);
 });
