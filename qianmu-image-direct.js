@@ -243,15 +243,15 @@ export async function checkDirectImageConnection(input = {}, { fetchImpl = globa
     const compatibility = normalizeOpenAIImageCompatibility(input.compatibility);
     if (compatibility.modelDiscovery === 'off') {
       providerEndpoint(input.baseUrl, compatibility.endpoints.generation, provider);
-      return { ok: true, verified: false, transport: 'configured', message: '已保存连接；当前预设关闭模型列表探测，请以首次生图验证 Key 与模型名' };
+      return { ok: true, verified: false, transport: 'configured', message: '未执行连接探测，请以生图验证' };
     }
     url = providerEndpoint(input.baseUrl, compatibility.endpoints.models, provider);
     headers = { Authorization: `Bearer ${apiKey}`, ...normalizeOpenAICompatibleHeaders(input.customHeaders, compatibility) };
   }
   const response = await directFetch(url, { method: 'GET', headers, signal: input.signal }, fetchImpl);
   // 第三方兼容站常常只实现生图端点；探测端点 404 代表地址可达，不再误报成连接失败。
-  if (provider === 'novel' && response.status === 404) return { ok: true, verified: false, transport: 'direct', message: '地址可达，但未提供订阅检查；请以首次生图验证 Key' };
-  if (provider === 'openai' && response.status === 404 && normalizeOpenAIImageCompatibility(input.compatibility).modelDiscovery !== 'required') return { ok: true, verified: false, transport: 'direct', message: '地址可达，但未提供模型列表；请以首次生图验证 Key 与模型名' };
+  if (provider === 'novel' && response.status === 404) return { ok: true, verified: false, transport: 'direct', message: '地址可达，请以生图验证' };
+  if (provider === 'openai' && response.status === 404 && normalizeOpenAIImageCompatibility(input.compatibility).modelDiscovery !== 'required') return { ok: true, verified: false, transport: 'direct', message: '地址可达，请以生图验证' };
   if (!response.ok) await responseError(response, `${provider} 连接失败`);
   if (provider !== 'novel') return { ok: true, verified: true, transport: 'direct', message: `连接通过 · ${input.model || provider}` };
   const data = await response.json().catch(() => ({}));

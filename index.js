@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.33';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.33';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.33';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.34';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.34';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.34';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.33';
+} from './qianmu-llm-output.js?v=1.59.34';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -165,147 +165,147 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.33';
+} from './qianmu-storyboard.js?v=1.59.34';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.33';
+const VERSION = '1.59.34';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   modelPicker: {
     label: '模型选择',
-    load: () => import('./qianmu-model-picker.js?v=1.59.33'),
+    load: () => import('./qianmu-model-picker.js?v=1.59.34'),
   },
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.33'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.34'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.33').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.34').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.33'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.34'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.33'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.34'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.33'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.34'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.33'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.34'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.33'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.34'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.33'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.34'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.33'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.34'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.33'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.34'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.33'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.34'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.33'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.34'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.33'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.34'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.33'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.34'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.33'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.34'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.33'),
+    load: () => import('./qianmu-video-task.js?v=1.59.34'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.33'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.34'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.33'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.34'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.33'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.34'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.33'),
+    load: () => import('./qianmu-video-store.js?v=1.59.34'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.33'),
+    load: () => import('./qianmu-video-result.js?v=1.59.34'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.33'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.34'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.33'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.34'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.33'),
+    load: () => import('./qianmu-video-media.js?v=1.59.34'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.33'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.34'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.33'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.34'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.33'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.34'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.33'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.34'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.33'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.34'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.33'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.34'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.33'),
-        import('./qianmu-theaters.js?v=1.59.33'),
+        import('./builtin-theaters.js?v=1.59.34'),
+        import('./qianmu-theaters.js?v=1.59.34'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1150,7 +1150,9 @@ const storyboardPlanArchiveCache = new Map(); // key -> 已结束计划的完整
 let storyboardPlanArchiveEpoch = 0;
 let storyboardPlanArchiveTimer = null;
 const storyboardApiKeys = new Map(); // credentialId -> Key；不进入设置、日志或分镜数据包
-const storyboardDraftApiKeys = new Map(); // 表单暂存：测试失败/页面重绘时不丢失用户刚输入的 Key
+const storyboardDraftApiKeys = new Map(); // 表单会话：载入、测试、保存及重绘均保留 Key；不新增持久副本
+let storyboardConnectionLoadRevision = 0;
+let storyboardKeyInputRevision = 0;
 const STORYBOARD_BROWSER_CREDENTIALS_KEY = 'qianmu.storyboard.credentials.v1';
 let storyboardRuntimeReconciled = false;
 const storyboardNormalizedStates = new WeakSet();
@@ -12359,9 +12361,9 @@ function renderStoryboardModelCard(state) {
         <div class="sd-storyboard-model-field"><span>模型</span>${renderStoryboardModelPicker(state.source, profile.model, profile.capabilityModelId)}</div>
       </div>
       ${profile.modelBindingError ? `<div class="sd-storyboard-connection-result failed" role="status"><span>${htmlEscape(profile.modelBindingError)}；请重新选择模型。</span></div>` : ''}
-      <div class="sd-storyboard-preset-field"><span>API 预设${activePreset ? `<small>已载入 · ${htmlEscape(connection.active?.name || '')}</small>` : ''}</span><div class="sd-storyboard-connection-preset-row"><select class="text_pole sd-storyboard-connection-preset"><option value="">选择生图 API 预设</option>${presetOptions}</select><button type="button" class="sd-icon-btn sd-storyboard-save-connection-preset" title="保存当前渠道的 API 预设" aria-label="保存当前渠道的 API 预设"><i class="fa-solid fa-bookmark"></i></button><button type="button" class="sd-icon-btn sd-danger sd-storyboard-delete-connection-preset" ${activePreset ? '' : 'disabled'} title="删除所选 API 预设" aria-label="删除所选 API 预设"><i class="fa-solid fa-trash-can"></i></button></div></div>
+      <div class="sd-storyboard-preset-field"><span>API 预设</span><div class="sd-storyboard-connection-preset-row"><select class="text_pole sd-storyboard-connection-preset"><option value="">选择生图 API 预设</option>${presetOptions}</select><button type="button" class="sd-icon-btn sd-storyboard-save-connection-preset" title="保存当前渠道的 API 预设" aria-label="保存当前渠道的 API 预设"><i class="fa-solid fa-bookmark"></i></button><button type="button" class="sd-icon-btn sd-danger sd-storyboard-delete-connection-preset" ${activePreset ? '' : 'disabled'} title="删除所选 API 预设" aria-label="删除所选 API 预设"><i class="fa-solid fa-trash-can"></i></button></div></div>
       <label><span>API 地址</span><input class="text_pole sd-storyboard-base-url" value="${htmlEscape(profile.baseUrl)}" placeholder="${htmlEscape(provider.defaultBaseUrl || 'http://127.0.0.1:8188')}"></label>
-      <label><span>${state.source === 'comfy' ? '访问令牌（可选）' : 'API Key'}</span><input class="text_pole sd-storyboard-api-key-memory" type="password" autocomplete="new-password" value="${htmlEscape(storyboardDraftApiKeys.get(state.source) || '')}" placeholder="输入 API Key"></label>
+      <div class="sd-storyboard-key-field"><label for="sd-storyboard-key-input">${state.source === 'comfy' ? '访问令牌（可选）' : 'API Key'}</label><div class="sd-storyboard-key-control"><input id="sd-storyboard-key-input" class="text_pole sd-storyboard-api-key-memory" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" value="${htmlEscape(storyboardDraftApiKeys.get(state.source) || '')}" placeholder="输入 API Key"><button type="button" class="sd-icon-btn sd-storyboard-key-visibility" title="显示 API Key" aria-label="显示 API Key" aria-pressed="false" aria-controls="sd-storyboard-key-input"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div></div>
       ${state.source === 'openai' ? renderStoryboardOpenAICompatibility(connection.draft) : ''}
       ${state.source === 'comfy' ? `<label class="sd-switch-row"><span>允许本地网络</span><input type="checkbox" class="sd-storyboard-private-network" ${(connection.active?.options?.allowPrivateNetwork ?? connection.group?.draft?.options?.allowPrivateNetwork) ? 'checked' : ''}></label><label><span>API Workflow</span><textarea class="text_pole sd-storyboard-workflow" placeholder="粘贴 ComfyUI API Workflow JSON">${htmlEscape(typeof profile.comfyWorkflow === 'string' && profile.comfyWorkflow.trim().startsWith('{') ? profile.comfyWorkflow : '')}</textarea></label><div class="sd-storyboard-workflow-warning sd-storyboard-connection-result failed" ${profile.comfyWorkflowNotice ? '' : 'hidden'}><i class="fa-solid fa-triangle-exclamation"></i><span>${htmlEscape(profile.comfyWorkflowNotice || '')}</span></div>` : ''}
       ${check ? `<div class="sd-storyboard-connection-result ${check.ok ? (check.verified === false ? 'partial' : 'ok') : 'failed'}"><i class="fa-solid ${check.ok && check.verified !== false ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${htmlEscape(check.message)}</span></div>` : ''}
@@ -16745,6 +16747,7 @@ async function storyboardRememberApiKey(providerId, key, credentialId) {
 }
 
 async function storyboardForgetApiKey(providerId, credentialId) {
+  storyboardConnectionLoadRevision++;
   storyboardCredentialRevision++;
   const id = credentialId || storyboardCredentialId(providerId, 'draft');
   storyboardApiKeys.delete(id);
@@ -16779,7 +16782,7 @@ async function storyboardCheckConnection(root) {
   const typedKey = String(keyInput?.value || '').trim();
   if (typedKey) storyboardDraftApiKeys.set(sourceId, typedKey);
   try {
-    await storyboardSaveConnection(root, { quiet: true, clearKey: false });
+    await storyboardSaveConnection(root, { quiet: true });
     const profile = storyboardProviderProfile(state, sourceId);
     const apiKey = await storyboardResolveApiKey(sourceId);
     if (sourceId !== 'comfy' && !apiKey) throw new Error('请填写 API Key');
@@ -16807,13 +16810,11 @@ async function storyboardCheckConnection(root) {
       if (!response.ok || !data.ok) throw new Error(data.message || `连接失败（${response.status}）`);
     }
     const verified = data.verified !== false;
-    const message = String(data.message || (verified ? `连接通过 · ${profile.model || STORYBOARD_PROVIDER_REGISTRY[sourceId].label}` : '地址可达；请以首次生图校验令牌'));
+    const message = String(verified ? data.message || `连接通过 · ${profile.model || STORYBOARD_PROVIDER_REGISTRY[sourceId].label}`
+      : data.transport === 'configured' ? '未执行连接探测，请以生图验证' : '地址可达，请以生图验证');
     storyboardConnectionStatus.set(sourceId, { ok: true, verified, message });
-    storyboardDraftApiKeys.delete(sourceId);
-    if (keyInput) keyInput.value = '';
     toast(message, verified ? 'success' : 'warning');
   } catch (error) {
-    if (typedKey) storyboardDraftApiKeys.set(sourceId, typedKey);
     storyboardConnectionStatus.set(sourceId, { ok: false, message: String(error?.message || error) });
     toast(`检查失败：${error?.message || error}`, 'error');
   } finally {
@@ -16863,7 +16864,7 @@ function storyboardParseWorkflow(value) {
   return result.workflow;
 }
 
-async function storyboardSaveConnection(root, { quiet = false, clearKey = true } = {}) {
+async function storyboardSaveConnection(root, { quiet = false } = {}) {
   const state = storyboardState();
   const sourceId = state.source;
   const source = STORYBOARD_PROVIDER_REGISTRY[sourceId];
@@ -16884,11 +16885,8 @@ async function storyboardSaveConnection(root, { quiet = false, clearKey = true }
       ? storyboardCredentialId(sourceId, 'draft')
       : inheritedCredentialId || storyboardCredentialId(sourceId, 'draft');
     group.draft.credentialId = credentialId;
+    storyboardDraftApiKeys.set(sourceId, keyValue);
     await storyboardRememberApiKey(sourceId, keyValue, credentialId);
-    if (clearKey) {
-      storyboardDraftApiKeys.delete(sourceId);
-      keyInput.value = '';
-    } else storyboardDraftApiKeys.set(sourceId, keyValue);
   }
   saveSettings();
   if (!quiet) toast(keyValue ? `${source.label} 连接设置与 API Key 已保存。` : `${source.label} 连接设置已保存。`, 'success');
@@ -16935,6 +16933,7 @@ async function storyboardSaveConnectionPreset(root) {
   const keyValue = String(keyInput?.value || '').trim();
   let keyStored = false;
   if (keyValue) {
+    storyboardDraftApiKeys.set(sourceId, keyValue);
     await storyboardRememberApiKey(sourceId, keyValue, credentialId);
     keyStored = true;
   }
@@ -16947,7 +16946,6 @@ async function storyboardSaveConnectionPreset(root) {
   }
   group.activePresetId = target.id;
   group.draft = { ...clone(target), id: '', name: '当前编辑' };
-  storyboardDraftApiKeys.delete(sourceId);
   saveSettings();
   toast(`API 预设「${name}」已保存${keyStored ? '，API Key 已保存至当前浏览器' : ''}。`, 'success');
   renderModal();
@@ -16959,20 +16957,41 @@ async function storyboardLoadConnectionPreset(presetId) {
   const sourceId = state.source;
   const group = state.connections[sourceId];
   const preset = group.presets.find((item) => item.id === presetId) || null;
+  const revision = ++storyboardConnectionLoadRevision;
+  const keyRevision = storyboardKeyInputRevision;
   group.activePresetId = preset?.id || '';
-  if (preset) {
-    group.draft = { ...clone(preset), id: '', name: '当前编辑' };
-    const keyLoaded = sourceId === 'comfy' || Boolean(await storyboardResolveApiKey(sourceId, preset.credentialId));
-    storyboardConnectionStatus.set(sourceId, {
-      ok: keyLoaded, verified: false,
-      message: keyLoaded ? `已载入 API 预设 · ${preset.name}` : `已载入「${preset.name}」，但当前浏览器未找到对应 API Key`,
-    });
-  } else {
-    storyboardConnectionStatus.delete(sourceId);
-  }
+  storyboardConnectionStatus.delete(sourceId);
+  if (!preset) { saveSettings(); renderModal(); return; }
+  group.draft = { ...clone(preset), id: '', name: '当前编辑' };
+  const draft = group.draft;
+  // Never show the previous connection's key beside the newly selected address while reading secrets.
   storyboardDraftApiKeys.delete(sourceId);
   saveSettings();
   renderModal();
+  const key = preset.credentialId ? await storyboardResolveApiKey(sourceId, preset.credentialId) : '';
+  if (revision !== storyboardConnectionLoadRevision || storyboardState() !== state || state.source !== sourceId
+    || group.activePresetId !== preset.id || group.draft !== draft || !group.presets.includes(preset)) return;
+  if (keyRevision !== storyboardKeyInputRevision) return; // New typing (including clearing) wins over late secrets.
+  if (key) storyboardDraftApiKeys.set(sourceId, key);
+  if (!key && sourceId !== 'comfy') {
+    storyboardConnectionStatus.set(sourceId, {
+      ok: false, verified: false, message: '当前浏览器未找到此预设的 API Key，请填写',
+    });
+  }
+  renderModal();
+}
+
+function storyboardToggleKeyVisibility(root) {
+  const input = root.querySelector('.sd-storyboard-api-key-memory');
+  const button = root.querySelector('.sd-storyboard-key-visibility');
+  if (!input || !button) return;
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  button.setAttribute('aria-pressed', String(visible));
+  button.setAttribute('aria-label', visible ? '隐藏 API Key' : '显示 API Key');
+  button.title = visible ? '隐藏 API Key' : '显示 API Key';
+  const icon = button.querySelector('i');
+  if (icon) refreshQianmuIcon(icon, visible ? 'fa-eye-slash' : 'fa-eye');
 }
 
 async function storyboardDeleteConnectionPreset() {
@@ -19574,10 +19593,12 @@ function bindStoryboardTabEvents(root) {
   });
   root.querySelector('.sd-storyboard-connection-preset')?.addEventListener('change', (event) => void storyboardLoadConnectionPreset(String(event.target.value || '')));
   root.querySelector('.sd-storyboard-api-key-memory')?.addEventListener('input', (event) => {
+    storyboardKeyInputRevision++;
     const value = String(event.target.value || '').trim();
     if (value) storyboardDraftApiKeys.set(state.source, value);
     else storyboardDraftApiKeys.delete(state.source);
   });
+  root.querySelector('.sd-storyboard-key-visibility')?.addEventListener('click', () => storyboardToggleKeyVisibility(root));
   root.querySelector('.sd-storyboard-save-connection-preset')?.addEventListener('click', () => void storyboardSaveConnectionPreset(root));
   root.querySelector('.sd-storyboard-delete-connection-preset')?.addEventListener('click', () => void storyboardDeleteConnectionPreset());
   root.querySelector('.sd-storyboard-context-recent')?.addEventListener('change', (event) => {

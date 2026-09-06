@@ -7700,6 +7700,18 @@ details.sd-reader-mcard > summary.sd-reader-mcard-head .sd-reader-inj-tag { marg
   min-height: var(--qm-control-height) !important; height: var(--qm-control-height); padding: 8px 11px !important;
   border-radius: var(--qm-control-radius) !important; font-size: 12px !important; line-height: 1.35 !important;
 }
+#story-director-modal .sd-storyboard-key-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+#story-director-modal .sd-storyboard-key-field > label { color: var(--sd-muted); font-size: 12px; text-align: left; }
+#story-director-modal .sd-storyboard-key-control { position: relative; min-width: 0; }
+#story-director-modal #sd-storyboard-key-input { padding-right: 43px !important; }
+#story-director-modal .sd-storyboard-root .sd-storyboard-key-control .sd-storyboard-key-visibility {
+  position: absolute; inset: 0 0 auto auto; width: var(--qm-control-height); min-width: var(--qm-control-height);
+  height: var(--qm-control-height); min-height: var(--qm-control-height); margin: 0 !important; padding: 0;
+  border: 0 !important; border-radius: var(--qm-control-radius); background: transparent !important; box-shadow: none !important; color: var(--sd-muted);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+#story-director-modal .sd-storyboard-key-visibility[aria-pressed="true"] { color: var(--sd-accent) !important; }
+#story-director-modal .sd-storyboard-key-visibility:focus-visible { outline: 2px solid var(--sd-accent); outline-offset: -4px; }
 #story-director-modal .sd-storyboard-root textarea.text_pole {
   box-sizing: border-box; width: 100%; min-width: 0; margin: 0 !important; resize: vertical;
   padding: 10px 11px !important; border-radius: var(--qm-control-radius) !important; font-size: 12px !important; line-height: 1.55 !important;

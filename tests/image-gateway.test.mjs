@@ -366,7 +366,7 @@ const novelWithoutProbe = await checkImageConnection({ provider: 'novel', apiKey
 });
 assert.equal(novelWithoutProbe.ok, true);
 assert.equal(novelWithoutProbe.verified, false);
-assert.match(novelWithoutProbe.message, /首次生图校验令牌/);
+assert.equal(novelWithoutProbe.message, '地址可达，请以生图验证');
 
 await checkImageConnection({ provider: 'seedream', apiKey: 'ark-key', model: 'doubao-seedream-5-0-260128' }, {
   resolveHost: publicDns,

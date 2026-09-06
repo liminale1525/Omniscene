@@ -782,7 +782,7 @@ export async function checkImageConnection(input, options = {}) {
   const model = asString(source.model, 240);
   const compatibility = provider === 'openai' ? normalizeOpenAIImageCompatibility(source.compatibility) : null;
   if (provider === 'openai' && compatibility.modelDiscovery === 'off') {
-    return { ok: true, provider, model, verified: false, message: '已保存连接；当前预设关闭模型列表探测，请以首次生图验证 Key 与模型名' };
+    return { ok: true, provider, model, verified: false, transport: 'configured', message: '未执行连接探测，请以生图验证' };
   }
   let url;
   let headers = {};
@@ -811,10 +811,10 @@ export async function checkImageConnection(input, options = {}) {
     // NAI 官方与部分兼容站会允许生图，却不开放订阅/模型探测接口。404 能证明地址可达，
     // 但不能证明令牌有效；与实际生图分开说明，避免把可用连接误判为失败。
     if (provider === 'novel' && Number(error?.upstreamStatus) === 404) {
-      return { ok: true, provider, model, verified: false, message: '地址可达；该服务未开放连接探测，请以首次生图校验令牌' };
+      return { ok: true, provider, model, verified: false, message: '地址可达，请以生图验证' };
     }
     if (provider === 'openai' && Number(error?.upstreamStatus) === 404 && compatibility.modelDiscovery !== 'required') {
-      return { ok: true, provider, model, verified: false, message: '地址可达，但未提供模型列表；请以首次生图验证 Key 与模型名' };
+      return { ok: true, provider, model, verified: false, message: '地址可达，请以生图验证' };
     }
     throw error;
   }
