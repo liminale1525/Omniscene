@@ -219,11 +219,14 @@ test('gateway invokes authorization only after validation and before every write
   assert.equal(guards, 2); assert.equal(posts, 1, 'a successful upload is never mislabeled as never submitted');
 });
 
-test('new service queue is not advertised or installed into live routes before durable storage and recovery are ready', async () => {
+test('coordinated service routes use the durable service and do not silently replace legacy generation', async () => {
   const source = await readFile(new URL('../server-plugin.js', import.meta.url), 'utf8');
   const release = await readFile(new URL('../release-files.json', import.meta.url), 'utf8');
-  assert.doesNotMatch(source, /createImageServiceQueue/);
-  assert.doesNotMatch(release, /qianmu-image-service-queue/);
+  assert.match(source, /createImageService/);
+  assert.match(source, /await generateImage\(req.body\)/);
+  assert.match(release, /qianmu-image-service-queue/);
+  assert.match(release, /qianmu-image-service-store/);
+  assert.match(release, /qianmu-image-service-recovery/);
 });
 
 test('explicit provider rejection does not block the next request or leave stale capacity after settlement', async () => {

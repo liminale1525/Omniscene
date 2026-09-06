@@ -116,7 +116,7 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
       if (created && !renamed) await io.unlink(temporary).catch(() => { poisoned = true; });
     }
   }
-  async function lockedTransaction(key, reduce) {
+  async function exclusive(operation) {
     await initialize();
     await checkMaintenance();
     const lock = path.join(directory, '.transaction.lock');
@@ -128,22 +128,25 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
       await handle.writeFile(JSON.stringify({ schema: 'qianmu.image-service-lock.v1', owner: randomUUID(), pid: process.pid }));
       // Close the race where offline maintenance begins after the first check.
       await checkMaintenance();
-      const previous = await readRecord(key);
-      await checkCapacity(Boolean(previous));
-      const next = reduce(previous?.state);
-      if (!next || typeof next !== 'object' || typeof next.then === 'function' || !next.state) throw error('transaction', '生图服务记录事务无效');
-      await atomicWrite(key, previous, next.state);
-      return next.result;
+      return await operation();
     } finally {
       await handle.close().catch(() => { poisoned = true; });
-      // Never steal an old lock by elapsed time, delete a different owner's lock,
-      // or sweep temporary files left by another session. Recovery is separate.
       try {
         const current = await io.lstat(lock);
         if (!identity || current.isSymbolicLink() || !sameFile(identity, current)) throw error('changed', '生图服务写入锁已变化');
         await io.unlink(lock); await syncDirectory();
       } catch (cause) { poisoned = true; throw safeError(cause); }
     }
+  }
+  async function lockedTransaction(key, reduce) {
+    return exclusive(async () => {
+      const previous = await readRecord(key);
+      await checkCapacity(Boolean(previous));
+      const next = reduce(previous?.state);
+      if (!next || typeof next !== 'object' || typeof next.then === 'function' || !next.state) throw error('transaction', '生图服务记录事务无效');
+      await atomicWrite(key, previous, next.state);
+      return next.result;
+    });
   }
   const enqueue = operation => {
     try {
@@ -156,6 +159,10 @@ export function createImageServiceStore({ dataRoot, fileSystem = fs, maxChannels
     } catch (cause) { return Promise.reject(safeError(cause)); }
   };
   return {
+    exclusive(operation) {
+      if (typeof operation !== 'function') return Promise.reject(error('transaction', '缺少服务存储操作'));
+      return enqueue(() => exclusive(operation));
+    },
     transaction(key, reduce) {
       try {
         checkKey(key);

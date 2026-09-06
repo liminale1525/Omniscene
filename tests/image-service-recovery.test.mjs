@@ -130,7 +130,7 @@ test('backup checksums match original bytes and recovery cannot be replayed from
 
 test('offline command inspection accepts only explicit arguments and never installs a live endpoint', async t => {
   const { root } = await fixture(t);
-  const script = new URL('../scripts/recover-image-service.mjs', import.meta.url).href;
+  const script = new URL('../qianmu-image-recovery-cli.js', import.meta.url).href;
   const output = await child(`process.argv=['node','recover','--data-root',${JSON.stringify(root)},'--inspect']; await import(${JSON.stringify(script)});`);
   assert.equal(JSON.parse(output.output.trim()).submitting, 1);
   const runtime = await fs.readFile(new URL('../server-plugin.js', import.meta.url), 'utf8');

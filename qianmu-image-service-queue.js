@@ -131,7 +131,8 @@ export function createImageServiceQueue({ store, ownerId = randomUUID(), now = D
     let submitted = false, finished = false, failure;
     try {
       check(valid, signal);
-      const result = await operation({
+      const result = await operation(Object.freeze({
+        fence,
         async beforeSubmit() {
           check(valid, signal);
           await transact(key, (state, at) => {
@@ -141,7 +142,7 @@ export function createImageServiceQueue({ store, ownerId = randomUUID(), now = D
           });
           check(valid, signal); submitted = true;
         },
-      });
+      }));
       finished = true; return result;
     } catch (error) { failure = error; throw error; }
     finally {

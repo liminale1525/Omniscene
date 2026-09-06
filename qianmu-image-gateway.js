@@ -6,6 +6,8 @@ import { IMAGE_MODEL_BINDING_VERSION, NOVEL_STATIC_MODELS, finalizeModelList, co
 import { randomUUID } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+import { request as httpsRequest } from 'node:https';
+import { Readable } from 'node:stream';
 import { inflateRawSync } from 'node:zlib';
 import {
   filterOpenAIProviderOptions,
@@ -785,6 +787,56 @@ export async function generateImage(input, options = {}) {
     if (error && typeof error === 'object') error.submissionState = submissionState;
     throw error;
   }
+}
+
+// Result retrieval is GET-only and never re-enters a generation adapter. Signed
+// media URLs may contain query strings; validation applies to their public origin.
+export function pinnedImageResultFetch(rawUrl, addresses, requestImpl = httpsRequest) {
+  const expected = new URL(safeRemoteImageUrl(rawUrl));
+  const list = (Array.isArray(addresses) ? addresses : [addresses]).map(item => ({ address: item?.address, family: item?.family }));
+  if (!list.length || list.length > 32 || list.some(item => !isIP(item.address || '') || isPrivateAddress(item.address) || isIP(item.address) !== item.family)) throw new ImageGatewayError(502, 'unsafe_image_host', '原图地址解析到不允许的网络');
+  return async (url, init) => {
+    if (String(url) !== expected.toString() || init.method !== 'GET') throw new ImageGatewayError(502, 'unsafe_image_host', '原图下载目标已变化');
+    return new Promise((resolve, reject) => {
+      const outgoing = requestImpl(expected, { method: 'GET', signal: init.signal, headers: { Accept: 'image/*' },
+        lookup(hostname, options, callback) {
+          if (hostname.toLowerCase() !== expected.hostname.toLowerCase().replace(/^\[|\]$/g, '')) { callback(new Error('image host changed')); return; }
+          if (options?.all) callback(null, list.map(item => ({ ...item })));
+          else callback(null, list[0].address, list[0].family);
+        },
+      }, incoming => {
+        if (incoming.statusCode >= 300 && incoming.statusCode < 400) { incoming.destroy(); reject(new ImageGatewayError(502, 'image_redirect_blocked', '原图链接发生跳转，未跟随')); return; }
+        try {
+          const headers = new Headers();
+          for (const [key, value] of Object.entries(incoming.headers)) if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(', ') : String(value));
+          const empty = [204,205,304].includes(incoming.statusCode);
+          if (empty) incoming.resume();
+          resolve(new Response(empty ? null : Readable.toWeb(incoming), { status: incoming.statusCode, headers }));
+        } catch (error) { incoming.destroy(); reject(error); }
+      });
+      outgoing.once('error', reject); outgoing.end();
+    });
+  };
+}
+export async function materializeImageResult(result, options = {}) {
+  const images = [];
+  let remaining = MAX_UPSTREAM_BYTES;
+  for (const item of result.images || []) {
+    if (item.data) {
+      remaining -= Buffer.byteLength(item.data, 'base64');
+      if (remaining < 0) throw new ImageGatewayError(502, 'upstream_too_large', '原图总量超过上限');
+      images.push(item); continue;
+    }
+    const url = safeRemoteImageUrl(item.url);
+    const addresses = await (options.resolveHost || dnsLookup)(new URL(url).hostname.replace(/^\[|\]$/g, ''), { all: true, verbatim: true });
+    await validateGatewayBaseUrl(new URL(url).origin, { resolveHost: async () => addresses });
+    const request = { apiKey: '', parameters: { timeoutMs: 60000 } };
+    const response = await fetchUpstream(url, { method: 'GET', headers: { Accept: 'image/*' }, credentials: 'omit' }, request, options.fetchImpl || pinnedImageResultFetch(url, addresses));
+    const buffer = await readLimited(response, remaining);
+    const normalized = normalizeImageData([{ ...item, url: '', data: buffer.toString('base64') }], { maxTotalBytes: remaining });
+    remaining -= buffer.length; images.push(...normalized);
+  }
+  return { ...result, images };
 }
 
 export async function checkImageConnection(input, options = {}) {

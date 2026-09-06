@@ -2,6 +2,8 @@
 // 为豆包 TTS 与分镜生图提供同源请求边界，密钥只在单次上游请求中使用。
 import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
+import { createImageService, imageServiceTaskErrorPayload, IMAGE_SERVICE_TASK_VERSION } from './qianmu-image-service.js';
+import { imageServiceAccount } from './qianmu-image-service-access.js';
 import {
   checkImageConnection,
   generateImage,
@@ -27,6 +29,7 @@ const ALLOWED_SAMPLE_RATES = new Set([16000, 24000, 32000, 48000]);
 const ALLOWED_RESOURCE_IDS = new Set(['seed-tts-2.0', 'seed-icl-2.0', 'seed-icl-1.0']);
 const ALLOWED_INFERENCE_MODELS = new Set(['seed-tts-2.0-expressive', 'seed-tts-1.1']);
 const VIDEO_STREAM_TIMEOUT_MS = 15 * 60_000;
+const imageTaskServices = new Set();
 
 async function pluginVersion() {
   try {
@@ -146,7 +149,7 @@ export async function streamMiniMaxH3VideoResult(opened, res) {
   }
 }
 
-export async function init(router) {
+export async function init(router, options = {}) {
   router.get('/health', async (_req, res) => res.json({
     ok: true,
     plugin: info.id,
@@ -163,6 +166,49 @@ export async function init(router) {
     res.set('X-Content-Type-Options', 'nosniff');
     return res;
   };
+
+  let imageTasks;
+  const hostDataRoot = () => options.dataRoot === undefined ? globalThis.DATA_ROOT : options.dataRoot;
+  const tasksFor = (req) => {
+    imageServiceAccount(req);
+    if (!imageTasks) {
+      imageTasks = createImageService({ dataRoot: hostDataRoot(), ...(options.imageTaskOptions || {}) });
+      imageTaskServices.add(imageTasks);
+    }
+    return imageTasks;
+  };
+  router.get('/image/tasks/capabilities', (req, res) => {
+    prepareImageResponse(res);
+    try {
+      imageServiceAccount(req);
+      // Construction checks the trusted host path but performs no disk/network IO.
+      tasksFor(req);
+      return res.json({ ok: true, schemaVersion: IMAGE_SERVICE_TASK_VERSION, providers: ['novel'], protocols: ['novelai'],
+        scope: 'coordinated-endpoints-only', resultRetrieval: true, resultAcknowledgement: true, explicitCacheCleanup: true,
+        maxPending: 32, maxActive: 2, automaticRestartReplay: false,
+      });
+    } catch (error) { const result = imageServiceTaskErrorPayload(error); return res.status(result.status).json(result.body); }
+  });
+  for (const action of ['submit', 'query', 'result', 'acknowledge', 'discard']) {
+    router.post(`/image/tasks/${action}`, async (req, res) => {
+      prepareImageResponse(res);
+      const controller = new AbortController();
+      // Request.close also fires after an ordinary request body is read in Node.
+      // Only an unfinished RESPONSE closing means the waiting client went away.
+      const onClose = () => { if (!res.writableEnded) controller.abort(); };
+      if (action === 'submit') res.once?.('close', onClose);
+      try {
+        const service = tasksFor(req);
+        const body = await service[action](req, req.body, { signal: controller.signal });
+        if (!res.destroyed && !res.writableEnded) return res.json(body);
+      } catch (error) {
+        const result = imageServiceTaskErrorPayload(error);
+        console.warn('[千幕生图任务]', result.body.code);
+        if (!res.destroyed && !res.writableEnded) return res.status(result.status).json(result.body);
+      } finally { res.off?.('close', onClose); }
+      return undefined;
+    });
+  }
 
   router.post('/image/check', async (req, res) => {
     prepareImageResponse(res);
@@ -296,4 +342,9 @@ export async function init(router) {
       clearTimeout(timer);
     }
   });
+}
+
+export async function exit() {
+  const active = [...imageTaskServices]; imageTaskServices.clear();
+  await Promise.allSettled(active.map(service => service.close()));
 }

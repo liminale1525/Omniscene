@@ -191,8 +191,11 @@ test('bounded waiting and closing reject unsent mutations without abandoning an 
   assert.equal(store.inspect().pending, 0);
 });
 
-test('new private metadata store remains outside live service routes and release until recovery is integrated', async () => {
-  for (const file of ['../server-plugin.js', '../release-files.json']) assert.doesNotMatch(await fs.readFile(new URL(file, import.meta.url), 'utf8'), /qianmu-image-service-store/);
+test('private metadata is only constructed through the task service and the release includes recovery', async () => {
+  assert.doesNotMatch(await fs.readFile(new URL('../server-plugin.js', import.meta.url), 'utf8'), /createImageServiceStore/);
+  const source = await fs.readFile(new URL('../qianmu-image-service.js', import.meta.url), 'utf8');
+  assert.match(source, /createImageServiceStore/);
+  assert.match(await fs.readFile(new URL('../release-files.json', import.meta.url), 'utf8'), /qianmu-image-service-store/);
 });
 
 test('reading absent metadata does not create a service database', async t => {

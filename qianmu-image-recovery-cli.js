@@ -1,5 +1,5 @@
 // Offline administrative entry, deliberately separate from plugin HTTP routes.
-import { inspectImageServiceRecovery, recoverImageServiceRecords, restoreInterruptedImageRecovery } from '../qianmu-image-service-recovery.js';
+import { inspectImageServiceRecovery, recoverImageServiceRecords, restoreInterruptedImageRecovery } from './qianmu-image-service-recovery.js';
 
 const args = process.argv.slice(2), values = {};
 try {

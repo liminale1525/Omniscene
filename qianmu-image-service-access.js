@@ -20,6 +20,10 @@ export function imageServiceAccount(request) {
 export function imageServiceAccountStillMatches(request, account) {
   try { return imageServiceAccount(request).namespace === account?.namespace; } catch (_) { return false; }
 }
+export function imageServiceTaskView(row) {
+  return row ? { attemptId: row.attemptId, status: row.status, automatic: row.automatic,
+    createdAt: row.createdAt, updatedAt: row.updatedAt, needsReview: row.status === 'uncertain' } : null;
+}
 export async function queryImageServiceTask(request, input, { store } = {}) {
   const account = imageServiceAccount(request);
   // Query by the actual connection credential, never a client-supplied hash.
@@ -34,12 +38,5 @@ export async function queryImageServiceTask(request, input, { store } = {}) {
   // A guessed id belonging to someone else is indistinguishable from a missing id,
   // even for an administrator. Maintenance is an explicit separate operation.
   if (!row) return { ok: true, schemaVersion: 1, task: null };
-  return { ok: true, schemaVersion: 1, task: {
-    attemptId: row.attemptId, status: row.status, automatic: row.automatic,
-    createdAt: row.createdAt, updatedAt: row.updatedAt,
-    // "submitting" may still be live; only the service lifecycle can determine
-    // whether it is orphaned. A query must not turn a normal running job into an
-    // invitation to retry, and acknowledged history needs no second confirmation.
-    needsReview: row.status === 'uncertain',
-  } };
+  return { ok: true, schemaVersion: 1, task: imageServiceTaskView(row) };
 }
