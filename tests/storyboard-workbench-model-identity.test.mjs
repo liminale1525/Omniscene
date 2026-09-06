@@ -22,6 +22,7 @@ function environment(capability = V3, model = alias, extra = {}) {
   const context = vm.createContext({
     ...storyboard, clone: structuredClone,
     settings: { apiProfiles: [] }, storyboardState: () => state, getChatKey: () => 'chat-a', ctx: () => ({ chat: [] }),
+    storyboardTargetFloor: () => -1, storyboardCredentialRevision: 0, getCharacterDescription: () => '', getPersonaDescription: () => '',
     storyboardSelectedArtistPreset: () => null, storyboardGalleryRecords: () => [],
     uniqueClean: (items) => [...new Set(items.filter(Boolean))],
     htmlEscape: (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'),
@@ -43,7 +44,7 @@ function environment(capability = V3, model = alias, extra = {}) {
     'storyboardPromptsForArtist', 'storyboardJoinPrompt', 'storyboardParameterPresets',
     'renderStoryboardParameterPresets', 'renderStoryboardParameterVibes', 'renderStoryboardCreate',
     'storyboardProfileSnapshot', 'storyboardCaptureWorkbench', 'storyboardGenerationPayload',
-    'storyboardResolveRoutingProfile', 'storyboardRoutingTargetOptions', 'storyboardCreateJob', 'storyboardGatewayRequest', 'storyboardLoadLogToWorkbench', 'storyboardSafeShotSpecFromPrompt', 'storyboardAdaptShotForModel'];
+    'storyboardCreatePreparationGuard', 'storyboardResolveRoutingProfile', 'storyboardRoutingTargetOptions', 'storyboardCreateJob', 'storyboardGatewayRequest', 'storyboardLoadLogToWorkbench', 'storyboardSafeShotSpecFromPrompt', 'storyboardAdaptShotForModel'];
   for (const call of section('renderStoryboardCreate').matchAll(/\b(renderStoryboard\w+)\(/g)) {
     if (!names.includes(call[1])) context[call[1]] = () => '';
   }
@@ -273,7 +274,40 @@ test('deleting a routed connection during safety preparation cannot queue a fall
   context.storyboardAdaptShotForModel = async (shot) => { state.connections.novel.presets = []; return shot; };
   assert.equal(await context.storyboardGenerate(null), false);
   assert.equal(queued.length, 0);
-  assert.match(notices.at(-1), /API 预设已失效/);
+  assert.match(notices.at(-1), /生图设置已变化/);
+});
+
+test('changing drawing settings in the count confirmation prevents all queued requests', async () => {
+  const { state, context, queued, notices } = generationEnvironment();
+  context.confirmDialog = async () => { Object.assign(state.profiles.novel, { loaded: true, cfg: '8' }); return true; };
+  assert.equal(await context.storyboardGenerate(null), false);
+  assert.equal(queued.length, 0);
+  assert.match(notices.at(-1), /生图设置已变化/);
+});
+
+test('a rejected or stale extraction result cannot be followed by generation of an older or fallback draft', async () => {
+  const { state, context, queued } = generationEnvironment();
+  state.prompt = '';
+  context.storyboardCompilePrompt = async () => { state.prompt = 'manual review fallback'; return false; };
+  assert.equal(await context.storyboardGenerate(null), false);
+  assert.equal(queued.length, 0);
+});
+
+test('an archive load cannot continue preparing jobs after a channel change', async () => {
+  const { state, context, queued } = generationEnvironment();
+  const plan = { archiveRef: 'archive-a', status: 'prompt_ready' };
+  context.storyboardReleasePlanArchive = async () => { state.source = 'banana'; };
+  assert.equal(await context.storyboardGenerate(null, { plan }), false);
+  assert.equal(queued.length, 0);
+});
+
+test('materializing visible parameter defaults on page navigation does not invalidate an unchanged effective model', () => {
+  const { state, context } = environment(V3);
+  const guard = context.storyboardCreatePreparationGuard(state);
+  state.profiles.novel = { ...context.storyboardProviderProfile(state), loaded: true };
+  state.view = 'assets';
+  assert.equal(guard.isCurrent(), true);
+  guard.dispose();
 });
 
 test('capture keeps the old identity when the DOM already shows the next selection', () => {

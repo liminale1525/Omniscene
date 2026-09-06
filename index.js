@@ -95,9 +95,9 @@ import {
   normalizeQianmuNote,
   saveQianmuNote,
 } from './qianmu-notes.js';
-import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.30';
-import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.30';
-import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.30';
+import { migrateQianmuChatStoreV2, migrateQianmuSettingsV2 } from './qianmu-data-migrations.js?v=1.59.31';
+import { createFeatureRuntime } from './qianmu-feature-runtime.js?v=1.59.31';
+import { applyQianmuIcons, refreshQianmuIcon } from './qianmu-icon-renderer.js?v=1.59.31';
 import {
   createQianmuChatCompletionResponseFormat,
   normalizeQianmuStructuredOutputMode,
@@ -105,7 +105,7 @@ import {
   parseQianmuDialoguePayload,
   qianmuChatCompletionError,
   qianmuChatCompletionText,
-} from './qianmu-llm-output.js?v=1.59.30';
+} from './qianmu-llm-output.js?v=1.59.31';
 import {
   normalizeOpenAIImageCompatibility,
   parseOpenAICompatibleHeaders,
@@ -165,143 +165,143 @@ import {
   storyboardDirectorDecisionSnapshot,
   storyboardProductionDeliveryPolicy,
   transitionStoryboardTaskState,
-} from './qianmu-storyboard.js?v=1.59.30';
+} from './qianmu-storyboard.js?v=1.59.31';
 
 const MODULE_EXECUTION_STARTED_AT = globalThis.performance?.now?.() ?? Date.now();
 const MODULE_NAME = 'story_director_liminale';
 const EXTENSION_NAME = '千幕';
-const VERSION = '1.59.30';
+const VERSION = '1.59.31';
 let reader = null;
 const featureRuntime = createFeatureRuntime({
   imageDirect: {
     label: '生图传输',
-    load: () => import('./qianmu-image-direct.js?v=1.59.30'),
+    load: () => import('./qianmu-image-direct.js?v=1.59.31'),
   },
   readerCore: {
     label: '伴读解析器',
-    load: () => import('./qianmu-reader.js?v=1.59.30').then((module) => {
+    load: () => import('./qianmu-reader.js?v=1.59.31').then((module) => {
       reader = module;
       return module;
     }),
   },
   optionalService: {
     label: '增强服务检测',
-    load: () => import('./qianmu-service-capabilities.js?v=1.59.30'),
+    load: () => import('./qianmu-service-capabilities.js?v=1.59.31'),
   },
   productionPacket: {
     label: '第二摄影机制片包',
-    load: () => import('./qianmu-production-packet.js?v=1.59.30'),
+    load: () => import('./qianmu-production-packet.js?v=1.59.31'),
   },
   narrativeLedger: {
     label: '共享叙事账本',
-    load: () => import('./qianmu-narrative-ledger.js?v=1.59.30'),
+    load: () => import('./qianmu-narrative-ledger.js?v=1.59.31'),
   },
   directorCandidates: {
     label: '导演候选评分',
-    load: () => import('./qianmu-director-candidate.js?v=1.59.30'),
+    load: () => import('./qianmu-director-candidate.js?v=1.59.31'),
   },
   directorDecision: {
     label: '导演决策单',
-    load: () => import('./qianmu-director-decision.js?v=1.59.30'),
+    load: () => import('./qianmu-director-decision.js?v=1.59.31'),
   },
   directorWorkOrders: {
     label: '导演工作单',
-    load: () => import('./qianmu-director-work-order.js?v=1.59.30'),
+    load: () => import('./qianmu-director-work-order.js?v=1.59.31'),
   },
   videoContract: {
     label: '动态镜头合同',
-    load: () => import('./qianmu-video-contract.js?v=1.59.30'),
+    load: () => import('./qianmu-video-contract.js?v=1.59.31'),
   },
   videoDraft: {
     label: '动态镜头草稿',
-    load: () => import('./qianmu-video-draft.js?v=1.59.30'),
+    load: () => import('./qianmu-video-draft.js?v=1.59.31'),
   },
   videoDraftStore: {
     label: '动态镜头草稿仓',
-    load: () => import('./qianmu-video-draft-store.js?v=1.59.30'),
+    load: () => import('./qianmu-video-draft-store.js?v=1.59.31'),
   },
   videoReadiness: {
     label: '动态渠道准备检查',
-    load: () => import('./qianmu-video-readiness.js?v=1.59.30'),
+    load: () => import('./qianmu-video-readiness.js?v=1.59.31'),
   },
   videoPricing: {
     label: '动态镜头费用预估',
-    load: () => import('./qianmu-video-pricing.js?v=1.59.30'),
+    load: () => import('./qianmu-video-pricing.js?v=1.59.31'),
   },
   videoConfirmation: {
     label: '动态镜头生成确认',
-    load: () => import('./qianmu-video-confirmation.js?v=1.59.30'),
+    load: () => import('./qianmu-video-confirmation.js?v=1.59.31'),
   },
   videoPrompt: {
     label: '动态镜头提示词合同',
-    load: () => import('./qianmu-video-prompt.js?v=1.59.30'),
+    load: () => import('./qianmu-video-prompt.js?v=1.59.31'),
   },
   videoTask: {
     label: '动态镜头任务',
-    load: () => import('./qianmu-video-task.js?v=1.59.30'),
+    load: () => import('./qianmu-video-task.js?v=1.59.31'),
   },
   videoBudget: {
     label: '动态镜头预算',
-    load: () => import('./qianmu-video-budget.js?v=1.59.30'),
+    load: () => import('./qianmu-video-budget.js?v=1.59.31'),
   },
   minimaxH3: {
     label: 'MiniMax H3 渠道',
-    load: () => import('./qianmu-video-minimax.js?v=1.59.30'),
+    load: () => import('./qianmu-video-minimax.js?v=1.59.31'),
   },
   minimaxH3Runtime: {
     label: 'MiniMax H3 运行层',
-    load: () => import('./qianmu-video-runtime.js?v=1.59.30'),
+    load: () => import('./qianmu-video-runtime.js?v=1.59.31'),
   },
   videoStore: {
     label: '动态镜头任务仓',
-    load: () => import('./qianmu-video-store.js?v=1.59.30'),
+    load: () => import('./qianmu-video-store.js?v=1.59.31'),
   },
   videoResult: {
     label: '动态镜头成片归档',
-    load: () => import('./qianmu-video-result.js?v=1.59.30'),
+    load: () => import('./qianmu-video-result.js?v=1.59.31'),
   },
   videoGallery: {
     label: '动态阅片室',
-    load: () => import('./qianmu-video-gallery.js?v=1.59.30'),
+    load: () => import('./qianmu-video-gallery.js?v=1.59.31'),
   },
   videoCoordinator: {
     label: '动态镜头协调器',
-    load: () => import('./qianmu-video-coordinator.js?v=1.59.30'),
+    load: () => import('./qianmu-video-coordinator.js?v=1.59.31'),
   },
   videoMedia: {
     label: '动态镜头素材解析',
-    load: () => import('./qianmu-video-media.js?v=1.59.30'),
+    load: () => import('./qianmu-video-media.js?v=1.59.31'),
   },
   videoTimeline: {
     label: '完整影片时间线',
-    load: () => import('./qianmu-video-timeline.js?v=1.59.30'),
+    load: () => import('./qianmu-video-timeline.js?v=1.59.31'),
   },
   videoTimelineStore: {
     label: '完整影片时间线仓',
-    load: () => import('./qianmu-video-timeline-store.js?v=1.59.30'),
+    load: () => import('./qianmu-video-timeline-store.js?v=1.59.31'),
   },
   videoTimelinePlayer: {
     label: '完整影片顺序预览',
-    load: () => import('./qianmu-video-timeline-player.js?v=1.59.30'),
+    load: () => import('./qianmu-video-timeline-player.js?v=1.59.31'),
   },
   videoPostproduction: {
     label: '完整影片后期分层',
-    load: () => import('./qianmu-video-postproduction.js?v=1.59.30'),
+    load: () => import('./qianmu-video-postproduction.js?v=1.59.31'),
   },
   videoPostproductionStore: {
     label: '完整影片后期分层仓',
-    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.30'),
+    load: () => import('./qianmu-video-postproduction-store.js?v=1.59.31'),
   },
   storyboardContract: {
     label: '分镜返回协议',
-    load: () => import('./qianmu-storyboard-contract.js?v=1.59.30'),
+    load: () => import('./qianmu-storyboard-contract.js?v=1.59.31'),
   },
   theaterCatalog: {
     label: '内置剧札',
     load: async () => {
       const [zizi, qianmu] = await Promise.all([
-        import('./builtin-theaters.js?v=1.59.30'),
-        import('./qianmu-theaters.js?v=1.59.30'),
+        import('./builtin-theaters.js?v=1.59.31'),
+        import('./qianmu-theaters.js?v=1.59.31'),
       ]);
       return { builtinTheaters: zizi.BUILTIN_THEATERS, qianmuTheaters: qianmu.QIANMU_THEATERS };
     },
@@ -1131,6 +1131,7 @@ let focusClockVoiceDrawerEl = null;  // 专注角色语音二层抽屉；挂在�
 const STORYBOARD_QUEUE_LIMIT = 8;     // 仅本页运行态；刷新后不自动续跑，避免意外消耗生图额度
 let storyboardBusy = false;          // 分镜生成独立忙碌态，不占用推演/幕外请求锁
 let storyboardCompilerBusy = false;  // 自动取景是独立的一次 LLM 请求，不与正文生成共用返回
+let storyboardCredentialRevision = 0;
 let storyboardWorldEntryCache = { key: '', names: [], boundNames: [], books: {}, rows: [], loading: null, error: '' }; // 分镜独立选择，读取链路与「取材」共用
 const storyboardActiveJobs = new Map(); // 正在生成的任务；放弃时不取消可能已计费的上游请求，只丢弃回传
 let storyboardQueue = [];            // 千幕内串行队列，避免同一连接并发误耗额度
@@ -16635,6 +16636,7 @@ async function storyboardResolveApiKey(providerId, requestedCredentialId = '') {
 async function storyboardRememberApiKey(providerId, key, credentialId) {
   const value = String(key || '').trim();
   if (!value) return false;
+  storyboardCredentialRevision++;
   const id = credentialId || storyboardCredentialId(providerId, 'draft');
   storyboardApiKeys.set(id, value);
   storyboardWriteBrowserCredential(id, value);
@@ -16648,6 +16650,7 @@ async function storyboardRememberApiKey(providerId, key, credentialId) {
 }
 
 async function storyboardForgetApiKey(providerId, credentialId) {
+  storyboardCredentialRevision++;
   const id = credentialId || storyboardCredentialId(providerId, 'draft');
   storyboardApiKeys.delete(id);
   storyboardDraftApiKeys.delete(providerId);
@@ -16912,6 +16915,74 @@ async function storyboardCompilerWorldText(state) {
   return { text: resolved.join('\n\n').slice(0, 18000), rows: selected, fallback: false };
 }
 
+function storyboardCreatePreparationGuard(state, { plan = null, includeDraft = true } = {}) {
+  const chatKey = String(getChatKey() || '');
+  const copy = (value) => Array.isArray(value) ? value.map(copy)
+    : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, copy(item)])) : value;
+  const equal = (a, b) => {
+    if (Object.is(a, b)) return true;
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a) !== Array.isArray(b)) return false;
+    const keys = Object.keys(a);
+    return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && equal(a[key], b[key]));
+  };
+  // Only preparation inputs: no gallery, logs, media bytes or parameter-memory archive. Strings are not serialized/copied.
+  const read = () => {
+    const floor = storyboardTargetFloor(state);
+    const recent = Math.max(0, Math.min(20, Number(state.promptCompiler.includeRecentFloors) || 0));
+    const chat = ctx().chat || [];
+    const selectedPreset = state.promptPresets.find((item) => item.id === state.promptCompiler.instructionPresetId);
+    const api = (settings.apiProfiles || []).find((item) => item.id === state.promptCompiler.apiProfileId) || settings;
+    return {
+      enabled: state.enabled, source: state.source, target: state.target, floor, floorValue: state.floor,
+      profiles: Object.fromEntries(Object.keys(STORYBOARD_PROVIDER_REGISTRY).map((id) => {
+        const { loaded, ...effectiveProfile } = storyboardProviderProfile(state, id);
+        return [id, effectiveProfile];
+      })), connections: state.connections, credentialRevision: storyboardCredentialRevision,
+      draftKeys: [...storyboardDraftApiKeys.entries()],
+      compiler: state.promptCompiler, preset: selectedPreset, composition: state.compositionPolicy, routing: state.routing,
+      parameterPresets: state.parameterPresets, paragraphMode: state.paragraphMode, manualParagraphIndex: state.manualParagraphIndex,
+      paragraphSelection: state.pendingParagraphSelection, promptMode: state.promptMode,
+      prompt: includeDraft ? state.prompt : undefined, negative: includeDraft ? state.negative : undefined, promptDraft: includeDraft ? state.promptDraft : undefined,
+      selectedArtist: state.selectedArtistPresetId, selectedPool: state.selectedArtistPoolId,
+      artists: state.artistPresets.map(({ id, value, positivePrompt, negativePrompt }) => ({ id, value, positivePrompt, negativePrompt })),
+      pools: state.artistPools, vibes: state.selectedVibeIds,
+      llm: { id: api.id, mode: settings.providerMode, apiUrl: api.apiUrl, apiKey: api.apiKey, model: api.model, temperature: api.temperature, structuredOutputMode: api.structuredOutputMode },
+      character: getCharacterDescription(), persona: getPersonaDescription(), mainApi: ctx().mainApi,
+      messages: chat.slice(Math.max(0, floor - recent), floor + 1).map((item) => ({ text: item?.mes, swipe: item?.swipe_id, user: item?.is_user, system: item?.is_system })),
+    };
+  };
+  const floor = storyboardTargetFloor(state), message = ctx().chat?.[floor];
+  let baseline = copy(read()), invalidated = false;
+  // Input events also invalidate edit-and-restore (A → B → A), without cancelling on scrolling or library searches.
+  const onInput = (event) => {
+    const target = event.target;
+    if (target?.closest?.('.sd-storyboard-root') && target.matches?.('input, textarea, select')
+      && !/search/.test(String(target.className || '')) && target.type !== 'search') invalidated = true;
+  };
+  if (typeof document !== 'undefined') {
+    document.addEventListener('input', onInput, true);
+    document.addEventListener('change', onInput, true);
+  }
+  const isCurrent = () => !invalidated && baseline !== null && state === storyboardState()
+    && chatKey === String(getChatKey() || '') && plan?.status !== 'cancelled' && ctx().chat?.[floor] === message && equal(baseline, read());
+  return {
+    isCurrent,
+    ownsCurrentContext: () => state === storyboardState() && chatKey === String(getChatKey() || ''),
+    assertCurrent() {
+      if (isCurrent()) return;
+      const error = new Error('分镜配置或正文已变化，已忽略旧结果，请按当前设置重试');
+      error.code = 'storyboard_input_changed'; throw error;
+    },
+    dispose() {
+      baseline = null;
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('input', onInput, true);
+        document.removeEventListener('change', onInput, true);
+      }
+    },
+  };
+}
+
 async function storyboardCompilerContext(state) {
   const floor = storyboardTargetFloor(state);
   const chat = Array.isArray(ctx().chat) ? ctx().chat : [];
@@ -17004,7 +17075,8 @@ async function storyboardCallCompiler(messages, profileId, requestOptions = {}) 
   });
 }
 
-async function storyboardCompilerResult(raw, context, capabilities, state, contractRequest = null) {
+async function storyboardCompilerResult(raw, context, capabilities, state, contractRequest = null, inputGuard = null) {
+  inputGuard?.assertCurrent();
   let object = null;
   let contractMeta = null;
   let contractTrace = null;
@@ -17012,6 +17084,7 @@ async function storyboardCompilerResult(raw, context, capabilities, state, contr
   const declaresPlanContract = /"schema"\s*:\s*"qianmu\.storyboard\.plan\.v1"/.test(rawText);
   if (contractRequest || declaresPlanContract) {
     const contract = contractRequest?.runtime || await featureRuntime.load('storyboardContract');
+    inputGuard?.assertCurrent();
     const paragraphIds = contractRequest?.paragraphIds || context.paragraphs.map((_, index) => `P${index + 1}`);
     const paragraphIndexById = Object.fromEntries(paragraphIds.map((id, index) => [id, index]));
     const manualSupplement = contractRequest?.manualSupplement ?? state.pendingParagraphSelection?.mode === 'manual_supplement';
@@ -17037,6 +17110,7 @@ async function storyboardCompilerResult(raw, context, capabilities, state, contr
       validation: initial,
       options: contractOptions,
       request: (messages) => {
+        inputGuard?.assertCurrent();
         repairMessages = messages;
         return storyboardCallCompiler(messages, state.promptCompiler.apiProfileId, {
           temperature: 0,
@@ -17047,6 +17121,7 @@ async function storyboardCompilerResult(raw, context, capabilities, state, contr
         });
       },
     });
+    inputGuard?.assertCurrent();
     contractMeta = {
       schema: STORYBOARD_PLAN_SCHEMA,
       repairAttempted: result.repairAttempted === true,
@@ -17136,13 +17211,17 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false } = {}
   catch (error) { toast(error.message, 'warning'); return false; }
   const floor = storyboardTargetFloor(state);
   if (floor < 0 || !ctx().chat?.[floor]) { toast('当前没有可用于自动取景的正文。', 'warning'); return false; }
+  const inputGuard = storyboardCreatePreparationGuard(state, { plan });
   storyboardCompilerBusy = true;
   storyboardSetPlanStatus(plan, 'compiling');
   renderModal();
   const startedAt = Date.now();
+  let resultAccepted = false;
   try {
     const context = await storyboardCompilerContext(state);
+    inputGuard.assertCurrent();
     const contract = await featureRuntime.load('storyboardContract');
+    inputGuard.assertCurrent();
     const contractRequest = {
       ...contract.buildStoryboardPlanContractRequest(context, storyboardCompilerRequestConfig(state, profile)),
       runtime: contract,
@@ -17152,8 +17231,10 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false } = {}
       jsonSchemaName: contractRequest.schemaId,
       jsonSchemaStrict: true,
     });
-    if (plan?.status === 'cancelled') return false;
-    const result = await storyboardCompilerResult(raw, context, getStoryboardCapabilities(state.source, resolveStoryboardProfileBinding(state.source, profile).capabilityModelId), state, contractRequest);
+    inputGuard.assertCurrent();
+    const result = await storyboardCompilerResult(raw, context, getStoryboardCapabilities(state.source, resolveStoryboardProfileBinding(state.source, profile).capabilityModelId), state, contractRequest, inputGuard);
+    inputGuard.assertCurrent();
+    resultAccepted = true;
     const compilerInput = {
       floor: context.floor,
       mode: state.promptMode,
@@ -17241,11 +17322,22 @@ async function storyboardCompilePrompt(root, { plan = null, quiet = false } = {}
     if (!quiet) toast(manualRequired ? '自动整理未通过校验；已停止自动生图并保留一份待确认草稿。' : '生成词已提取，可继续修改或手动生成。', manualRequired ? 'warning' : 'success');
     return !manualRequired;
   } catch (error) {
+    if (error?.code === 'storyboard_input_changed' || !resultAccepted && !inputGuard.isCurrent()) {
+      if (plan?.status === 'compiling') {
+        const error = '取景输入已变化，请重新提取';
+        if (inputGuard.ownsCurrentContext() && plan.chatKey === String(getChatKey() || '')) storyboardSetPlanStatus(plan, 'stale', { error });
+        // Finish only the original plan reference; never save/render the new chat through a global state setter.
+        else Object.assign(plan, { status: 'stale', error, updatedAt: Date.now() });
+      }
+      if (!quiet && inputGuard.ownsCurrentContext()) toast('取景输入已变化，旧结果未写回；请重新提取', 'info');
+      return false;
+    }
     console.error(`[${MODULE_NAME}] storyboard prompt compiler failed`, error);
     storyboardSetPlanStatus(plan, 'failed', { error: error?.message || error });
     if (!quiet) toast(`画面整理失败：${error?.message || error}`, 'error');
     return false;
   } finally {
+    inputGuard.dispose();
     storyboardCompilerBusy = false;
     renderModal();
   }
@@ -17392,7 +17484,9 @@ function storyboardSafeShotSpecFromPrompt(shot, prompt) {
 async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = storyboardState(), guard = {}) {
   const stillCurrent = () => (!guard.chatKey || guard.chatKey === String(getChatKey() || ''))
     && !guard.cancelled?.()
-    && storyboardState().enabled;
+    && storyboardState().enabled && state === storyboardState() && (guard.isCurrent?.() ?? true);
+  const aborted = () => ({ ...shot, safetyAdapted: false, safetyAborted: true });
+  if (!stillCurrent()) return aborted();
   const binding = resolveStoryboardProfileBinding(sourceId, { model: modelId, capabilityModelId: guard.capabilityModelId });
   const policy = getStoryboardCapabilities(sourceId, binding.capabilityModelId).contentPolicy;
   if (!shot?.sensitive || policy !== 'filtered') return { ...shot, originalPrompt: String(shot?.prompt || ''), safetyAdapted: false };
@@ -17411,6 +17505,7 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
   let safetyTrace = null;
   try {
     const contract = await featureRuntime.load('storyboardContract');
+    if (!stillCurrent()) return aborted();
     const provider = STORYBOARD_PROVIDER_REGISTRY[sourceId];
     const request = contract.buildStoryboardSafetyContractRequest(shot.shotSpec || shot, {
       providerId: sourceId,
@@ -17451,6 +17546,7 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
       validation: initial,
       options: contractOptions,
       request: (messages) => {
+        if (!stillCurrent()) { const error = new Error('安全适配输入已变化'); error.code = 'storyboard_input_changed'; throw error; }
         repairMessages = messages;
         return storyboardCallCompiler(messages, state.promptCompiler.apiProfileId, {
           temperature: 0,
@@ -17498,8 +17594,10 @@ async function storyboardAdaptShotForModel(shot, sourceId, modelId, state = stor
       }
     }
   } catch (error) {
+    if (error?.code === 'storyboard_input_changed' || !stillCurrent()) return aborted();
     console.warn(`[${MODULE_NAME}] storyboard safety adaptation used local fallback`, error);
   }
+  if (!stillCurrent()) return aborted();
   const fallbackPrompt = storyboardSafePromptFallback(shot);
   return {
     ...shot,
@@ -17624,19 +17722,34 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
   }
   const productionDraft = state.promptDraft?.shots?.find((item) => storyboardProductionContext(item).packetId) || null;
   if (productionDraft && storyboardProductionContext(productionDraft).decisionStatus !== 'approved') return toast('世界侧镜头缺少已确认的导演决策。', 'warning');
-  if (productionDraft) {
-    const currentChatKey = String(getChatKey() || '');
-    const decision = storyboardDirectorDecisionSnapshot(productionDraft);
-    const decisionRuntime = await featureRuntime.load('directorDecision');
-    if (!decision || !decisionRuntime.canConsumeDirectorDecision(decision, 'storyboard', currentChatKey)) return toast('世界侧镜头的导演决策已失效。', 'warning');
-  }
-  const deliveryPolicy = storyboardProductionDeliveryPolicy(productionDraft || {}, { target: state.target, inlineByDefault: state.inlineByDefault });
-  const targetFloor = deliveryPolicy.target === 'gallery' ? null : storyboardTargetFloor(state);
-  if (!plan && deliveryPolicy.target !== 'gallery' && Number.isInteger(targetFloor) && ctx().chat?.[targetFloor]) {
-    plan = storyboardEnsurePlan(state, targetFloor, ctx().chat[targetFloor], { origin: automatic ? 'automatic' : 'manual', autoGenerate: automatic });
-  }
-  if (plan?.archiveRef) await storyboardReleasePlanArchive(plan);
-  if (!state.prompt.trim() && state.promptCompiler.enabled) await storyboardCompilePrompt(root, { plan });
+  let deliveryPolicy, targetFloor;
+  // Extraction owns its draft writes; this outer guard keeps the surrounding configuration/context stable.
+  const preparationGuard = storyboardCreatePreparationGuard(state, { plan, includeDraft: false });
+  try {
+    if (productionDraft) {
+      const currentChatKey = String(getChatKey() || '');
+      const decision = storyboardDirectorDecisionSnapshot(productionDraft);
+      const decisionRuntime = await featureRuntime.load('directorDecision');
+      preparationGuard.assertCurrent();
+      if (!decision || !decisionRuntime.canConsumeDirectorDecision(decision, 'storyboard', currentChatKey)) return toast('世界侧镜头的导演决策已失效。', 'warning');
+    }
+    deliveryPolicy = storyboardProductionDeliveryPolicy(productionDraft || {}, { target: state.target, inlineByDefault: state.inlineByDefault });
+    targetFloor = deliveryPolicy.target === 'gallery' ? null : storyboardTargetFloor(state);
+    if (!plan && deliveryPolicy.target !== 'gallery' && Number.isInteger(targetFloor) && ctx().chat?.[targetFloor]) {
+      plan = storyboardEnsurePlan(state, targetFloor, ctx().chat[targetFloor], { origin: automatic ? 'automatic' : 'manual', autoGenerate: automatic });
+    }
+    if (plan?.archiveRef) await storyboardReleasePlanArchive(plan);
+    preparationGuard.assertCurrent();
+    if (!state.prompt.trim() && state.promptCompiler.enabled) {
+      const compiled = await storyboardCompilePrompt(root, { plan });
+      if (!compiled) return false;
+    }
+    preparationGuard.assertCurrent();
+  } catch (error) {
+    if (error?.code !== 'storyboard_input_changed') throw error;
+    if (!automatic && preparationGuard.ownsCurrentContext()) toast('生图设置已变化，已停止本次准备；请按当前设置重试', 'info');
+    return false;
+  } finally { preparationGuard.dispose(); }
   if (!state.prompt.trim()) return toast('请先写下画面描述，或开启 LLM 协作自动取景。', 'warning');
   if (deliveryPolicy.target === 'floor' && (!String(state.floor || '').trim() || !Number.isInteger(Number(state.floor)))) {
     return toast('请输入有效的正文楼层。', 'warning');
@@ -17683,66 +17796,76 @@ async function storyboardGenerate(root, { plan = null, automatic = false } = {})
     }));
     plan.updatedAt = Date.now();
   }
-  const jobs = [];
-  const resolvedArtistIds = [];
-  for (let index = 0; index < planned.length; index++) {
-    const shot = planned[index];
-    const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
-    const sourceId = STORYBOARD_PROVIDER_REGISTRY[route.providerId] ? route.providerId : state.source;
-    let shotProfile;
-    try { shotProfile = storyboardResolveRoutingProfile(state, route, sourceId === state.source ? profile : null); }
-    catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
-    if (manualSupplement) shotProfile.count = '1';
-    const effectiveShot = await storyboardAdaptShotForModel(shot, sourceId, shotProfile.model, state, {
-      chatKey: generationChatKey,
-      capabilityModelId: shotProfile.capabilityModelId,
-      cancelled: () => plan?.status === 'cancelled',
-    });
-    if (effectiveShot.safetyAborted || plan?.status === 'cancelled' || generationChatKey !== String(getChatKey() || '') || !storyboardState().enabled) return false;
-    const planShot = plan?.shots?.[index] || null;
-    if (planShot) Object.assign(planShot, { providerId: sourceId, connectionPresetId: route.connectionPresetId || '', parameterPresetId: route.parameterPresetId || '', routeRuleId: route.ruleId || '', safetyAdapted: effectiveShot.safetyAdapted, safetyMethod: effectiveShot.safetyMethod || '' });
-    const providerRequests = planStoryboardProviderRequests(sourceId, shotProfile.count);
-    for (const request of providerRequests) {
-      const requestProfile = { ...shotProfile, count: String(request.imageCount) };
-      let job;
-      try {
-        job = storyboardCreateJob(state, requestProfile, {
-          shot: effectiveShot, sourceId, profileSourceId: sourceId, modelId: route.modelId, capabilityModelId: shotProfile.capabilityModelId, connectionPresetId: route.connectionPresetId,
-          planId: plan?.id || '', planShotId: planShot?.id || '', recentArtistIds: resolvedArtistIds,
-          requestIndex: request.requestIndex, requestTotal: request.requestTotal,
-        });
-      } catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
-      if (job.artistPresetId) resolvedArtistIds.push(job.artistPresetId);
-      if (planShot && request.requestIndex === 1) Object.assign(planShot, {
-        shotSpec: clone(job.shotSpec), compiledPrompt: clone(job.compiledPrompt), compositionDecision: clone(job.compositionDecision),
-        paragraphSelection: clone(job.paragraphSelection || plan.paragraphSelection || null),
+  const inputGuard = storyboardCreatePreparationGuard(state, { plan });
+  try {
+    const jobs = [];
+    const resolvedArtistIds = [];
+    for (let index = 0; index < planned.length; index++) {
+      const shot = planned[index];
+      const route = routingEnabled ? routeStoryboardShot(shot, state.routing) : { providerId: state.source, modelId: profile.model, capabilityModelId: profile.capabilityModelId, connectionPresetId: '', parameterPresetId: '' };
+      const sourceId = STORYBOARD_PROVIDER_REGISTRY[route.providerId] ? route.providerId : state.source;
+      let shotProfile;
+      try { shotProfile = storyboardResolveRoutingProfile(state, route, sourceId === state.source ? profile : null); }
+      catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
+      if (manualSupplement) shotProfile.count = '1';
+      const effectiveShot = await storyboardAdaptShotForModel(shot, sourceId, shotProfile.model, state, {
+        chatKey: generationChatKey,
+        capabilityModelId: shotProfile.capabilityModelId,
+        isCurrent: inputGuard.isCurrent,
+        cancelled: () => plan?.status === 'cancelled',
       });
-      job.automatic = Boolean(automatic);
-      jobs.push(job);
+      inputGuard.assertCurrent();
+      if (effectiveShot.safetyAborted || plan?.status === 'cancelled' || generationChatKey !== String(getChatKey() || '') || !storyboardState().enabled) return false;
+      const planShot = plan?.shots?.[index] || null;
+      if (planShot) Object.assign(planShot, { providerId: sourceId, connectionPresetId: route.connectionPresetId || '', parameterPresetId: route.parameterPresetId || '', routeRuleId: route.ruleId || '', safetyAdapted: effectiveShot.safetyAdapted, safetyMethod: effectiveShot.safetyMethod || '' });
+      const providerRequests = planStoryboardProviderRequests(sourceId, shotProfile.count);
+      for (const request of providerRequests) {
+        const requestProfile = { ...shotProfile, count: String(request.imageCount) };
+        let job;
+        try {
+          job = storyboardCreateJob(state, requestProfile, {
+            shot: effectiveShot, sourceId, profileSourceId: sourceId, modelId: route.modelId, capabilityModelId: shotProfile.capabilityModelId, connectionPresetId: route.connectionPresetId,
+            planId: plan?.id || '', planShotId: planShot?.id || '', recentArtistIds: resolvedArtistIds,
+            requestIndex: request.requestIndex, requestTotal: request.requestTotal,
+          });
+        } catch (error) { return toast(`镜组配置：${error.message}`, 'warning'); }
+        if (job.artistPresetId) resolvedArtistIds.push(job.artistPresetId);
+        if (planShot && request.requestIndex === 1) Object.assign(planShot, {
+          shotSpec: clone(job.shotSpec), compiledPrompt: clone(job.compiledPrompt), compositionDecision: clone(job.compositionDecision),
+          paragraphSelection: clone(job.paragraphSelection || plan.paragraphSelection || null),
+        });
+        job.automatic = Boolean(automatic);
+        jobs.push(job);
+      }
     }
-  }
-  const remainingSlots = STORYBOARD_QUEUE_LIMIT - storyboardQueue.length - storyboardActiveJobs.size;
-  if (jobs.length > remainingSlots) {
-    return toast(`当前队列只剩 ${Math.max(0, remainingSlots)} 个空位，请先完成或移除部分任务。`, 'warning');
-  }
-  const generationDemand = summarizeStoryboardGenerationDemand(jobs);
-  const requiresPlanConfirmation = generationDemand.requestCount > 1 && state.routing.confirmMultipleRequests !== false;
-  const requiresCountConfirmation = generationDemand.hasMultiImageRequest;
-  if (!automatic && (requiresPlanConfirmation || requiresCountConfirmation)) {
-    const providers = jobs.map((job) => STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || '模型');
-    const detail = generationDemand.requestCount > 1
-      ? `${generationDemand.requestCount} 次生图请求（${providers.join('、')}），预计生成 ${generationDemand.imageCount} 张图片`
-      : `1 次生图请求，预计生成 ${generationDemand.imageCount} 张图片`;
-    if (!await confirmDialog('确认生成数量', `本次将发起 ${detail}。是否继续？`)) return false;
-  }
-  let queued = 0;
-  for (const job of jobs) if (storyboardQueueJob(job)) queued++;
-  if (queued > 0 && !automatic && plan?.manualReviewRequired) {
-    plan.manualReviewRequired = false;
-    for (const shot of plan.shots || []) shot.requiresManualConfirmation = false;
-    saveSettings();
-  }
-  return queued > 0;
+    const remainingSlots = STORYBOARD_QUEUE_LIMIT - storyboardQueue.length - storyboardActiveJobs.size;
+    if (jobs.length > remainingSlots) {
+      return toast(`当前队列只剩 ${Math.max(0, remainingSlots)} 个空位，请先完成或移除部分任务。`, 'warning');
+    }
+    const generationDemand = summarizeStoryboardGenerationDemand(jobs);
+    const requiresPlanConfirmation = generationDemand.requestCount > 1 && state.routing.confirmMultipleRequests !== false;
+    const requiresCountConfirmation = generationDemand.hasMultiImageRequest;
+    if (!automatic && (requiresPlanConfirmation || requiresCountConfirmation)) {
+      const providers = jobs.map((job) => STORYBOARD_PROVIDER_REGISTRY[job.source]?.label || '模型');
+      const detail = generationDemand.requestCount > 1
+        ? `${generationDemand.requestCount} 次生图请求（${providers.join('、')}），预计生成 ${generationDemand.imageCount} 张图片`
+        : `1 次生图请求，预计生成 ${generationDemand.imageCount} 张图片`;
+      if (!await confirmDialog('确认生成数量', `本次将发起 ${detail}。是否继续？`)) return false;
+    }
+    let queued = 0;
+    inputGuard.assertCurrent();
+    for (const job of jobs) if (storyboardQueueJob(job)) queued++;
+    if (queued > 0 && !automatic && plan?.manualReviewRequired) {
+      plan.manualReviewRequired = false;
+      for (const shot of plan.shots || []) shot.requiresManualConfirmation = false;
+      saveSettings();
+    }
+    return queued > 0;
+  } catch (error) {
+    if (error?.code !== 'storyboard_input_changed') throw error;
+    if (inputGuard.ownsCurrentContext() && !automatic) toast('生图设置已变化，未提交旧任务；请按当前设置生成', 'info');
+    return false;
+  } finally { inputGuard.dispose(); }
 }
 
 function storyboardRetryLog(log) {
